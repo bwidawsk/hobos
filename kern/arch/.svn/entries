@@ -1,37 +1,0 @@
-10
-
-dir
-56
-http://192.168.2.78:8008/svn/hobos/trunk/kern/arch
-http://192.168.2.78:8008/svn/hobos
-
-
-
-2010-09-05T23:01:35.994923Z
-56
-bwidawsk
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-53893400-c89c-48b5-9a5b-bdb4faea5041
-
-ia_common
-dir
-
-i386
-dir
-
-amd64
-dir
-
