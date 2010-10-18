@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/hobos/!svn/ver/30/trunk/boot/mbr
+END
+mbr.S
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/hobos/!svn/ver/30/trunk/boot/mbr/mbr.S
+END
+mbr.lds
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/hobos/!svn/ver/13/trunk/boot/mbr/mbr.lds
+END
+mbr_code.inc
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/hobos/!svn/ver/17/trunk/boot/mbr/mbr_code.inc
+END
+mbr_template.txt
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/hobos/!svn/ver/30/trunk/boot/mbr/mbr_template.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/15/trunk/boot/mbr/Makefile
+END

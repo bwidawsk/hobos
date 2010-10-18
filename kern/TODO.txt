@@ -1,0 +1,34 @@
+TODOs (aside from the ones in code)
+
+Refactors
+
+1 - Remove use of direct calls to early_printf. It should be implicit to console functions.
+3* - page allocator that allows freeing memory
+	Not needed until there is repeated use of malloc
+3 - Heap based malloc
+5 - I took kvprintf from freebsd, I should write my own
+
+Build
+2 - Clean up makefiles dependency stuff. It seems to be broken when you move around header files.
+	need a way to reproduce the problem
+5 - Move .d files to a temporary directory
+5* - Some kind of menuconfig
+
+New
+1* - Actually implement KASSERT
+	It's important to get this right before too much code goes in
+1 - Some basic libc functionality
+	This task is started and will be added to as needed,
+	bcopy is a big one i need to do next
+2 - Timer interrupt
+	good test for me, plus this will get basic interrupt handling working
+2 - HW query
+2 - hard disk driver
+2 - more mm functionality:
+	Ability to map any PA to any VA (seems useful right now)
+3 - Do something with kernel command line, unit test?
+4 - equivalent of freebsd hints (pulls from compile time/command line)
+4 - Get things to work with GRUB or FreeBSD bootloader
+
+
+

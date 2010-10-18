@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/hobos/!svn/ver/22/trunk/kern/arch/i386
+END
+begin.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/hobos/!svn/ver/22/trunk/kern/arch/i386/begin.c
+END
+linker_script.ld
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/hobos/!svn/ver/20/trunk/kern/arch/i386/linker_script.ld
+END
+header.S
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/hobos/!svn/ver/20/trunk/kern/arch/i386/header.S
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/hobos/!svn/ver/22/trunk/kern/arch/i386/Makefile
+END

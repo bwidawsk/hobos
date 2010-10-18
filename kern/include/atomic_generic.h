@@ -1,0 +1,1 @@
+extern int atomic_cmpxchg_64(volatile void *dest, uint64_t expect, uint64_t src);

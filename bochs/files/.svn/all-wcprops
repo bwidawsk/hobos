@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/hobos/!svn/ver/53/trunk/bochs/files
+END
+kernel
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/hobos/!svn/ver/57/trunk/bochs/files/kernel
+END
+hload
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/24/trunk/bochs/files/hload
+END

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 34
+/svn/hobos/!svn/ver/53/trunk/bochs
+END
+bochsrc.txt
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/53/trunk/bochs/bochsrc.txt
+END
+debug_smallboot
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/hobos/!svn/ver/21/trunk/bochs/debug_smallboot
+END
+bochsrc_nogui.txt
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/hobos/!svn/ver/40/trunk/bochs/bochsrc_nogui.txt
+END
+Makefile.ut
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/42/trunk/bochs/Makefile.ut
+END
+ut_script
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/hobos/!svn/ver/38/trunk/bochs/ut_script
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/hobos/!svn/ver/50/trunk/bochs/Makefile
+END

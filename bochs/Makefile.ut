@@ -1,0 +1,10 @@
+.PHONY : ut.all
+ut.all :
+	bochs -f bochsrc_nogui.txt -q -rc ut_script  2>&1 | grep unit_test
+
+.PHONY : ut.boot
+ut.boot :
+	bochs -f bochsrc_nogui.txt -q -rc ut_script  2>&1 | grep "unit_test: booted"
+
+help :
+	@echo ut.boot

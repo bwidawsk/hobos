@@ -1,0 +1,53 @@
+.macro partition_table boot=0, bf1=0, bf2=0, bf3=0, type=0, bl1=0, bl2=0, bl3=0, lba=0, size=0
+.byte \boot
+.byte \bf1
+.byte \bf2
+.byte \bf3
+.byte \type
+.byte \bl1
+.byte \bl2
+.byte \bl3
+.long \lba
+.long \size
+.endm
+
+.macro partition_table1
+	partition_table
+.endm
+.macro partition_table2
+	partition_table
+.endm
+.macro partition_table3
+	partition_table
+.endm
+.macro partition_table4
+	partition_table
+.endm
+
+.text
+.globl entry
+entry:
+.include "mbr_code.inc"
+
+
+.data
+#Optional Disk signature
+.long 0
+.short 0
+
+# BAW: this is old, now we autogenerate this from bochs build
+#partition table
+# We have a file system which looks like this:
+#LBA0 = MBR
+#LBA1-62 = blank
+#LBA63 = VBR
+#LBA64-2015 = FS
+# we assume 16 heads, and 63 SPT
+# CHS start = 0,1,1 (LBA 63)
+# CHS end = 1,15,63
+
+partition_table 0x80 1 1 0 0x83 15 63 60 63 61425
+partition_table2
+partition_table3
+partition_table4
+.short 0xaa55

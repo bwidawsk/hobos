@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/hobos/!svn/ver/56/trunk/kern/core
+END
+console.c
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/hobos/!svn/ver/58/trunk/kern/core/console.c
+END
+mutex.c
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/51/trunk/kern/core/mutex.c
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/hobos/!svn/ver/60/trunk/kern/core/main.c
+END
+bs_commands.c
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/hobos/!svn/ver/56/trunk/kern/core/bs_commands.c
+END
+noarch.c
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/hobos/!svn/ver/60/trunk/kern/core/noarch.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/hobos/!svn/ver/56/trunk/kern/core/Makefile
+END

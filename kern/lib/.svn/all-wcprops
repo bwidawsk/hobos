@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/hobos/!svn/ver/50/trunk/kern/lib
+END
+libc_strfuncs.c
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/hobos/!svn/ver/57/trunk/kern/lib/libc_strfuncs.c
+END
+printf.c
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/58/trunk/kern/lib/printf.c
+END
+libc_memfuncs.c
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/hobos/!svn/ver/58/trunk/kern/lib/libc_memfuncs.c
+END
+early_putc.c
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/hobos/!svn/ver/50/trunk/kern/lib/early_putc.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/hobos/!svn/ver/58/trunk/kern/lib/Makefile
+END
+freebsd_printf.c
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/hobos/!svn/ver/58/trunk/kern/lib/freebsd_printf.c
+END
