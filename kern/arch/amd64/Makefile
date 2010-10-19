@@ -7,7 +7,7 @@ HEADEROBJS=header.o early_pages.o
 HEADEROBJ_CFLAGS=-ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -DKERNEL -I. -I../../ -I../ia_common -I../../../common/include -I../../../common/include/amd64 -DAMD64 -mcmodel=kernel
 
 CFLAGS+=-I. -I../../ -I../ia_common -I../../../common/include -I../../../common/include/amd64
-SOURCES=begin.c mm_amd64.c atomic_amd64.c idt.c
+SOURCES=begin.c mm_amd64.c atomic_amd64.c idt.c reset.c
 OBJS=$(subst .c,.o,$(SOURCES)) idt_handlers.o
 
 all : kernel 

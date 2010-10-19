@@ -84,6 +84,7 @@ myfs.img : ../kern/kernel
 	-dd if=/dev/zero of=temp.img bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
 	-sudo losetup /dev/loop0 temp.img
 	-sudo $(MKFS) $(MKFS_FLAGS) /dev/loop0  > /dev/null 2>&1
+	-sudo mkdir -p hobosmnt/
 	-sudo mount -o loop /dev/loop0 hobosmnt/
 	-sudo chmod -R 777 hobosmnt/
 	-cp files/* hobosmnt/
