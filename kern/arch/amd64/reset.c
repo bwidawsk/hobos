@@ -4,6 +4,12 @@
 #include "idt_common.h"
 #include "inlined_asm_amd64.h"
 
+/* 
+ * bw: I originally learned about this through various operating systems and
+ * osdev. Finding documentation on how it actually works isn't easy. So this
+ * should be considered the backup. I believe a better way is to force the
+ * triple fault.
+ */
 static void *
 keyboard_controller_reset() {
 	outb(0xFE, 0x64);
@@ -15,6 +21,9 @@ reset_cmd_help() {
 	printf("Reset the damn thing\n");
 }
 
+/*
+ * bw: This idea came from osdev. Set a 0 length IDT, and then invoke an int.
+ */
 static void *
 zero_length_idt_reset() {
 	struct idt_descriptor idtr = {
@@ -26,6 +35,7 @@ zero_length_idt_reset() {
 	
 }
 
+/* Hook this into our debugger */
 #ifdef RESET_WITH_8042
 BS_COMMAND_DECLARE(reset, keyboard_controller_reset, reset_cmd_help);
 #else
