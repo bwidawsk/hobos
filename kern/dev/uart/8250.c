@@ -14,7 +14,7 @@ CONSOLE_DECLARE(cons_8250, cons_init_8250, cons_putc_8250, cons_getc_8250, cons_
 int use_8250_io = 1;
 
 /* Temporarily this stuff defaults to io */
-#include "../../arch/amd64/inlined_asm_amd64.h"
+#include <arch/asm.h>
 static void
 write_8250_reg(uint8_t reg, uint8_t val, void *ctrl) {
 	outb(val, 0x3f8+reg);

@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "console.h"
 
-#include "../../arch/amd64/inlined_asm_amd64.h"
+#include <arch/asm.h>
 
 #define BOCHS_CONS_AWESOMENESS 1
 #define BOCHS_DEBUG_PORT 0xe9

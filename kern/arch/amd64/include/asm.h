@@ -8,12 +8,38 @@ outb(uint8_t byte, uint16_t port) {
 	__asm__ volatile("outb %0, %1" : : "a" (byte), "d" (port));
 }
 
+static inline void 
+outw(uint16_t word, uint16_t port) {
+	__asm__ volatile("outw %0, %1" : : "r" (word), "d" (port));
+}
+
+static inline void 
+outl(uint32_t dword, uint16_t port) {
+	__asm__ volatile("outl %0, %1" : : "r" (dword), "d" (port));
+}
+
+
 static inline unsigned char 
 inb(uint16_t port) {
 	uint8_t retval;
 	__asm__ volatile ("inb %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
+
+static inline unsigned short 
+inw(uint16_t port) {
+	unsigned short retval;
+	__asm__ volatile ("inw %1, %0" : "=r"(retval) : "Nd"(port));
+	return retval;
+}
+
+static inline unsigned int 
+inl(uint16_t port) {
+	unsigned int  retval;
+	__asm__ volatile ("inl %1, %0" : "=r"(retval) : "Nd"(port));
+	return retval;
+}
+
 
 static inline void
 cpuid(uint32_t eax, cpuid_return_t retval) {

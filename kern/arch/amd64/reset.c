@@ -2,7 +2,7 @@
 #include <bs_commands.h>
 #include "idt_amd64.h"
 #include "idt_common.h"
-#include "inlined_asm_amd64.h"
+#include "include/asm.h"
 
 /* 
  * bw: I originally learned about this through various operating systems and

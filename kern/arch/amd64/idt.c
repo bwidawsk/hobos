@@ -2,7 +2,7 @@
 #include "gdt.h" // need KERNEL_CS64 in SET_IDT_INTR macro
 #include "idt_amd64.h"
 #include "idt_common.h"
-#include "inlined_asm_amd64.h"
+#include "include/asm.h"
 
 struct idt_entry idt[MAX_IDT_ENTRIES];
 

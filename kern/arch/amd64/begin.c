@@ -5,7 +5,7 @@
 #include <mm/page_allocator.h>
 #include "gdt.h" // for the GDT stuff TODO: move GDT stuff to it's own file
 #include "tss_amd64.h" // for temporary task stuff TODO: move this too
-#include "inlined_asm_amd64.h"
+#include "include/asm.h"
 #include "amd64_defines.h"
 #include "ia_defines.h"
 #include "idt_common.h"
