@@ -19,7 +19,7 @@
 	
 struct bs_cmd {
 	char *name;
-	void *(*execute)(char *argv[]);
+	void *(*execute)(int argc, char *argv[]);
 	void (*help)();
 };
 void do_shell_cmd(int argc, char *argv[]);

@@ -64,8 +64,9 @@ struct pci_accessor x86_io_pci = {
 /* TODO: this belongs elsewhere */
 #include <bs_commands.h>
 static void *
-x86_io_lspci() {
+x86_io_lspci(int argc, char *argv[]) {
 	uint16_t bus = 0;
+
 	for(bus = 0; bus < 256; bus++) {
 		uint8_t devno = 0;
 		for(devno = 0; devno < 16; devno++) {

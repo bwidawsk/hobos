@@ -12,6 +12,9 @@ int strcmp(const char *s1, const char *s2) __attribute__((weak, alias ("__hbuilt
 int strncmp(const char *s1, const char *s2, uint64_t n) __attribute__((weak, alias ("__hbuiltin_strncmp")));
 uint64_t strlen(const char *s) __attribute__((weak, alias ("__hbuiltin_strlen")));
 
+// non-compliant strtol
+uint64_t strtol(const char *s, int base);
+
 char *
 __hbuiltin_strcpy_safe(char *dest, const char *src) {
 	#define STRCPY_MAX (1 << 20)
@@ -88,3 +91,32 @@ __hbuiltin_strlen(const char *s) {
 	}
 	return count;
 }
+uint64_t
+strtol(const char *s, int base) {
+	uint64_t ret = 0;
+	int length = strlen(s);
+	if (base <= 10) {
+		while(length--) {
+			ret += s[length] * base;
+		}
+	}
+}
+
+uint64_t
+strtol(const char *s, int base) {
+	uint64_t ret = 0;
+	uint64_t temp_base = 1;
+	int length = strlen(s);
+	// if base is <= 10, ascii makes this very simple
+	if (base <= 10) {
+		while(length--) {
+			ret += (s[length] - '0') * temp_base;
+			temp_base *= base;
+		}
+	} else {
+		// otherwise we need some kind of hacky conversion
+		// TODO: finish this later
+	}
+	return ret;
+}
+

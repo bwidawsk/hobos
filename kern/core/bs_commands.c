@@ -30,12 +30,12 @@ do_shell_cmd(int argc, char *argv[]) {
 			break;
 		}
 	}
-	cmd->execute(argv);
+	cmd->execute(argc, argv);
 }
 
 
 static void *
-help_cmd_execute(char *argv[]) {
+help_cmd_execute(int argc, char *argv[]) {
 	int throwaway = 0;
 	struct bs_cmd *cmd;
 	console_puts("Displaying commands: \n");

@@ -8,4 +8,5 @@ bochs/debugger.out
 bochs/files/kernel
 bochs/myfs.img
 kern/kernel
+kern/include/arch/*
 
