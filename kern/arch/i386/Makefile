@@ -13,4 +13,5 @@ kernel : header.o
 .PHONY: clean
 clean :
 	rm *.o
+	-rm *.d
 	rm kernel

@@ -15,6 +15,7 @@ $(OUTPUT) : $(OBJS)
 
 .PHONY : clean
 clean :
+	-rm *.d
 	-rm $(OUTPUT) $(OBJS) $(DEPS)
 
 include $(subst .c,.d,$(SOURCES))

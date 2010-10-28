@@ -1,4 +1,6 @@
 TARGET?=amd64
+BUILD_DIR?=$(PWD)/build
+export BUILD_DIR
 CC=x86_64-pc-linux-gnu-gcc
 LD=x86_64-pc-linux-gnu-ld
 #CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
@@ -36,6 +38,5 @@ include_clean : include/common.h
 .PHONY : clean
 clean :
 	-rm -rf include/arch
-	-find . -name '*.d' | xargs rm 
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done

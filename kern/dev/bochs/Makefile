@@ -7,4 +7,5 @@ bochs.o :
 
 .PHONY : clean
 clean :
+	-rm *.d
 	-rm bochs.a $(OBJS)

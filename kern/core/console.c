@@ -2,6 +2,8 @@
 #include <console.h>
 #include <bs_commands.h>
 
+#define USE_LOCAL_ECHO
+
 extern int early_printf(const char *format, ...);
 
 CONSOLE_CREATE_LIST;
@@ -121,6 +123,9 @@ start_interactive_console() {
 			c = console_getc();
 			in_cmd[idx] = c;
 			idx++;
+			#ifdef USE_LOCAL_ECHO
+			console_putc(c);
+			#endif
 		} while(c != '\r');
 		
 		/* remove the \r which was the last character */
