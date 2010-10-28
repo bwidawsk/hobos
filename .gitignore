@@ -1,0 +1,11 @@
+*.a
+*.d
+*.o
+*.gch
+bochs/bochsimg
+bochs/bochsout.txt
+bochs/debugger.out
+bochs/files/kernel
+bochs/myfs.img
+kern/kernel
+
