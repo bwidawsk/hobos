@@ -1,0 +1,13 @@
+Micro tasks in order
+take arguments with the kernel console commands - want to keep it simple, assume 4 args max
+need a strtol function
+set up the 8254 (later on have a delay loop backup, required frequency calibration, apics ec.)
+block device abstraction - first pass done
+ATA driver - implement a block device
+
+
+Mega tasks in order
+Load a statically linked app off the disk and run as ring0
+Load a statically linked app off the disk and run as ring3
+Load a statically linkedapp off the disk, run as ring 3, support syscalls
+Load a statically linkedapp off the disk with multiprocess support

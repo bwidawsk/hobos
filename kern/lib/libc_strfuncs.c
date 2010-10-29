@@ -13,6 +13,7 @@ int strncmp(const char *s1, const char *s2, uint64_t n) __attribute__((weak, ali
 uint64_t strlen(const char *s) __attribute__((weak, alias ("__hbuiltin_strlen")));
 
 // non-compliant strtol
+#define STRTOL_DEFAULT_BASE 10
 uint64_t strtol(const char *s, int base);
 
 char *
@@ -91,32 +92,77 @@ __hbuiltin_strlen(const char *s) {
 	}
 	return count;
 }
-uint64_t
-strtol(const char *s, int base) {
-	uint64_t ret = 0;
-	int length = strlen(s);
-	if (base <= 10) {
-		while(length--) {
-			ret += s[length] * base;
-		}
-	}
+
+
+static int
+is_hex(const char *s) {
+	if(s[0] == '0' && (s[1] == 'x'|| s[1] == 'X'))
+		return 1;
+	return 0;
+}
+
+/* Todo check for 9-F */
+static int
+is_octal(const char *s) {
+	if(s[0] == '0' && (!(s[1] == 'x'|| s[1] == 'X')))
+		return 1;
+
+	return 0;
+}
+
+static int
+hex_to_dec(char h) {
+
+	if (h <= '9' && h >= '0')
+		return h - '0';
+
+	if (h >= 'a' && h <= 'f')
+		return (h - 'a') + 10;
+
+	if (h >= 'A' && h <= 'F')
+		return (h - 'A') + 10;
+
+	return 0;
 }
 
 uint64_t
 strtol(const char *s, int base) {
 	uint64_t ret = 0;
 	uint64_t temp_base = 1;
+
+#ifdef EXTRA_CAUTIOUS
+	if (s == NULL)
+		return 0;
+#endif
 	int length = strlen(s);
-	// if base is <= 10, ascii makes this very simple
+	if (base == 0) {
+		if (length >= 2) {
+			if(is_hex(s)) 
+				base = 16;
+			if(is_octal(s))
+				base = 8;
+		} else if(length == 1) {
+			if(is_octal(s))
+				base = 8;
+		} else 
+				base = STRTOL_DEFAULT_BASE;
+	}
+
 	if (base <= 10) {
 		while(length--) {
 			ret += (s[length] - '0') * temp_base;
 			temp_base *= base;
 		}
+	} else if (base == 16) {
+		while(length--) {
+			if(s[length] == 'x' || s[length] == 'X')
+				break;
+			ret += (hex_to_dec(s[length])) * temp_base;
+			temp_base *= base;
+		}
 	} else {
-		// otherwise we need some kind of hacky conversion
-		// TODO: finish this later
+		ret = 0;
 	}
+
 	return ret;
 }
-
