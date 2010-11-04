@@ -1,5 +1,5 @@
-DIRS = bochs uart pci
-OBJS = bochs/bochs.a uart/uart.a pci/pci.a
+DIRS = bochs uart pci block
+OBJS = bochs/bochs.a uart/uart.a pci/pci.a block/block.a
 
 OUTPUT = devices.a
 

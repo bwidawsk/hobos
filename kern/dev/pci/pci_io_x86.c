@@ -59,6 +59,8 @@ struct pci_accessor x86_io_pci = {
 	.pci_write16 = x86_io_pci_write16,
 	.pci_write32 = x86_io_pci_write32
 };
+/* TODO: this shouldn't be here or hardcoded */
+struct pci_accessor *pci = &x86_io_pci;
 
 
 /* TODO: this belongs elsewhere */

@@ -1,8 +1,8 @@
-SOURCES= pci.c pci_io_x86.c 
+SOURCES= ata_block.c
 OBJS=$(subst .c,.o,$(SOURCES))
-OUTPUT=pci.a
+OUTPUT=block.a
 
-CFLAGS+=-I../../common/include
+CFLAGS+=-I../../common/include -I../../
 
 %.d: %.c
 	$(CC) -M $(CFLAGS) $< > $@.$$$$;                  \
