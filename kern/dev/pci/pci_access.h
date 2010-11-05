@@ -2,17 +2,28 @@
 #define _PCI_ACCESS_H_
 
 typedef uint32_t bdfo_t;
-
 #define PCI_BDFO(bus, dev, func, offset) ((bdfo_t)(bus << 16  |  (dev << 11)  |  (func <<  8) | offset))
-	
-#define BDFO_BUS(bdfo) ((bdfo >> 16) & 0xFFFF)
-#define BDFO_DEV(bdfo) ((bdfo >> 11) & 0x3F)
-#define BDFO_FUNC(bdfo) ((bdfo >> 3) & 0x7)
-#define BDFO_OFF(bdfo) ((bdfo >> 0) & 0xFF)
 
-#define PCI_MAX_BUS 256
-#define PCI_MAX_DEV 64
-#define PCI_MAX_FUNC 8
+#define PCI_OFF_SHIFT 2
+#define PCI_FUNC_SHIFT 8
+#define PCI_DEV_SHIFT 11
+#define PCI_BUS_SHIFT 16
+
+#define PCI_MAX_BUS 255
+#define PCI_BUS_MASK 0xFF
+#define PCI_MAX_DEV 31
+#define PCI_DEV_MASK 0x1f
+#define PCI_MAX_FUNC 7
+#define PCI_FUNC_MASK 0x7
+#define PCI_MAX_IDS (PCI_MAX_BUS * PCI_MAX_DEV * PCI_MAX_FUNC)
+
+#define FOREACH_PCI_DEV(bus, dev, func, temp) \
+	for(bus = 0, dev = 0, func = 0, temp = 0; \
+		temp < PCI_MAX_IDS ; \
+		func = (temp % 8), \
+		dev = ((temp) >> 3) & PCI_DEV_MASK, \
+		bus = ((temp) >> 8) & PCI_BUS_MASK, \
+		temp++)
 
 #define PCI_VENID_OFF 0x0
 #define PCI_DEVID_OFF 0x2
@@ -92,6 +103,6 @@ void pci_write32(bdfo_t bdfo, uint32_t data);
 
 typedef uint8_t pci_class_t;
 
-int pci_get_devs(pci_class_t, bdfo_t *ret);
+int pci_get_devs(pci_class_t, bdfo_t *ret, int *count);
 
 #endif
