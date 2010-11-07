@@ -1,0 +1,20 @@
+SOURCES= pit.c
+OBJS=$(subst .c,.o,$(SOURCES))
+OUTPUT=timer.a
+
+CFLAGS+=-I../../common/include -I../../
+
+%.d: %.c
+	$(CC) -M $(CFLAGS) $< > $@.$$$$;                  \
+	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+	rm -f $@.$$$$
+
+$(OUTPUT) : $(OBJS)
+	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
+
+.PHONY : clean
+clean :
+	-rm *.d
+	-rm $(OUTPUT) $(OBJS)
+
+include $(subst .c,.d,$(SOURCES))

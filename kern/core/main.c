@@ -35,7 +35,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// interrupt setup (needed for when we enumerate)
 	
 	// platform_enumeration()
-
+	pit_test();
 	__asm__ volatile("ud2");
 
 	while(1) {
