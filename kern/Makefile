@@ -1,6 +1,4 @@
 TARGET?=amd64
-BUILD_DIR?=$(PWD)/build
-export BUILD_DIR
 CC=x86_64-pc-linux-gnu-gcc
 LD=x86_64-pc-linux-gnu-ld
 #CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
@@ -25,7 +23,8 @@ all : $(OUTPUT)
 
 .PHONY : $(OUTPUT) 
 $(OUTPUT) : include_clean
-	cp -r arch/${TARGET}/include/ include/arch/
+	./vers.sh
+	cp -rf arch/${TARGET}/include/ include/arch/
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} $1 || exit 1) || exit 1; done
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel
 

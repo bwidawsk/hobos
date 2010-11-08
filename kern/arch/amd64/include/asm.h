@@ -126,6 +126,16 @@ static inline uint64_t rdmsr(uint32_t which) {
 }
 
 static inline void
+cli() {
+	__asm__ volatile ("cli");
+}
+
+static inline void
+sti() {
+	__asm__ volatile ("sti");
+}
+
+static inline void
 swapgs() {
 	__asm__ volatile ("swapgs");
 }
