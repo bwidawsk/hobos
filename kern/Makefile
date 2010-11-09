@@ -36,6 +36,7 @@ include_clean : include/common.h
 	
 .PHONY : clean
 clean :
+	-rm core/vers.c
 	-rm -rf include/arch
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done

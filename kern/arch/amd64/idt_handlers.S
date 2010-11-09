@@ -34,6 +34,7 @@
 
 .globl undefined_handler
 undefined_handler:
+	call undefined_c_handler
 	jmp .
 
 default_handler:

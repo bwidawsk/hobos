@@ -15,7 +15,7 @@ struct thread first_thread = {
 	.tid = 0,
 	.debug = "poop"
 };
-
+extern char version[];
 /*
  * Machine independent beginning. The machine dependent code can optionally
  * pass in an allocator it may have used early in boot.
@@ -26,15 +26,16 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	KASSERT(primary_allocator != NULL, ("can't handle null allocator yet\n"));
 	init_malloc(primary_allocator);
 	console_init();
-
-	printf("%p\n", this_thread());
-	printf("%s\n", this_thread()->debug);
+	printf("Link time = %s\n", version);
+	//printf("%p\n", this_thread());
+	//printf("%s\n", this_thread()->debug);
 	// platform extended features
 	// set gsbase
 	
 	// interrupt setup (needed for when we enumerate)
 	
 	// platform_enumeration()
+	pic_init();
 	pit_test();
 	__asm__ volatile("ud2");
 

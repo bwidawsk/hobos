@@ -37,14 +37,14 @@
 
 #define PIT_DATA_PORT 0x40
 #define PIT_CMD_PORT 0x43
-#define PIT_CMD_WRITE(u8) outb(u8, PIT_CMD_PORT)
-#define PIT_DATA_WRITE(u8) outb(u8, PIT_DATA_PORT)
+#define PIT_CMD_WRITE(u8) outb((uint8_t)u8, PIT_CMD_PORT)
+#define PIT_DATA_WRITE(u8) outb((uint8_t)u8, PIT_DATA_PORT)
 #define PIT_DATA_READ inb(PIT_DATA_PORT)
 
 // TODO: This would differ for 8253
 #define PIT_RELOAD_WRITE(u16) \
-	outb((u16 * 0xFF), PIT_DATA_PORT); \
-	outb((u16 >> 8), PIT_DATA_PORT)
+	PIT_DATA_WRITE(u16 & 0xFF); \
+	PIT_DATA_WRITE(u16 >> 8)
 
 #define PIT_READ_CURRENT \
 	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH) \
@@ -53,8 +53,11 @@
 
 void
 pit_test() {
+	sti();
 	PIT_CMD_WRITE(PIT_ONESHOT);
-	PIT_RELOAD_WRITE(1);
+	//PIT_RELOAD_WRITE(1);
+	PIT_DATA_WRITE(1 & 0xFF);
+	PIT_DATA_WRITE(0);
 	uint8_t nums[4];
 	nums[0] = PIT_DATA_READ;
 	nums[1] = PIT_DATA_READ;

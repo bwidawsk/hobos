@@ -8,6 +8,12 @@ struct idt_entry idt[MAX_IDT_ENTRIES];
 
 uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
+void 
+undefined_c_handler() {
+	pic_print_irrs();
+	pic_print_isrs();
+}
+
 /* TODO:
  * idt_handlers.S, I push a 0 error code in certain cases, I need to pop as well
  */

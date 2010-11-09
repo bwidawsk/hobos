@@ -1,6 +1,6 @@
-DIRS = bochs uart pci block timer
-OBJS = bochs/bochs.a uart/uart.a pci/pci.a block/block.a timer/timer.a
-
+DIRS = bochs uart pci block timer pic
+OBJS = bochs/bochs.a uart/uart.a pci/pci.a block/block.a timer/timer.a pic/pic.a
+ 
 OUTPUT = devices.a
 
 .PHONY : $(OUTPUT)
