@@ -7,6 +7,13 @@ bochs/bochsout.txt
 bochs/debugger.out
 bochs/files/kernel
 bochs/myfs.img
+boot/mbr/mbr.S
+boot/bootimage
+boot/mbr/mbr.elf
+boot/mbr/mbr.img
+boot/smallboot/smallboot.img
+boot/smallboot/smallboot.img.elf
 kern/kernel
 kern/include/arch/*
-boot/mbr/mbr.S
+kern/core/vers.c
+
