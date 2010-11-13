@@ -2,7 +2,7 @@
 #include <console.h>
 #include <bs_commands.h>
 
-#define USE_LOCAL_ECHO
+//#define USE_LOCAL_ECHO
 
 extern int early_printf(const char *format, ...);
 
@@ -109,7 +109,7 @@ start_interactive_console() {
 		int idx = 0;
 		char in_cmd[MAX_CMD + 1];
 
-		console_puts("hobo_cons> ");
+		console_puts("\nhobo_cons> ");
 		in_cmd[MAX_CMD] = 0;
 
 		/* TODO: bzero or memset */
@@ -122,12 +122,17 @@ start_interactive_console() {
 		do {
 			c = console_getc();
 			in_cmd[idx] = c;
+			/* TODO: Add backspace support */
 			idx++;
 			#ifdef USE_LOCAL_ECHO
 			console_putc(c);
 			#endif
 		} while(c != '\r');
-		
+
+		/* Shortcut empty commands */
+		if (idx == 0)
+			continue;
+
 		/* remove the \r which was the last character */
 		cmd_len = idx - 1;
 		
