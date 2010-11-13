@@ -122,7 +122,14 @@ start_interactive_console() {
 		do {
 			c = console_getc();
 			in_cmd[idx] = c;
-			/* TODO: Add backspace support */
+			/* Handle backspace support */
+			if (c == 0x7F) {
+				if (idx > 0) {
+					in_cmd[idx] = 0;
+					idx--;
+				}
+				continue;
+			}
 			idx++;
 			#ifdef USE_LOCAL_ECHO
 			console_putc(c);
