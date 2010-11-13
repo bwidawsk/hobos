@@ -53,7 +53,8 @@
 
 void
 pit_test() {
-	sti();
+	// interrupt testing!
+	//sti();
 	PIT_CMD_WRITE(PIT_ONESHOT);
 	//PIT_RELOAD_WRITE(1);
 	PIT_DATA_WRITE(1 & 0xFF);
