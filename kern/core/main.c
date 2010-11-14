@@ -16,6 +16,11 @@ struct thread first_thread = {
 	.debug = "poop"
 };
 extern char version[];
+
+/* FIXME: remove these */
+extern void pit_test();
+extern void pic8259_init(int);
+
 /*
  * Machine independent beginning. The machine dependent code can optionally
  * pass in an allocator it may have used early in boot.
@@ -35,7 +40,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// interrupt setup (needed for when we enumerate)
 	
 	// platform_enumeration()
-	pic_init();
+	pic8259_init(3);
 	pit_test();
 	__asm__ volatile("ud2");
 

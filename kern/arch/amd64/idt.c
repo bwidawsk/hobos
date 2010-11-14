@@ -10,8 +10,8 @@ uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
 void 
 undefined_c_handler() {
-	pic_print_irrs();
-	pic_print_isrs();
+	pic8259_print_irrs();
+	pic8259_print_isrs();
 }
 
 /* TODO:
@@ -19,23 +19,16 @@ undefined_c_handler() {
  */
 void
 dflt_c_handler(struct trap_frame64 *tf) {
+	printf("got exception #%d\n", tf->tf_which);
 	printf("tf_rip = %p\n", tf->tf_rip);
-	printf("tf_rax = %p\n", tf->tf_rax);
 	printf("tf_cs = %p\n", tf->tf_cs);
-	printf("got exception #%d ", tf->tf_which);
 
 	if (tf->tf_which == T_PAGE_FAULT) {
-		early_printf("address == 0x%x", read_cr2());
-	} else {
-	
-	}
-	early_printf("\n");
-	
-	// if it was a ud2, break into the console
-	if (tf->tf_rip != 0 && tf->tf_which == 6 && 
-		(*((uint16_t *)tf->tf_rip) == 0x0b0f)) {
+		printf("fault address == 0x%x\n", read_cr2());
+	} else if (tf->tf_which == T_UNDEF_FAULT) {
 		start_interactive_console();
 	}
+	printf("\n");
 	
 	while(1);
 }

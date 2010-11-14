@@ -50,15 +50,15 @@
 	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH) \
 	((uint16_t)PIT_DATA_READ | (PIT_DATA_READ << 8))
 
+#define PIT_SETUP_ONESHOT(timeout) \
+	PIT_CMD_WRITE(PIT_ONESHOT); \
+	PIT_RELOAD_WRITE(timeout)
 
 void
 pit_test() {
-	// interrupt testing!
+	// enable below for interrupt testing!
 	//sti();
-	PIT_CMD_WRITE(PIT_ONESHOT);
-	//PIT_RELOAD_WRITE(1);
-	PIT_DATA_WRITE(1 & 0xFF);
-	PIT_DATA_WRITE(0);
+	PIT_SETUP_ONESHOT(1);
 	uint8_t nums[4];
 	nums[0] = PIT_DATA_READ;
 	nums[1] = PIT_DATA_READ;

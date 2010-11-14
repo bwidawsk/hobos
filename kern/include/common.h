@@ -14,19 +14,26 @@
 #ifndef NO_INVARIANTS
 #define KASSERT(x, ...) do { \
 		if (!(x)) { \
-			/* printf("%s: %s\n", __FILE__, #x); */ \
-			while(1); \
+			printf("%s: %s\n", __FILE__, #x); \
+			__asm__ volatile("ud2"); \
 		} \
 	} while (0);
 	#define panic(str) KASSERT(0, (str));
+#define KWARN(x, ...) do { \
+		if (!(x)) { \
+			printf("%s: %s\n", __FILE__, #x);  \
+		} \
+	} while (0);
 #else
-	#define KASSERT(x)
+	#define KASSERT(x, ...)
+	#define KWARN(x, ...)
 #endif
 
 
 
 #define ROUND_UP(x, base) 		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
 #define ROUND_DOWN(x, base) 	(((x) / (base)) * (base)) 
+#define IS_POW2(x) (!(x & (x-1)))
 
 /* CompileTimeLIST
  * I borrowed part of this implementation from FreeBSD, but it's a generic OS 
@@ -63,5 +70,10 @@
 	
 #define CTLIST_FOREACH(elem, list_name, temp_var) \
 	for ((temp_var) = 0, ((elem) = CTLIST_FIRST_SYM(list_name)); temp_var < CTLIST_COUNT(list_name); (temp_var)++, (elem) = *(&CTLIST_FIRST_SYM(list_name) + temp_var))
+
+
+#ifndef ASM_FILE
+extern int printf(const char *fmt, ...);
+#endif
 
 #endif
