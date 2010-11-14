@@ -25,6 +25,7 @@
 #define PIC8259_ICW4_SPECIAL_FULLY_NESTED 0x10
 
 #define PIC8259_OCW2_NOP (0x2 << 5)
+#define PIC8259_OCW3_NOP (0x8)
 
 #define PIC8259_OCW3_READ_IRR (0x8 | 0x2)
 #define PIC8259_OCW3_READ_ISR (0x8 | 0x3)
@@ -51,6 +52,44 @@ pic8259_eoi(uint8_t irq) {
 	}
 	KASSERT(master_inited == 1, ("%s: master not inited\n", __FUNCTION__));
 	outb(PIC8259_EOI, MASTER_CMD_PORT);
+}
+
+void
+pic8259_mask(uint8_t irq) {
+	uint8_t which_data_port;	
+	uint8_t which_cmd_port;	
+
+	if(irq >= 8) { 
+		which_data_port = SLAVE_DATA_PORT;
+		which_cmd_port = SLAVE_CMD_PORT;
+	} else {
+		which_data_port = MASTER_DATA_PORT;
+		which_cmd_port = MASTER_CMD_PORT;
+	}
+	uint8_t current_mask = inb(which_data_port);
+	current_mask |= (1 << (irq %8));
+	outb(current_mask, which_data_port);
+	outb(PIC8259_OCW2_NOP, which_cmd_port);
+	outb(PIC8259_OCW3_NOP, which_cmd_port);
+}
+
+void
+pic8259_unmask(uint8_t irq) {
+	uint8_t which_data_port;	
+	uint8_t which_cmd_port;	
+
+	if(irq >= 8) { 
+		which_data_port = SLAVE_DATA_PORT;
+		which_cmd_port = SLAVE_CMD_PORT;
+	} else {
+		which_data_port = MASTER_DATA_PORT;
+		which_cmd_port = MASTER_CMD_PORT;
+	}
+	uint8_t current_mask = inb(which_data_port);
+	current_mask &= ~(1 << (irq %8));
+	outb(current_mask, which_data_port);
+	outb(PIC8259_OCW2_NOP, which_cmd_port);
+	outb(PIC8259_OCW3_NOP, which_cmd_port);
 }
 
 void
@@ -89,6 +128,7 @@ pic8259_init(enum which_8259 which ) {
 		slave_inited = 1;
 	}
 }
+
 uint8_t
 pic8259_get_ir(enum which_8259 which, uint8_t which_ir) {
 	KWARN(IS_POW2(which), ("BUG: pic8259_get_irr called for multiple pics\n"));
