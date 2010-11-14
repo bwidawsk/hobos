@@ -25,7 +25,12 @@
 #define TF_R15_OFF -0x80
 #define TF_WHICH -0x88
 
+#define IRQ_EXTERNAL	32
+
+
 #ifndef ASM_FILE
+#define IDTVEC(name)   X ## name
+void IDTVEC(IRQ_EXTERNAL)(void);
 enum {
 	IDT_UPPER8=0,
 	IDT_LDT=2,
@@ -118,5 +123,10 @@ struct idt_descriptor{
 		}; \
 		idt[vector].descriptor.intr_gate = intr_gate; \
 	}while(0);
+	
+static inline
+void register_irq(int vector, int (*handler)(void *), void *data) {
+	//
+}
 #endif
 #endif

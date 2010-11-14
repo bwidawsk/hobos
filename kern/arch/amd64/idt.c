@@ -1,6 +1,6 @@
 #include "stdint.h"
 #include "gdt.h" // need KERNEL_CS64 in SET_IDT_INTR macro
-#include "idt_amd64.h"
+#include "include/irq.h" //AKA <arch/irq.h>
 #include "idt_common.h"
 #include "include/asm.h"
 

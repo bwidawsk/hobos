@@ -1,4 +1,4 @@
-#include "idt_amd64.h"
+#include "include/irq.h" // AKA <arch/irq.h
 #include "idt_common.h"
 
 #define STORE_ALL_REGS \
@@ -83,3 +83,6 @@ IDTVEC(T_MACH_ABORT)
 	TRAP_DEF_NO_ERR_PUSH(T_MACH_ABORT)
 IDTVEC(T_SIMD_FAULT)
 	TRAP_DEF(T_SIMD_FAULT)
+	
+IDTVEC(IRQ_EXTERNAL)
+	TRAP_DEF(IRQ_EXTERNAL)

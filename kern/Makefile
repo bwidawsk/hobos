@@ -24,6 +24,8 @@ all : $(OUTPUT)
 .PHONY : $(OUTPUT) 
 $(OUTPUT) : include_clean
 	./vers.sh
+	#rm is here because cp wasn't working all the time
+	-rm -rf include/arch
 	cp -rf arch/${TARGET}/include/ include/arch/
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} $1 || exit 1) || exit 1; done
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel

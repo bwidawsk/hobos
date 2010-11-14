@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <arch/asm.h>
+#include <arch/irq.h>
 
 #ifdef ONLY_8253
 #error No 8253 support because of access mode
@@ -54,8 +55,16 @@
 	PIT_CMD_WRITE(PIT_ONESHOT); \
 	PIT_RELOAD_WRITE(timeout)
 
+#define PIT_IRQ 0
+
+int
+pit_timer_irq(void *data) {
+
+}
+
 void
 pit_test() {
+	register_irq(0, pit_timer_irq, 0);
 	// enable below for interrupt testing!
 	//sti();
 	PIT_SETUP_ONESHOT(1);
