@@ -4,6 +4,7 @@
 // TODO: make this dynamic allocation
 typedef int (*irq_handler)(void *);
 irq_handler handlers[16] = {0};
+void *handler_data[16] = {0};
 
 
 void 
@@ -12,7 +13,7 @@ generic_c_handler(uint64_t vector) {
 	printf("vector = %d\n", vector);
 	pic8259_print_irrs();
 	pic8259_print_isrs();
-	handlers[vector](0);
+	handlers[vector](handler_data[vector]);
 	pic8259_eoi(vector);
 	return;
 }
@@ -24,6 +25,7 @@ register_irq(int vector, int (*handler)(void *), void *data) {
 
 	arch_setup_irq(vector);
 	handlers[vector] = handler;
+	handler_data[vector] = data;
 	// set the pic mask
 	pic8259_unmask(vector);
 }
