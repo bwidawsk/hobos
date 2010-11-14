@@ -59,14 +59,15 @@
 
 int
 pit_timer_irq(void *data) {
-
+	printf("timer interrupt\n");
+	return 0;
 }
 
 void
 pit_test() {
 	register_irq(0, pit_timer_irq, 0);
-	// enable below for interrupt testing!
-	//sti();
+	// enable below for interrupt testing only!
+	sti();
 	PIT_SETUP_ONESHOT(1);
 	uint8_t nums[4];
 	nums[0] = PIT_DATA_READ;

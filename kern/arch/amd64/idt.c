@@ -6,13 +6,9 @@
 
 struct idt_entry idt[MAX_IDT_ENTRIES];
 
-uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
+MUTEX_DECLARE(irq_vector_mtx);
 
-void 
-undefined_c_handler() {
-	pic8259_print_irrs();
-	pic8259_print_isrs();
-}
+uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
 /* TODO:
  * idt_handlers.S, I push a 0 error code in certain cases, I need to pop as well
@@ -33,14 +29,14 @@ dflt_c_handler(struct trap_frame64 *tf) {
 	while(1);
 }
 
-extern void (*undefined_handler)();
+extern void (*generic_handler)();
 
 void
 setup_exception_handlers() {
 	int i;
 	for( i = 0; i < MAX_IDT_ENTRIES; i++) {
 		// set up a known handler for every entry to help debugging
-		SET_IDT_INTR(i, &undefined_handler);
+		SET_IDT_INTR(i, &generic_handler);
 	}
 
 	// Set the default vectors which we actually care about
@@ -52,4 +48,10 @@ setup_exception_handlers() {
 		.base = (uint64_t)&idt
 	};
 	lidt((void *)&idtr);
+}
+
+#include "extern_vector_table.h"
+void
+arch_setup_irq(int vector) {
+	SET_IDT_INTR(IRQ_EXTERNAL + vector, external_idt_vectors[vector]);
 }

@@ -34,7 +34,8 @@
 #define	T_MACH_ABORT	18
 #define	T_SIMD_FAULT	19
 
-
+#define IRQ_EXTERNAL 32
+#define IRQ_MAX (MAX_IDT_ENTRIES - 1)
 #ifndef ASM_FILE
 
 /* default handlers for all traps, aborts, and faults */

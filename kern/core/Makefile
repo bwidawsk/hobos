@@ -1,4 +1,5 @@
-SOURCES=main.c noarch.c console.c mutex.c bs_commands.c vers.c
+SOURCES=main.c noarch.c console.c mutex.c bs_commands.c interrupt.c
+SOURCES+=vers.c
 OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=core.a
 
