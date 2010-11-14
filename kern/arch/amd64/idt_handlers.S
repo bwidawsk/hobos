@@ -19,19 +19,35 @@
 	movq %r14, TF_R14_OFF(%rsp) ;\
 	movq %r15, TF_R15_OFF(%rsp) ;\
 
-#define UNSTORE_ALL_REGS
+#define UNSTORE_ALL_REGS \
+	xchg %rax, TF_RAX_OFF(%rsp) ;\
+	xchg %rbx, TF_RBX_OFF(%rsp) ;\
+	xchg %rcx, TF_RCX_OFF(%rsp) ;\
+	xchg %rdx, TF_RDX_OFF(%rsp) ;\
+	xchg %rsi, TF_RDI_OFF(%rsp) ;\
+	xchg %rdi, TF_RSI_OFF(%rsp) ;\
+	xchg %rbp, TF_RBP_OFF(%rsp) ;\
+	xchg %rsp, TF_RSP_OFF(%rsp) ;\
+	xchg %r8, TF_R8_OFF(%rsp) ;\
+	xchg %r9, TF_R9_OFF(%rsp) ;\
+	xchg %r10, TF_R10_OFF(%rsp) ;\
+	xchg %r11, TF_R11_OFF(%rsp) ;\
+	xchg %r12, TF_R12_OFF(%rsp) ;\
+	xchg %r13, TF_R13_OFF(%rsp) ;\
+	xchg %r14, TF_R14_OFF(%rsp) ;\
+	xchg %r15, TF_R15_OFF(%rsp) ;\
 	
 #define TRAP_DEF(x)    \
 	STORE_ALL_REGS \
 	movq $(x), TF_WHICH(%rsp) ;\
-	addq $TF_WHICH, %rsp ;\
+	addq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
     jmp default_handler
 	
 #define TRAP_DEF_NO_ERR_PUSH(x)    \
 	pushq $0 ; \
 	STORE_ALL_REGS \
 	movq $(x), TF_WHICH(%rsp) ;\
-	addq $TF_WHICH, %rsp ;\
+	addq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
     jmp default_handler
 
 .globl generic_handler
@@ -44,7 +60,7 @@ generic_handler:
 default_handler:
 	movq %rsp, %rdi ;\
 	callq dflt_c_handler ;\
-	subq $TF_WHICH, %rsp ;\
+	subq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
 	iretq
 
 IDTVEC(T_DIVIDE_FAULT)
@@ -93,11 +109,12 @@ IDTVEC(T_SIMD_FAULT)
 #define IRQ_HANDLER(index, vec_name) \
 IDTVEC(vec_name) \
 	STORE_ALL_REGS ;\
-	movq $(index), %rdi ;\
-	sub	$IRQ_EXTERNAL, %rdi ;\
+	addq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
+	movq $(index - IRQ_EXTERNAL), %rdi ;\
 	call    generic_c_handler ;\
+	subq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
 	UNSTORE_ALL_REGS ;\
-	iret
+	iretq
 
 // TODO: make below macro work
 .macro setup_all_irqs from=IRQ_EXTERNAL, to=IRQ_MAX

@@ -166,3 +166,15 @@ pic8259_print_isrs() {
 	printf("Master ISR = %x\n", pic8259_get_ir(PIC8259_MASTER, PIC8259_OCW3_READ_ISR));
 	printf("Slave ISR = %x\n", pic8259_get_ir(PIC8259_SLAVE, PIC8259_OCW3_READ_ISR));
 }
+
+
+#include <bs_commands.h>
+static void *
+pic8259_dump(int argc, char *argv[]) {
+	pic8259_print_irrs();
+	pic8259_print_isrs();
+}
+pic8259_help() {
+	printf("Dump 8259 state\n");
+}
+BS_COMMAND_DECLARE(dump_8259, pic8259_dump, pic8259_help);

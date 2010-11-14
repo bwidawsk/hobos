@@ -76,6 +76,7 @@ pit_test() {
 	nums[3] = PIT_DATA_READ;
 	printf("now = %d\n", nums[0]);
 	printf("now = %d\n", nums[1]);
+	PIT_SETUP_ONESHOT(1);
 	printf("now = %d\n", nums[2]);
 	printf("now = %d\n", nums[3]);
 }
