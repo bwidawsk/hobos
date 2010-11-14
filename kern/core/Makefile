@@ -15,7 +15,6 @@ $(OUTPUT) : $(OBJS)
 .PHONY : clean
 clean :
 	-rm *.d
-	-rm vers.o
 	-rm $(OUTPUT) $(OBJS)
 
 ifneq ($(MAKECMDGOALS),clean)
