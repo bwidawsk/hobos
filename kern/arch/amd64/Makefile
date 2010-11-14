@@ -36,4 +36,6 @@ clean :
 	-rm *.o
 	-rm *.d
 	
-include $(subst .c,.d,$(SOURCES))
+ifneq ($(MAKECMDGOALS),clean)
+	include $(subst .c,.d,$(SOURCES))
+endif

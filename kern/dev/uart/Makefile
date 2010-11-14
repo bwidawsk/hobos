@@ -14,5 +14,6 @@ $(OUTPUT) : $(OBJS)
 clean :
 	-rm *.d
 	-rm $(OUTPUT) $(OBJS)
-
-include $(subst .c,.d,$(SOURCES))
+ifneq ($(MAKECMDGOALS),clean)
+	include $(subst .c,.d,$(SOURCES))
+endif

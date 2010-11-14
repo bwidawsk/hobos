@@ -1,4 +1,4 @@
-SOURCES=main.c noarch.c console.c mutex.c bs_commands.c vers.c
+SOURCES=main.c noarch.c console.c mutex.c bs_commands.c
 OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=core.a
 
@@ -9,12 +9,18 @@ CFLAGS+=-I../../common/include
 	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
 
-$(OUTPUT) : $(OBJS)
+.PHONY: vers.o
+vers.o:
+
+$(OUTPUT) : $(OBJS) vers.o
 	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
 
 .PHONY : clean
 clean :
 	-rm *.d
+	-rm vers.o
 	-rm $(OUTPUT) $(OBJS)
 
-include $(subst .c,.d,$(SOURCES))
+ifneq ($(MAKECMDGOALS),clean)
+	include $(subst .c,.d,$(SOURCES))
+endif

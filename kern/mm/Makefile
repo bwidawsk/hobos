@@ -18,4 +18,6 @@ clean :
 	-rm *.d
 	-rm $(OUTPUT) $(OBJS) $(DEPS)
 
-include $(subst .c,.d,$(SOURCES))
+ifneq ($(MAKECMDGOALS),clean)
+	include $(subst .c,.d,$(SOURCES))
+endif
