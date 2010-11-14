@@ -61,6 +61,7 @@ default_handler:
 	movq %rsp, %rdi ;\
 	callq dflt_c_handler ;\
 	subq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
+	UNSTORE_ALL_REGS ;\
 	iretq
 
 IDTVEC(T_DIVIDE_FAULT)
