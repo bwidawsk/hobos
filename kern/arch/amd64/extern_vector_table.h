@@ -459,5 +459,5 @@ idtvec external_idt_vectors[] = {
 	IDTVEC(irq_vector_255)
 };
 #else
-#error can't include this file twice
+#error cant include this file twice
 #endif

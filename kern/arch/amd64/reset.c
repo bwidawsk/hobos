@@ -10,12 +10,13 @@
  * should be considered the backup. I believe a better way is to force the
  * triple fault.
  */
+#ifdef RESET_WITH_8042
 static void *
 keyboard_controller_reset() {
 	outb(0xFE, 0x64);
-	return 0;
+	return NULL;
 }
-
+#endif
 static void
 reset_cmd_help() {
 	printf("Reset the damn thing\n");
@@ -32,7 +33,7 @@ zero_length_idt_reset() {
 	};
 	lidt((void *)&idtr);
 	__asm__ volatile ("int $0");
-	
+	return NULL;	
 }
 
 /* Hook this into our debugger */

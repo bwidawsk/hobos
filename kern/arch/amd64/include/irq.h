@@ -124,6 +124,7 @@ struct idt_descriptor{
 	}while(0);
 
 void arch_setup_irq(int vector);
+void arch_release_irq(int vector);
 	
 #endif
 #endif

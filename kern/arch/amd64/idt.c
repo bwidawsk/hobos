@@ -6,8 +6,6 @@
 
 struct idt_entry idt[MAX_IDT_ENTRIES];
 
-MUTEX_DECLARE(irq_vector_mtx);
-
 uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
 /* TODO:
@@ -54,4 +52,9 @@ setup_exception_handlers() {
 void
 arch_setup_irq(int vector) {
 	SET_IDT_INTR(IRQ_EXTERNAL + vector, external_idt_vectors[vector]);
+}
+
+void
+arch_release_irq(int vector) {
+	SET_IDT_INTR(IRQ_EXTERNAL + vector, generic_handler);
 }

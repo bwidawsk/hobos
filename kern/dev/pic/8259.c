@@ -173,7 +173,9 @@ static void *
 pic8259_dump(int argc, char *argv[]) {
 	pic8259_print_irrs();
 	pic8259_print_isrs();
+	return NULL;
 }
+void
 pic8259_help() {
 	printf("Dump 8259 state\n");
 }

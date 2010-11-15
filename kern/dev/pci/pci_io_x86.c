@@ -21,7 +21,6 @@ uint16_t x86_io_pci_read16(bdfo_t bdfo) {
 	outl((1 << 31) | (bdfo), 0xcf8);
 	return inw(0xCFC);
 #else
-	uint16_t ret;
 	uint32_t temp = x86_io_pci_read32(bdfo & 0xFFFFFFFC);
 	return (temp >> ((bdfo & 3) * 8));
 #endif
