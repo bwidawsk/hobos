@@ -56,10 +56,11 @@
 	PIT_RELOAD_WRITE(timeout)
 
 #define PIT_IRQ 0
-
+volatile uint64_t pit_ticks = 0;
 int
 pit_timer_irq(void *data) {
 	printf("timer interrupt\n");
+	atomic_add_64(&pit_ticks, 1);
 	return 0;
 }
 
@@ -79,4 +80,5 @@ pit_test() {
 	PIT_SETUP_ONESHOT(1);
 	printf("now = %d\n", nums[2]);
 	printf("now = %d\n", nums[3]);
+	printf("pit_ticks = %d", pit_ticks);
 }

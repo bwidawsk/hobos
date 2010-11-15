@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <arch/irq.h>
 
+/* Currently hardcoded to use 8259 */
+
 // TODO: make this dynamic allocation
 typedef int (*irq_handler)(void *);
 irq_handler handlers[16] = {0};
