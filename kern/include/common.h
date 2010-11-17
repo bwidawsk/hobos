@@ -74,6 +74,7 @@
 
 #ifndef ASM_FILE
 extern int printf(const char *fmt, ...);
+extern volatile unsigned long ticks;
 #endif
 
 #endif

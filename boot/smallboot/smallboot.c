@@ -402,11 +402,9 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	__asm__ volatile("movl	%%esp, %0;" : "=r" (current_esp));
 	ASSERT(current_esp > 0x1000 && current_esp < 0x9f000);
 	__asm__ volatile(
-		"movl %0, %%eax;"
-		"lea %2, %%ebx;"
 		"call %1"
 		:
-		: "g" (MULTIBOOT_BOOTLOADER_MAGIC), "c" (kernel_entry), "g" (mboot_info));
+		: "a" (MULTIBOOT_BOOTLOADER_MAGIC), "g" (kernel_entry), "b" (&mboot_info));
 	return 0;
 }
 

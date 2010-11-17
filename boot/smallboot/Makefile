@@ -1,5 +1,6 @@
 TARGET?=i386
-CFLAGS=-ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -I../../common/include -I../../common/include/${TARGET}
+CFLAGS=-m32 -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -I../../common/include -I../../common/include/${TARGET}
+ASFLAGS=--32
 
 ifdef DEBUG
 CFLAGOPTS+=-DDEBUG -g -O0
@@ -26,6 +27,9 @@ smallboot.img : $(OBJECTS)
 
 smallboot.lst16 : smallboot.img
 	objdump --disassemble -mi8086 $<.elf
+
+smallboot.lst32 : smallboot.img
+	objdump --disassemble -mi386 $<.elf
 
 clean:
 	rm -f $(OBJECTS)
