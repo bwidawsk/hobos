@@ -2,6 +2,7 @@
 *.d
 *.o
 *.gch
+tags
 bochs/bochsimg
 bochs/bochsout.txt
 bochs/debugger.out
