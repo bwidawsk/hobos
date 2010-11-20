@@ -11,4 +11,5 @@ $(OUTPUT) :
 
 .PHONY : clean
 clean :
+	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done
