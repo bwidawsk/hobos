@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <arch/asm.h>
 #include <arch/irq.h>
+#include <timer.h>
 
 #ifdef ONLY_8253
 #error No 8253 support because of access mode
@@ -57,13 +58,18 @@
 
 #define PIT_IRQ 0
 volatile uint64_t pit_ticks = 0;
+
+void
+pit_init(struct timer_driver *me) {
+	me->irq = PIT_IRQ;
+}
+
+#if 0
 int
 pit_timer_irq(void *data) {
-	printf("timer interrupt\n");
 	atomic_add_64(&pit_ticks, 1);
 	return 0;
 }
-
 void
 pit_test() {
 	register_irq(0, pit_timer_irq, 0);
@@ -82,3 +88,6 @@ pit_test() {
 	printf("now = %d\n", nums[3]);
 	printf("pit_ticks = %d", pit_ticks);
 }
+#endif
+
+TIMER_DECLARE(pit8254, pit_init);

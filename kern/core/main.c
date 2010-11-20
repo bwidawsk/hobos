@@ -41,7 +41,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	
 	// platform_enumeration()
 	pic8259_init(3);
-	pit_test();
+	timer_init();
 	__asm__ volatile("ud2");
 
 	while(1) {
