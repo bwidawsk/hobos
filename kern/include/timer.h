@@ -19,6 +19,8 @@
 struct timer_driver {
 	char *name;
 	void (*init)(struct timer_driver *);
+	int (*set_oneshot)(struct timer_driver *, uint64_t usec);
+	int (*set_periodic)(struct timer_driver *, uint64_t usec_period);
 	int irq;
 };
 

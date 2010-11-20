@@ -28,8 +28,6 @@ register_irq(int vector, int (*handler)(void *), void *data) {
 	handlers[vector] = handler;
 	handler_data[vector] = data;
 	arch_setup_irq(vector);
-	// set the pic mask
-	pic8259_unmask(vector);
 	return 0;
 }
 
