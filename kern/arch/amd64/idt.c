@@ -29,12 +29,16 @@ dflt_c_handler(struct trap_frame64 *tf) {
 
 extern void (*generic_handler)();
 
+#include "extern_vector_table.h"
 void
 setup_exception_handlers() {
 	int i;
 	for( i = 0; i < MAX_IDT_ENTRIES; i++) {
 		// set up a known handler for every entry to help debugging
 		SET_IDT_INTR(i, &generic_handler);
+		//if (i > 31)
+		//	SET_IDT_INTR(i, external_idt_vectors[i - 32]);
+		
 	}
 
 	// Set the default vectors which we actually care about
@@ -48,7 +52,6 @@ setup_exception_handlers() {
 	lidt((void *)&idtr);
 }
 
-#include "extern_vector_table.h"
 void
 arch_setup_irq(int vector) {
 	SET_IDT_INTR(IRQ_EXTERNAL + vector, external_idt_vectors[vector]);

@@ -66,7 +66,7 @@ pic8259_mask(uint8_t irq) {
 		which_data_port = MASTER_DATA_PORT;
 		which_cmd_port = MASTER_CMD_PORT;
 	}
-	uint8_t current_mask = inb(which_data_port);
+	volatile uint8_t current_mask = inb(which_data_port);
 	current_mask |= (1 << (irq %8));
 	outb(current_mask, which_data_port);
 	outb(PIC8259_OCW2_NOP, which_cmd_port);
@@ -91,9 +91,21 @@ pic8259_unmask(uint8_t irq) {
 	outb(PIC8259_OCW2_NOP, which_cmd_port);
 	outb(PIC8259_OCW3_NOP, which_cmd_port);
 }
+static int
+master_spurious(void *data) {
+	printf("master spurious\n");
+	return 0;
+}
+
+static int
+slave_spurious(void *data) {
+	printf("slave spurious\n");
+	return 0;
+}
 
 void
 pic8259_init(enum which_8259 which ) {
+	int i;
 	if (which & PIC8259_MASTER) {
 		// Start the initialization sequence
 		outb(PIC8259_ICW1_DEFAULT, MASTER_CMD_PORT);
@@ -107,8 +119,10 @@ pic8259_init(enum which_8259 which ) {
 
 		//8086 mode with no aeoi	
 		outb(PIC8259_ICW4_8086, MASTER_DATA_PORT);
-
+		for(i = 0; i < 8; i++)
+			pic8259_mask(i);
 		master_inited = 1;
+		register_irq(7, master_spurious, NULL);
 	}	
 	
 	if (which & PIC8259_SLAVE) {
@@ -125,7 +139,10 @@ pic8259_init(enum which_8259 which ) {
 		//8086 mode with no aeoi	
 		outb(PIC8259_ICW4_8086, SLAVE_DATA_PORT);
 
+		for(i = 8; i < 16; i++)
+			pic8259_mask(i);
 		slave_inited = 1;
+		register_irq(15, slave_spurious, NULL);
 	}
 }
 

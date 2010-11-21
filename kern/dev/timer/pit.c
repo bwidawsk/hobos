@@ -8,6 +8,8 @@
 #endif
 
 #define PIT_OSC_FREQ 1193182
+#define PIT_MAX_DIVISOR 65535
+#define PIT_MAX_USECS ((65535 * 1000000) / 1193182)
 #define PIT_MINIMUM_NS 838 /* (1/1193182) */
 #define PIT_MAX_ONESHOT (838 * 65535) /* roughly .05 seconds */
 #define PIT_BCD_MODE_OFF 0
@@ -36,6 +38,7 @@
 #define PIT_CHAN_BOTH (3 << PIT_CHAN_OFF)
 
 #define PIT_ONESHOT  (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE0 | PIT_16BIT_MODE)
+#define PIT_PERIODIC (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE2 | PIT_16BIT_MODE)
 
 #define PIT_DATA_PORT 0x40
 #define PIT_CMD_PORT 0x43
@@ -56,12 +59,35 @@
 	PIT_CMD_WRITE(PIT_ONESHOT); \
 	PIT_RELOAD_WRITE(timeout)
 
-#define PIT_IRQ 0
-volatile uint64_t pit_ticks = 0;
+#define PIT_SETUP_PERIODIC(divisor) \
+	PIT_CMD_WRITE(PIT_PERIODIC); \
+	PIT_RELOAD_WRITE(divisor)
 
-void
-pit_init(struct timer_driver *me) {
+#define PIT_IRQ 0
+static int set_periodic(struct timer *me, uint64_t timeout_usecs);
+
+static void
+pit_init(struct timer *me) {
 	me->irq = PIT_IRQ;
+	me->set_periodic = set_periodic;
+}
+
+static int 
+set_oneshot(struct timer *me, uint64_t timeout_usecs) {
+	return 0;
+}
+
+static 
+int set_periodic(struct timer *me, uint64_t timeout_usecs) {
+	if (timeout_usecs > PIT_MAX_USECS)
+		return 1;
+
+	// There appears to be some issue when using bochs if usecs is too low
+	// because arg is in usecs, hz is relative to 1000000
+	uint32_t hz = 1000000 / timeout_usecs;
+	uint16_t divisor = PIT_OSC_FREQ / hz;
+	PIT_SETUP_PERIODIC(divisor);
+	return 0;
 }
 
 #if 0

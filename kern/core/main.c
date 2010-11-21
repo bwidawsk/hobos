@@ -7,6 +7,7 @@
 #include <multiboot.h>
 #include <noarch.h>
 #include <thread.h>
+#include <timer.h>
 
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
@@ -18,8 +19,9 @@ struct thread first_thread = {
 extern char version[];
 
 /* FIXME: remove these */
-extern void pit_test();
 extern void pic8259_init(int);
+extern volatile uint64_t ttick;
+
 
 /*
  * Machine independent beginning. The machine dependent code can optionally
@@ -42,6 +44,15 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// platform_enumeration()
 	pic8259_init(3);
 	timer_init();
+	// set up a tickrate for 100HZ
+	set_system_timer(HZ_TO_USECS(100));
+
+	// TODO: replace this with timer API code
+	pic8259_unmask(0);
+
+	__asm__ volatile("sti");
+	printf("waiting 2 seconds\n");
+	timed_delay(2000000);
 	__asm__ volatile("ud2");
 
 	while(1) {

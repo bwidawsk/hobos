@@ -12,9 +12,9 @@ void *handler_data[16] = {0};
 void 
 generic_c_handler(uint64_t vector) {
 	KASSERT(vector != -1, ("No handler for interrupt\n"));
-	printf("vector = %d\n", vector);
-	pic8259_print_irrs();
-	pic8259_print_isrs();
+//	printf("vector = %d\n", vector);
+//	pic8259_print_irrs();
+//	pic8259_print_isrs();
 	handlers[vector](handler_data[vector]);
 	pic8259_eoi(vector);
 	return;
