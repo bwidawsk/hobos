@@ -40,10 +40,15 @@ include_clean : include/common.h
 tags :
 	ctags -R .
 
+.PHONY : picocom
+picocom :
+	sudo picocom -b 115200 -i -r /dev/ttyp9 -c
+
 help :
 	@echo "Available targets: "
 	@echo " all (default)"
 	@echo " tags"
+	@echo " picocom"
 	@echo " clean"
 	@echo "Variables which you may want to change: "
 	@echo " CC default: $(CC)"

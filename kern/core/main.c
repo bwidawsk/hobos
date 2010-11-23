@@ -36,8 +36,6 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	printf("Link time = %s\n", version);
 	//printf("%p\n", this_thread());
 	//printf("%s\n", this_thread()->debug);
-	// platform extended features
-	// set gsbase
 	
 	// interrupt setup (needed for when we enumerate)
 	
@@ -51,8 +49,8 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	pic8259_unmask(0);
 
 	__asm__ volatile("sti");
-	printf("waiting 2 seconds\n");
-	timed_delay(2000000);
+	printf("waiting 5 seconds\n");
+	timed_delay(5000000);
 	__asm__ volatile("ud2");
 
 	while(1) {

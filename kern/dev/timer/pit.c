@@ -3,13 +3,11 @@
 #include <arch/irq.h>
 #include <timer.h>
 
-#ifdef ONLY_8253
-#error No 8253 support because of access mode
-#endif
-
 #define PIT_OSC_FREQ 1193182
 #define PIT_MAX_DIVISOR 65535
-#define PIT_MAX_USECS ((65535 * 1000000) / 1193182)
+// preprocessor doesn't seem to like the math for some reason
+//#define PIT_MAX_USECS ((PIT_MAX_DIVISOR * 1000000) / PIT_OSC_FREQ)
+#define PIT_MAX_USECS  54924
 #define PIT_MINIMUM_NS 838 /* (1/1193182) */
 #define PIT_MAX_ONESHOT (838 * 65535) /* roughly .05 seconds */
 #define PIT_BCD_MODE_OFF 0
@@ -37,23 +35,20 @@
 #define PIT_CHAN2 (2 << PIT_CHAN_OFF)
 #define PIT_CHAN_BOTH (3 << PIT_CHAN_OFF)
 
-#define PIT_ONESHOT  (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE0 | PIT_16BIT_MODE)
-#define PIT_PERIODIC (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE2 | PIT_16BIT_MODE)
-
 #define PIT_DATA_PORT 0x40
 #define PIT_CMD_PORT 0x43
 #define PIT_CMD_WRITE(u8) outb((uint8_t)u8, PIT_CMD_PORT)
 #define PIT_DATA_WRITE(u8) outb((uint8_t)u8, PIT_DATA_PORT)
 #define PIT_DATA_READ inb(PIT_DATA_PORT)
 
-// TODO: This would differ for 8253
-#define PIT_RELOAD_WRITE(u16) \
-	PIT_DATA_WRITE(u16 & 0xFF); \
-	PIT_DATA_WRITE(u16 >> 8)
+#define PIT_IRQ 0
+#ifndef ONLY_8253
+#define PIT_ONESHOT  (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE0 | PIT_16BIT_MODE)
+#define PIT_PERIODIC (PIT_CHAN0 | PIT_ACC_BOTH | PIT_MODE2 | PIT_16BIT_MODE)
 
-#define PIT_READ_CURRENT \
-	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH) \
-	((uint16_t)PIT_DATA_READ | (PIT_DATA_READ << 8))
+#define PIT_RELOAD_WRITE(u16) \
+	PIT_DATA_WRITE((uint8_t)((uint16_t)u16) & 0xFF); \
+	PIT_DATA_WRITE((((uint16_t)u16) >> 8) & 0xff)
 
 #define PIT_SETUP_ONESHOT(timeout) \
 	PIT_CMD_WRITE(PIT_ONESHOT); \
@@ -63,7 +58,23 @@
 	PIT_CMD_WRITE(PIT_PERIODIC); \
 	PIT_RELOAD_WRITE(divisor)
 
-#define PIT_IRQ 0
+#else
+#warning 8253 mode is untested
+static inline
+void PIT_SETUP_PERIODIC(uint16_t divisor) {
+	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LO | PIT_MODE2 | PIT_16BIT_MODE);
+	PIT_DATA_WRITE((uint8_t)divisor & 0xff);
+	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_HI | PIT_MODE2 | PIT_16BIT_MODE);
+	PIT_DATA_WRITE((uint8_t)divisor >> 8);
+}
+#endif
+
+static inline
+uint16_t PIT_READ_CURRENT() {
+	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH); 
+	return ((uint16_t)PIT_DATA_READ | (PIT_DATA_READ << 8));
+}
+
 static int set_periodic(struct timer *me, uint64_t timeout_usecs);
 
 static void
