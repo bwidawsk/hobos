@@ -1,6 +1,4 @@
 #include <stdint.h>
-#include <mm/page.h>
-#include <mm/page_allocator.h>
 #include <mm/malloc.h>
 #include <console.h>
 #include <mutex.h>
@@ -49,6 +47,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	pic8259_unmask(0);
 
 	__asm__ volatile("sti");
+	ata_scan_devs();
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
 	__asm__ volatile("ud2");

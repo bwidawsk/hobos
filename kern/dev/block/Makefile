@@ -1,4 +1,4 @@
-SOURCES= ata_block.c
+SOURCES= ata_block.c ata_io.c
 OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=block.a
 
