@@ -50,6 +50,10 @@ timed_delay(uint64_t timeout_usec) {
 
 	uint64_t start = ttick;
 	uint64_t end_tick = ((timer_hz * timeout_usec) / 1000000) + start;
+
+	if (end_tick == start)
+		end_tick++;
+
 	while(ttick < end_tick)
 		arch_pause();
 
