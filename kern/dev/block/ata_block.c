@@ -20,6 +20,22 @@ ata_read_status(struct ata_channel *ata) {
 	return (uint8_t)ata->read_port8(ata, ATA_STS_OFF);
 }
 
+uint8_t
+ata_wait_for(struct ata_channel *ata, uint8_t mask) {
+	volatile uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while((status & mask) == 0);
+}
+
+uint8_t
+ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while((status & mask));
+}
+
 void
 ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
 	// wait until DRQ and BSY are 0 before submitting a new command
@@ -29,6 +45,7 @@ ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
 	} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
 	ata->write_port8(ata, ATA_DEV_OFF, devdata);
 }
+
 void
 ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd) {
 	if (cmd != ATA_CMD_DEVICE_RESET) {
@@ -45,8 +62,8 @@ static void
 dump_identity(struct ata_channel *ata) {
 	int size = sizeof(struct ata_identify_data) / 2;
 	int i;
-	for(i = 0; i < (size / 8); i+=8) {
-		printf("%x %x %x %x %x %x %x %x\n",
+	for(i = 0; i < size; i+=8) {
+		printf("%04x %04x %04x %04x %04x %04x %04x %04x\n",
 			((uint16_t *)ata->identify_data)[i],
 			((uint16_t *)ata->identify_data)[i+1],
 			((uint16_t *)ata->identify_data)[i+2],
@@ -86,11 +103,44 @@ ata_do_identify(struct ata_channel *ata) {
 		ata->identify_data = malloc(sizeof(struct ata_identify_data));
 	}
 
+	// OSDev says use a0 and b0, but bochs doesn't like it
+	//ata_write_dev(ata, 0xa0 | ata->devid);
 	ata_write_dev(ata, ata->devid);
 
+	ata->write_port8(ata, ATA_SECTCOUNT_OFF, 0);
+	ata->write_port8(ata, ATA_LBAL_OFF, 0);
+	ata->write_port8(ata, ATA_LBAM_OFF, 0);
+	ata->write_port8(ata, ATA_LBAH_OFF, 0);
+
 	// Wait for DRDY to issue the identify command
-	while(!(ata_read_status(ata) & ATA_STS_DRDY));
+	ata_wait_for(ata, ATA_STS_DRDY);
+
 	ata_write_cmd(ata, ATA_CMD_IDENTIFY);
+
+	uint8_t status = 0;
+	status = ata_read_status(ata);
+	if (status == 0)
+		printf("HELP, device doesn't exist?");
+
+	// Wait until no longer busy
+	ata_wait_clear(ata, ATA_STS_BSY);
+
+	// According to OSDev, we need to check LBAM and LBAH for some older packet devices
+	if (ata->read_port8(ata, ATA_LBAM_OFF) || ata->read_port8(ata, ATA_LBAH_OFF))
+		printf("HELP, device isn't ATA?");
+
+	uint8_t error;
+	while(1) {
+		status = ata_read_status(ata);
+		if (status & ATA_STS_DRQ)
+			break;
+		error = ata->read_port8(ata, ATA_ERROR_OFF);
+		// TODO: why do this?
+		if (error & 1) {
+			printf("Bad again\n");
+			break;
+		}
+	}
 
 	// size is in words, so divide by 2
 	ata_pio_read(ata, (uint8_t *)ata->identify_data, sizeof(struct ata_identify_data) / 2);
@@ -201,8 +251,9 @@ ata_scan_devs() {
 		if (!(status & ATA_STS_BSY || status & ATA_STS_DRDY))
 			ata_channels[i].disabled = 1;
 		else {
-			printf("found ata channel %d, status = %x, PCI = (%d, %d, %d)\n", i, status,
+			printf("identifying ATA channel %d, status = %x, PCI = (%d, %d, %d)\n", ata_channels[i].devid, status,
 				ata_channels[i].bus, ata_channels[i].dev, ata_channels[i].func);
+			ata_channels[i].write_port8(&ata_channels[i], ATA_CTRL_OFF, ATA_CTRL_nIEN);
 			ata_do_identify(&ata_channels[i]);
 			dump_identity(&ata_channels[i]);
 		}
