@@ -84,24 +84,24 @@ struct ata_identify_data {
 /* Below created with ATA7 spec as reference */
 
 /* Register offsets for !PACKET command feature set */
-#define ATA_DATA_OFF 0
-#define ATA_ERROR_OFF 1
-#define ATA_FEATURES_OFF 1
-#define ATA_SECTCOUNT_OFF 2
-#define ATA_LBAL_OFF 3
-#define ATA_LBAM_OFF 4
-#define ATA_LBAH_OFF 5
-#define ATA_DEV_OFF 6
-#define ATA_STS_OFF 7
-#define ATA_CMD_OFF 7
+#define ATA_DATA_REG 0
+#define ATA_ERROR_REG 1
+#define ATA_FEATURES_REG 1
+#define ATA_SECTCOUNT_REG 2
+#define ATA_LBAL_REG 3
+#define ATA_LBAM_REG 4
+#define ATA_LBAH_REG 5
+#define ATA_DEV_REG 6
+#define ATA_STS_REG 7
+#define ATA_CMD_REG 7
 #define ATA_CMD_MAX 7
-#define ATA_ASTS_OFF (2 + ATA_CMD_MAX)
-#define ATA_CTRL_OFF (2 + ATA_CMD_MAX)
+#define ATA_ASTS_REG (2 + ATA_CMD_MAX)
+#define ATA_CTRL_REG (2 + ATA_CMD_MAX)
 /* PACKET command feature set */
-#define ATA_INTY_OFF 2
-#define ATA_BCL_OFF 4
-#define ATA_BCH_OFF 5
-#define ATA_DEVSEL_OFF 6
+#define ATA_INTY_REG 2
+#define ATA_BCL_REG 4
+#define ATA_BCH_REG 5
+#define ATA_DEVSEL_REG 6
 
 
 /* Bitfields */

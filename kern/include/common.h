@@ -34,7 +34,7 @@
 #define ROUND_UP(x, base) 		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
 #define ROUND_DOWN(x, base) 	(((x) / (base)) * (base)) 
 #define IS_POW2(x) (!(x & (x-1)))
-
+#define INITSECTION  __attribute__ ((section ("initonly") ))
 /* CompileTimeLIST
  * I borrowed part of this implementation from FreeBSD, but it's a generic OS 
  * trick thing used in Linux as well.

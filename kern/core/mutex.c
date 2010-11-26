@@ -6,12 +6,12 @@
 
 void 
 mutex_acquire(struct mutex *mtx) {
-	while(!atomic_cmpxchg_64(&mtx->owner, 0, curthread)) {
+	while(!atomic_cmpxchg_64(&mtx->mutex_owner, 0, curthread)) {
 	
 	}
 }
 
 void 
 mutex_release(struct mutex *mtx) {
-	KASSERT((atomic_cmpxchg_64(&mtx->owner, curthread, 0)) == 1, (""));
+	KASSERT((atomic_cmpxchg_64(&mtx->mutex_owner, curthread, 0)) == 1, (""));
 }

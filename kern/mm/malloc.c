@@ -30,7 +30,7 @@ simple_free(uint64_t addr) {
 	KASSERT(malloc_inited != 0, ("Malloc not inited"));
 	KASSERT((addr & PAGE_OFFSET_MASK) == 0, ());
 
-	void *va = vaddr_to_paddr(addr);	
+	void *va = vaddr_to_paddr((void *)addr);
 
 	// TODO: 64 bit hardcode
 	uint64_t free_addr = (uint64_t)va;

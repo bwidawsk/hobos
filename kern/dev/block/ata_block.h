@@ -1,7 +1,8 @@
-#ifndef __ATA_H__
-#define __ATA_H__
+#ifndef __ATA_BLOCK_H__
+#define __ATA_BLOCK_H__
 
 struct ata_channel {
+	struct mutex *chan_mtx;
 	struct ide_bus *idebus;
 	uint8_t (*read_port8)(struct ata_channel *ata, uint8_t which);
 	uint16_t (*read_port16)(struct ata_channel *ata, uint8_t which);
@@ -9,6 +10,7 @@ struct ata_channel {
 	void (*write_port16)(struct ata_channel *ata, uint8_t which, uint16_t data);
 	int id;
 	uint8_t devid;
+	uint8_t devreg;
 	uint64_t ata_cmd_base;
 	uint64_t ata_ctrl_base;
 	uint64_t ata_busm_base;
@@ -25,6 +27,7 @@ struct ata_channel {
 struct ide_bus {
 	//Needed? struct ata_channel **
 	struct ata_channel *current_dev;
+	struct mutex *ide_bus_mtx;
 };
 
 void ata_scan_devs(void);
