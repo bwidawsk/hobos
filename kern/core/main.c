@@ -6,6 +6,7 @@
 #include <noarch.h>
 #include <thread.h>
 #include <timer.h>
+#include <dev/block/ata_block.h> // ata_scan_devs, TODO: remove?
 
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
@@ -36,16 +37,15 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	//printf("%s\n", this_thread()->debug);
 	
 	// interrupt setup (needed for when we enumerate)
-	
-	// platform_enumeration()
+	// TODO: abstract PIC
 	pic8259_init(3);
 	timer_init();
 	// set up a tickrate for 100HZ
 	set_system_timer(HZ_TO_USECS(100));
 
-	// TODO: replace this with timer API code
 	pic8259_unmask(0);
 
+	// TODO abstract sti
 	__asm__ volatile("sti");
 	ata_scan_devs();
 	printf("waiting 5 seconds\n");

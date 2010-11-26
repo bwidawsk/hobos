@@ -3,7 +3,7 @@ SOURCES+=vers.c
 OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=core.a
 
-CFLAGS+=-I../../common/include
+CFLAGS+=-I../../common/include -I..
 
 %.d: %.c
 	$(CC) -M $(CFLAGS) $< > $@.$$$$;                  \

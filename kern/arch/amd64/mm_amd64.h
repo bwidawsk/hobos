@@ -35,7 +35,7 @@ extern void *va_base;
 	((uint64_t)va - DMAP_BASE)
 
 #define VA_IN_DMAP(va) \
-	((va >= DMAP_BASE) && (va < DMAP_TOP))
+	((((uint64_t)va) >= DMAP_BASE) && (((uint64_t)va) < DMAP_TOP))
 
 #define VA_TO_PTE(va) (pdpte_t *) \
 	(KVADDR(RECURSIVE_PML, 0, 0, 0) + \

@@ -1,6 +1,7 @@
 #include <stdint.h>
+#include <interrupt.h> // request_irq
 #include <arch/asm.h>
-#include <atomic_generic.h>
+#include <arch/atomic.h>
 
 #define MASTER_CMD_PORT 0x20
 #define MASTER_DATA_PORT 0x21

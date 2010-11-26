@@ -1,5 +1,8 @@
 #include <stdint.h>
+#include <interrupt.h>
 #include <timer.h>
+#include <noarch.h> // arch_pause
+#include <arch/atomic.h> // atomic_add_64
 
 TIMER_CREATE_LIST;
 
@@ -9,11 +12,12 @@ static uint64_t timer_hz = 0;
 volatile uint64_t ttick = 0;
 
 int
-periodic_timer_tick(struct timer *timer) {
+periodic_timer_tick(void *data) {
 	atomic_add_64(&ttick, 1);
+	return INTERRUPT_SERVICED;
 }
 
-void
+void INITSECTION
 timer_init() {
 	int throwaway = 0;
 	struct timer *timer;

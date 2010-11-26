@@ -217,6 +217,8 @@ change_pages_and_jump(void (*func)) {
 	//stack_va = halloc(PAGE_SIZE);
 	temp = primary_allocator->get_page(primary_allocator);
 	stack_va = (void *)DMAP_XLATE_PA((void *)PAGE_TO_VAL(temp));
+
+	// We're going to put our thread struct at the top of the stack
 	stack_va -= sizeof(struct thread *);
 	
 	__asm__ volatile (

@@ -2,12 +2,13 @@
 #include <dev/pci/pci_access.h>
 #include <mm/malloc.h>
 #include <mutex.h>
+#include <timer.h> // timed_delay
 #include "ata.h"
 
 static void ata_dump_identity(struct ata_channel *ata);
 static uint8_t ata_read_status(struct ata_channel *ata);
-static uint8_t ata_wait_for(struct ata_channel *ata, uint8_t mask);
-static uint8_t ata_wait_clear(struct ata_channel *ata, uint8_t mask);
+static void ata_wait_for(struct ata_channel *ata, uint8_t mask);
+static void ata_wait_clear(struct ata_channel *ata, uint8_t mask);
 static void ata_write_dev(struct ata_channel *ata, uint8_t devdata);
 static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd);
 static void possibly_update_dev(struct ata_channel *ata, uint8_t val);
@@ -63,6 +64,8 @@ ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t coun
 	if (count > 256) {
 		printf("Count > 256 sectors is not yet supported\n");
 	}
+
+	return 0;
 }
 
 static void
@@ -111,7 +114,7 @@ ata_do_identify(struct ata_channel *ata) {
 	}
 
 	// size is in words, so divide by 2
-	ata_pio_read(ata, (uint8_t *)ata->identify_data, sizeof(struct ata_identify_data) / 2);
+	ata_pio_read(ata, (uint16_t *)ata->identify_data, sizeof(struct ata_identify_data) / 2);
 }
 
 /* Helper function for scan devs */
@@ -165,8 +168,8 @@ initialize_channel(struct ata_channel *ata) {
 		// status above called possible_update_dev()
 		ata->write_port8(ata, ATA_CTRL_REG, ATA_CTRL_nIEN);
 		ata_do_identify(ata);
-		uint32_t total_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
-		uint32_t logical_sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
+		//uint32_t total_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
+		//uint32_t logical_sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
 	}
 }
 
@@ -203,7 +206,7 @@ ata_scan_devs() {
 		// but it's probably a good idea to do it before
 		ata_setup_bus(ata->idebus);
 	}
-	free(temp);
+	free((void *)temp);
 }
 
 /* val is all bits except the device ID */
@@ -230,7 +233,7 @@ ata_read_status(struct ata_channel *ata) {
 	return (uint8_t)ata->read_port8(ata, ATA_STS_REG);
 }
 
-static uint8_t
+static void
 ata_wait_for(struct ata_channel *ata, uint8_t mask) {
 	volatile uint8_t status;
 	possibly_update_dev(ata, ATA_DEV_BITS);
@@ -239,7 +242,7 @@ ata_wait_for(struct ata_channel *ata, uint8_t mask) {
 	} while((status & mask) == 0);
 }
 
-static uint8_t
+static void
 ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
 	uint8_t status;
 	possibly_update_dev(ata, ATA_DEV_BITS);

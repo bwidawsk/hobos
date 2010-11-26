@@ -27,4 +27,8 @@ struct timer {
 	int irq;
 };
 
+void INITSECTION timer_init();
+void set_system_timer(uint64_t timeout_usec);
+void timed_delay(uint64_t timeout_usec);
+
 #endif
