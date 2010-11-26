@@ -1,81 +1,35 @@
 #include <stdint.h>
 #include <dev/pci/pci_access.h>
 #include <mm/malloc.h>
-#include "block.h"
 #include "ata.h"
+
+static void ata_dump_identity(struct ata_channel *ata);
+static uint8_t ata_read_status(struct ata_channel *ata);
+static uint8_t ata_wait_for(struct ata_channel *ata, uint8_t mask);
+static uint8_t ata_wait_clear(struct ata_channel *ata, uint8_t mask);
+static void ata_write_dev(struct ata_channel *ata, uint8_t devdata);
+static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd);
+static void possibly_update_dev(struct ata_channel *ata);
 
 extern uint8_t ata_read8_io(struct ata_channel *ata, uint8_t which);
 extern uint16_t ata_read16_io(struct ata_channel *ata, uint8_t which);
 extern void ata_write8_io(struct ata_channel *ata, uint8_t which, uint8_t data);
 extern void ata_write16_io(struct ata_channel *ata, uint8_t which, uint16_t data); 
 
-/* Preallocate 6 channels */
-static struct ata_channel ata_channels[6];
+#define MAX_CHANNEL 5
+static struct ata_channel ata_channels[MAX_CHANNEL + 1];
+static struct ide_bus ide_busses[(MAX_CHANNEL + 1) / 2];
 static int total_channel = 0;
 
-uint8_t
-ata_read_status(struct ata_channel *ata) {
-	// TODO we don't need to delay the first time
-	timed_delay(1);
-	return (uint8_t)ata->read_port8(ata, ATA_STS_OFF);
+alloc_ata_dev() {
+	KASSERT(total_channel < MAX_CHANNEL, ("not enough channel structures\n"));
+	ata_channels[total_channel].id = total_channel;
+	ata_channels[total_channel].idebus = &ide_busses[total_channel / 2];
+	total_channel++;
+	return &ata_channels[total_channel-1];
 }
 
-uint8_t
-ata_wait_for(struct ata_channel *ata, uint8_t mask) {
-	volatile uint8_t status;
-	do {
-		status = ata_read_status(ata);
-	} while((status & mask) == 0);
-}
-
-uint8_t
-ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
-	uint8_t status;
-	do {
-		status = ata_read_status(ata);
-	} while((status & mask));
-}
-
-void
-ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
-	// wait until DRQ and BSY are 0 before submitting a new command
-	uint8_t status ;
-	do {
-		status= ata_read_status(ata);
-	} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
-	ata->write_port8(ata, ATA_DEV_OFF, devdata);
-}
-
-void
-ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd) {
-	if (cmd != ATA_CMD_DEVICE_RESET) {
-		// wait until DRQ and BSY are 0 before submitting a new command
-		uint8_t status ;
-		do {
-			status= ata_read_status(ata);
-		} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
-	}
-	ata->write_port8(ata, ATA_CMD_OFF, cmd);
-}
-
-static void
-dump_identity(struct ata_channel *ata) {
-	int size = sizeof(struct ata_identify_data) / 2;
-	int i;
-	for(i = 0; i < size; i+=8) {
-		printf("%04x %04x %04x %04x %04x %04x %04x %04x\n",
-			((uint16_t *)ata->identify_data)[i],
-			((uint16_t *)ata->identify_data)[i+1],
-			((uint16_t *)ata->identify_data)[i+2],
-			((uint16_t *)ata->identify_data)[i+3],
-			((uint16_t *)ata->identify_data)[i+4],
-			((uint16_t *)ata->identify_data)[i+5],
-			((uint16_t *)ata->identify_data)[i+6],
-			((uint16_t *)ata->identify_data)[i+7]);
-	}
-}
-
-int
+static int
 ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 	volatile uint8_t status;
 	while(words) {
@@ -95,7 +49,14 @@ ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 	return 0;
 }
 
-void
+int
+ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t count) {
+	if (count > 256) {
+		printf("Count > 256 sectors is not yet supported\n");
+	}
+}
+
+static void
 ata_do_identify(struct ata_channel *ata) {
 	if (ata->identify_data != NULL) {
 		printf("Warning, identify was already executed on ATA channel %d\n", ata->id);
@@ -105,7 +66,7 @@ ata_do_identify(struct ata_channel *ata) {
 
 	// OSDev says use a0 and b0, but bochs doesn't like it
 	//ata_write_dev(ata, 0xa0 | ata->devid);
-	ata_write_dev(ata, ata->devid);
+	possibly_update_dev(ata);
 
 	ata->write_port8(ata, ATA_SECTCOUNT_OFF, 0);
 	ata->write_port8(ata, ATA_LBAL_OFF, 0);
@@ -144,8 +105,59 @@ ata_do_identify(struct ata_channel *ata) {
 
 	// size is in words, so divide by 2
 	ata_pio_read(ata, (uint8_t *)ata->identify_data, sizeof(struct ata_identify_data) / 2);
+}
 
-	printf("%x\n", ata->identify_data->integrity);
+/* Helper function for scan devs */
+static void
+set_funcandbars(struct ata_channel *ata, uint32_t barN, uint32_t barN1, uint32_t barN4) {
+	if(barN == 0) {
+		ata->ata_cmd_base = IDE_BAR0_DEFAULT;
+		ata->read_port8 = ata_read8_io;
+		ata->read_port16 = ata_read16_io;
+		ata->write_port8 = ata_write8_io;
+		ata->write_port16 = ata_write16_io;
+	} else {
+		if(barN & 1) {
+			ata->ata_cmd_base = barN & (~0x1);
+			ata->read_port8 = ata_read8_io;
+			ata->read_port16 = ata_read16_io;
+			ata->write_port8 = ata_write8_io;
+			ata->write_port16 = ata_write16_io;
+		} else {
+			printf("Memory mapped ATA not yet supported (this is a fatal error)\n");
+			return;
+		}
+	}
+	if(barN1 == 0) {
+		ata->ata_ctrl_base = IDE_BAR1_DEFAULT;
+	} else {
+		if(barN1 & 1) {
+			ata->ata_ctrl_base = barN1 & (~0x1);
+		} else {
+			printf("Memory mapped ATA not yet supported\n");
+		}
+	}
+	ata->ata_busm_base = barN4;
+}
+
+static void
+set_other_stuff(struct ata_channel *ata, uint8_t devid, bdfo_t bdfo) {
+	ata->devid = devid;
+}
+
+static void 
+initialize_channel(struct ata_channel *ata) {
+	uint8_t status = ata_read_status(ata);
+	if (!(status & ATA_STS_BSY || status & ATA_STS_DRDY))
+		ata->disabled = 1; 
+	else {
+		// It's safe to use write_port here (for now) because
+		// status above called possible_update_dev()
+		ata->write_port8(ata, ATA_CTRL_OFF, ATA_CTRL_nIEN);
+		ata_do_identify(ata);
+		uint32_t total_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
+		uint32_t logical_sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
+	}
 }
 
 void
@@ -156,106 +168,88 @@ ata_scan_devs() {
 	for(count_temp = 0; count_temp < count; count_temp++) {
 		struct pci_header header;
 		pci_read_header(temp[count_temp], &header);
-		if(header.bar0 == 0) {
-			ata_channels[total_channel].ata_cmd_base = IDE_BAR0_DEFAULT;
-			ata_channels[total_channel].read_port8 = ata_read8_io;
-			ata_channels[total_channel].read_port16 = ata_read16_io;
-			ata_channels[total_channel].write_port8 = ata_write8_io;
-			ata_channels[total_channel].write_port16 = ata_write16_io;
-		} else {
-			if(header.bar0 & 1) {
-				ata_channels[total_channel].ata_cmd_base = header.bar0 & (~0x1);
-				ata_channels[total_channel].read_port8 = ata_read8_io;
-				ata_channels[total_channel].read_port16 = ata_read16_io;
-				ata_channels[total_channel].write_port8 = ata_write8_io;
-				ata_channels[total_channel].write_port16 = ata_write16_io;
-			} else {
-				printf("Memory mapped ATA not yet supported (this is a fatal error)\n");
-				return;
-			}
-		}
-		
-		if(header.bar1 == 0) {
-			ata_channels[total_channel].ata_ctrl_base = IDE_BAR1_DEFAULT;
-		} else {
-			if(header.bar1 & 1) {
-				ata_channels[total_channel].ata_ctrl_base = header.bar1 & (~0x1);
-			} else {
-				printf("Memory mapped ATA not yet supported\n");
-			}
-		}
 
-		ata_channels[total_channel].ata_busm_base = header.bar4;
+		// We set up these devices like traditional IDE devices
+		// TODO: is this appropriate for SATA?
+		struct ata_channel *ata = alloc_ata_dev();
+		set_funcandbars(ata, header.bar0, header.bar1, header.bar4);
+		set_other_stuff(ata, ATA_DEV_DEV0, temp[count_temp]);
+		initialize_channel(ata);
 
-		ata_channels[total_channel].id = total_channel;
-		ata_channels[total_channel].devid = ATA_DEV_DEV0;
-		ata_channels[total_channel].bus = PCI_BDFO_BUS(temp[count_temp]);
-		ata_channels[total_channel].dev = PCI_BDFO_DEV(temp[count_temp]);
-		ata_channels[total_channel].func = PCI_BDFO_FUNC(temp[count_temp]);
-
-		total_channel++;
-
-		if(header.bar2 == 0) {
-			ata_channels[total_channel].ata_cmd_base = IDE_BAR2_DEFAULT;
-			ata_channels[total_channel].read_port8 = ata_read8_io;
-			ata_channels[total_channel].read_port16 = ata_read16_io;
-			ata_channels[total_channel].write_port8 = ata_write8_io;
-			ata_channels[total_channel].write_port16 = ata_write16_io;
-		} else {
-			if(header.bar2 & 1) {
-				ata_channels[total_channel].ata_cmd_base = header.bar2 & (~0x1);
-				ata_channels[total_channel].read_port8 = ata_read8_io;
-				ata_channels[total_channel].read_port16 = ata_read16_io;
-				ata_channels[total_channel].write_port8 = ata_write8_io;
-				ata_channels[total_channel].write_port16 = ata_write16_io;
-			} else {
-				printf("Memory mapped ATA not yet supported (this is a fatal error)\n");
-				return;
-			}
-		}
-		
-		if(header.bar3 == 0) {
-			ata_channels[total_channel].ata_ctrl_base = IDE_BAR3_DEFAULT;
-		} else {
-			if(header.bar3 & 1) {
-				ata_channels[total_channel].ata_ctrl_base = header.bar3 & (~0x1);
-			} else {
-				printf("Memory mapped ATA not yet supported\n");
-			}
-		}
-		ata_channels[total_channel].ata_busm_base = header.bar4 + 8;
-	
-		ata_channels[total_channel].id = total_channel;
-		ata_channels[total_channel].devid = ATA_DEV_DEV1;
-		ata_channels[total_channel].bus = PCI_BDFO_BUS(temp[count_temp]);
-		ata_channels[total_channel].dev = PCI_BDFO_DEV(temp[count_temp]);
-		ata_channels[total_channel].func = PCI_BDFO_FUNC(temp[count_temp]);
-
-		total_channel++;
-
-		#ifdef ATA_DEBUG_BARS
-		printf("bar0 %p\n", header.bar0);
-		printf("bar1 %p\n", header.bar1);
-		printf("bar2 %p\n", header.bar2);
-		printf("bar3 %p\n", header.bar3);
-		printf("bar4 %p\n", header.bar4);
-		printf("bar5 %p\n", header.bar5);
-		#endif
+		// Set up second channel
+		ata = alloc_ata_dev();
+		set_funcandbars(ata, header.bar2, header.bar3, header.bar4 + 8);
+		set_other_stuff(ata, ATA_DEV_DEV1, temp[count_temp]);
+		initialize_channel(ata);
 	}
+	free(temp);
+}
 
-	int i;
-	for(i = 0; i < total_channel; i++) {
-		uint8_t status = ata_read_status(&ata_channels[i]);
-		// If the drive is not busy, and not ready, assume it's not present
-		// TODO: is this a valid assumption?
-		if (!(status & ATA_STS_BSY || status & ATA_STS_DRDY))
-			ata_channels[i].disabled = 1;
-		else {
-			printf("identifying ATA channel %d, status = %x, PCI = (%d, %d, %d)\n", ata_channels[i].devid, status,
-				ata_channels[i].bus, ata_channels[i].dev, ata_channels[i].func);
-			ata_channels[i].write_port8(&ata_channels[i], ATA_CTRL_OFF, ATA_CTRL_nIEN);
-			ata_do_identify(&ata_channels[i]);
-			dump_identity(&ata_channels[i]);
-		}
+static void
+possibly_update_dev(struct ata_channel *ata) {
+	if (ata->idebus->current_dev != ata) {
+		ata_write_dev(ata, ata->devid);
+		ata->idebus->current_dev = ata;
+		timed_delay(1);
 	}
 }
+
+static uint8_t
+ata_read_status(struct ata_channel *ata) {
+	possibly_update_dev(ata);
+	return (uint8_t)ata->read_port8(ata, ATA_STS_OFF);
+}
+
+static uint8_t
+ata_wait_for(struct ata_channel *ata, uint8_t mask) {
+	volatile uint8_t status;
+	possibly_update_dev(ata);
+	do {
+		status = ata_read_status(ata);
+	} while((status & mask) == 0);
+}
+
+static uint8_t
+ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
+	uint8_t status;
+	possibly_update_dev(ata);
+	do {
+		status = ata_read_status(ata);
+	} while((status & mask));
+}
+
+static void
+ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
+	ata->write_port8(ata, ATA_DEV_OFF, devdata);
+}
+
+static void
+ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd) {
+	possibly_update_dev(ata);
+	if (cmd != ATA_CMD_DEVICE_RESET) {
+		// wait until DRQ and BSY are 0 before submitting a new command
+		uint8_t status ;
+		do {
+			status= ata_read_status(ata);
+		} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
+	}
+	ata->write_port8(ata, ATA_CMD_OFF, cmd);
+}
+
+static void
+ata_dump_identity(struct ata_channel *ata) {
+	int size = sizeof(struct ata_identify_data) / 2;
+	int i;
+	for(i = 0; i < size; i+=8) {
+		printf("%04x %04x %04x %04x %04x %04x %04x %04x\n",
+			((uint16_t *)ata->identify_data)[i],
+			((uint16_t *)ata->identify_data)[i+1],
+			((uint16_t *)ata->identify_data)[i+2],
+			((uint16_t *)ata->identify_data)[i+3],
+			((uint16_t *)ata->identify_data)[i+4],
+			((uint16_t *)ata->identify_data)[i+5],
+			((uint16_t *)ata->identify_data)[i+6],
+			((uint16_t *)ata->identify_data)[i+7]);
+	}
+}
+

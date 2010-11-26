@@ -28,7 +28,12 @@ simple_malloc(uint64_t size) {
 void
 simple_free(uint64_t addr) {
 	KASSERT(malloc_inited != 0, ("Malloc not inited"));
-	KASSERT(addr & PAGE_MASK == 0, ());
+	KASSERT((addr & PAGE_OFFSET_MASK) == 0, ());
 
-	page_allocator->free_page(page_allocator, vaddr_to_paddr(PAGE_FROM_VAL(addr)));
+	void *va = vaddr_to_paddr(addr);	
+
+	// TODO: 64 bit hardcode
+	uint64_t free_addr = (uint64_t)va;
+
+	page_allocator->free_page(page_allocator, PAGE_FROM_VAL(free_addr));
 }

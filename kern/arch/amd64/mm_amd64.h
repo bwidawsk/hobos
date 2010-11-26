@@ -25,14 +25,17 @@ extern void *va_base;
 #define DMAP_PML 510ULL
 #define RECURSIVE_PML 509ULL
 
+#define DMAP_BASE ((-1ULL << VA_RSVD_SHIFT) | (DMAP_PML << PML4_SHIFT))
+#define DMAP_TOP (((-1ULL << VA_RSVD_SHIFT) | ((DMAP_PML + 1ULL) << PML4_SHIFT)) - 1)
+
 #define DMAP_XLATE_PA(pa) \
-	(((-1ULL << VA_RSVD_SHIFT) | (DMAP_PML << PML4_SHIFT)) + (uint64_t)pa)
+	(DMAP_BASE + (uint64_t)pa)
 
 #define DMAP_XLATE_VA(va) \
-	((uint64_t)va - ((-1ULL << VA_RSVD_SHIFT) | (DMAP_PML << PML4_SHIFT)))
+	((uint64_t)va - DMAP_BASE)
 
 #define VA_IN_DMAP(va) \
-	(va >= (DMAP_PML << PML4_SHIFT) && (va < ((DMAP_PML + 1) << PML4_SHIFT)))
+	((va >= DMAP_BASE) && (va < DMAP_TOP))
 
 #define VA_TO_PTE(va) (pdpte_t *) \
 	(KVADDR(RECURSIVE_PML, 0, 0, 0) + \
