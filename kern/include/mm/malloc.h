@@ -5,7 +5,9 @@
 
 void init_malloc(struct mm_page_allocator *allocator);
 void *simple_malloc(uint64_t size);
+void simple_free(uint64_t addr);
 
 #define malloc simple_malloc
+#define free simple_free
 
 #endif

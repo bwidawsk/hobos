@@ -31,6 +31,9 @@ extern void *va_base;
 #define DMAP_XLATE_VA(va) \
 	((uint64_t)va - ((-1ULL << VA_RSVD_SHIFT) | (DMAP_PML << PML4_SHIFT)))
 
+#define VA_IN_DMAP(va) \
+	(va >= (DMAP_PML << PML4_SHIFT) && (va < ((DMAP_PML + 1) << PML4_SHIFT)))
+
 #define VA_TO_PTE(va) (pdpte_t *) \
 	(KVADDR(RECURSIVE_PML, 0, 0, 0) + \
 		((va >> PT_SHIFT) & (1 << (PML4_BITS + PDPT_BITS + PD_BITS + PT_BITS)) - 1) * sizeof(pte_t))	
