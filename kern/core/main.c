@@ -33,8 +33,8 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	init_malloc(primary_allocator);
 	console_init();
 	printf("Link time = %s\n", version);
-	//printf("%p\n", this_thread());
-	//printf("%s\n", this_thread()->debug);
+	printf("%p\n", this_thread());
+	printf("%s\n", this_thread()->debug);
 	
 	// interrupt setup (needed for when we enumerate)
 	// TODO: abstract PIC
@@ -47,6 +47,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 
 	// TODO abstract sti
 	__asm__ volatile("sti");
+	call_initialization_functions();
 	ata_scan_devs();
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);

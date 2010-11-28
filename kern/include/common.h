@@ -34,9 +34,9 @@
 #define ROUND_UP(x, base) 		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
 #define ROUND_DOWN(x, base) 	(((x) / (base)) * (base)) 
 #define IS_POW2(x) (!(x & (x-1)))
-#define INITSECTION  __attribute__ ((section ("initonly") ))
+#define _INITSECTION_  __attribute__ ((section ("initonly") ))
 /* CompileTimeLIST
- * I borrowed part of this implementation from FreeBSD, but it's a generic OS 
+ * I got the idea of the implementation from FreeBSD, but it's a generic OS 
  * trick thing used in Linux as well.
  * The code is mine. I needed a hint with the __start and __stop to find the 
  * start and end points of the section which it seems are automatically made by 
@@ -52,11 +52,12 @@
 #define CTLIST_LAST_SYM(name) __stop_ctlist_##name
 #define CTLIST_SECTION(list_name) __attribute__((used, section("ctlist_" #list_name)))
 
+// TODO: size of void star only works if the list is pointers, should be sizeof type
 #define CTLIST_COUNT(name) (((void *)&CTLIST_LAST_SYM(name) - (void *)&CTLIST_FIRST_SYM(name)) / sizeof(void *))
 
 /* The following should be publicly used */
 /* 
- * Creats a compile type list whose name/key is the first arg, and second arg
+ * Creates a compile type list whose name/key is the first arg, and second arg
  * is the type.
  */
 #define CTLIST_CREATE(list_name, type) \
@@ -67,14 +68,12 @@
  */
 #define CTLIST_ELEM_ADD(list_name, name, type, data) \
 	static type name CTLIST_SECTION(list_name) = (type)data;
-	
+
 #define CTLIST_FOREACH(elem, list_name, temp_var) \
 	for ((temp_var) = 0, ((elem) = CTLIST_FIRST_SYM(list_name)); temp_var < CTLIST_COUNT(list_name); (temp_var)++, (elem) = *(&CTLIST_FIRST_SYM(list_name) + temp_var))
 
-
 #ifndef ASM_FILE
 extern int printf(const char *fmt, ...);
-extern volatile unsigned long ticks;
 #endif
 
 #endif

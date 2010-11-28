@@ -107,6 +107,7 @@ struct ata_identify_data {
 /* Bitfields */
 #define ATA_DEV_DEV0 (0 << 4) /* Select device 0 */
 #define ATA_DEV_DEV1 (1 << 4) /* Select device 1 */
+#define ATA_DEV_LBA  (1 << 6)
 
 #define ATA_CTRL_HOB (1 << 7) /* TODO: Not sure what this does*/
 #define ATA_CTRL_SRST (1 << 2) /* Soft reset both devices */

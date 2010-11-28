@@ -17,7 +17,7 @@ periodic_timer_tick(void *data) {
 	return INTERRUPT_SERVICED;
 }
 
-void INITSECTION
+void _INITSECTION_
 timer_init() {
 	int throwaway = 0;
 	struct timer *timer;

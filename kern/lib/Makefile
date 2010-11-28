@@ -1,4 +1,4 @@
-SOURCES=early_putc.c libc_memfuncs.c libc_strfuncs.c freebsd_printf.c printf.c
+SOURCES=early_putc.c libc_memfuncs.c libc_strfuncs.c freebsd_printf.c printf.c quicksort.c
 OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=lib.a
 
@@ -13,7 +13,7 @@ $(OUTPUT) : $(OBJS)
 .PHONY : clean
 clean :
 	-rm *.d
-	-rm $(OUTPUT) $(OBJS)
+	-rm $(OUTPUT) $(OBJS) 
 
 ifneq ($(MAKECMDGOALS),clean)
 	include $(subst .c,.d,$(SOURCES))

@@ -224,7 +224,11 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 		scratch += block_size;
 	}
 
+	if (!blocks)
+		return i;
+
 	/*  TODO: implement triply indirect */
+	printf("%x blocks remain\n", blocks);
 	ASSERT(0);
 	return i;
 }

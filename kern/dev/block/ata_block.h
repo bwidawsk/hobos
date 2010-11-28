@@ -1,6 +1,8 @@
 #ifndef __ATA_BLOCK_H__
 #define __ATA_BLOCK_H__
 
+#include "block.h"
+
 struct ata_channel {
 	struct mutex *chan_mtx;
 	struct ide_bus *idebus;
@@ -16,7 +18,7 @@ struct ata_channel {
 	uint64_t ata_busm_base;
 	struct ata_identify_data *identify_data;
 
-	uint32_t block_size;
+	uint32_t sector_size;
 	uint64_t size;
 	int disabled;
 	uint8_t bus;
@@ -25,14 +27,13 @@ struct ata_channel {
 };
 
 struct ide_bus {
-	//Needed? struct ata_channel **
+	//Needed? struct ata_channel **channels
 	struct ata_channel *current_dev;
 	struct mutex *ide_bus_mtx;
 };
 
 void ata_scan_devs(void);
 int ata_get_numdevs(void);
-struct ata_channel *ata_get_channel(int which);
-int ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t count);
+void ata_init_blkdev(struct block_device *dev, int which);
 
 #endif

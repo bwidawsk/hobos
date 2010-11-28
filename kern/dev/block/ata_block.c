@@ -12,6 +12,8 @@ static void ata_wait_clear(struct ata_channel *ata, uint8_t mask);
 static void ata_write_dev(struct ata_channel *ata, uint8_t devdata);
 static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd);
 static void possibly_update_dev(struct ata_channel *ata, uint8_t val);
+static int ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
+static int ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
 
 extern uint8_t ata_read8_io(struct ata_channel *ata, uint8_t which);
 extern uint16_t ata_read16_io(struct ata_channel *ata, uint8_t which);
@@ -22,6 +24,7 @@ extern void ata_write16_io(struct ata_channel *ata, uint8_t which, uint16_t data
 static struct ata_channel ata_channels[MAX_CHANNEL + 1];
 static struct ide_bus ide_busses[(MAX_CHANNEL + 1) / 2];
 static int total_channel = 0;
+static int scanned = 0;
 
 #ifdef ATA1_SUPPORT
 	// ATA1 devices need bits 7 and 5 set
@@ -29,6 +32,13 @@ static int total_channel = 0;
 #else
 	#define ATA_DEV_BITS 0x0
 #endif
+
+#define IDE_BUS_LOCK(ata) 		mutex_acquire(ata->idebus->ide_bus_mtx)
+#define IDE_BUS_RELEASE(ata)	mutex_release(ata->idebus->ide_bus_mtx)
+#define ATA_CH_LOCK(ata)		mutex_acquire(ata->chan_mtx)
+#define ATA_CH_RELEASE(ata)		mutex_release(ata->chan_mtx)
+
+#define ATA_FROM_BLK(blk) ((struct ata_channel *)blk->pvt_data)
 
 static struct ata_channel *
 alloc_ata_dev() {
@@ -39,12 +49,32 @@ alloc_ata_dev() {
 	return &ata_channels[total_channel-1];
 }
 
+int 
+ata_get_numdevs(void) {
+	return total_channel;
+}
+
+void 
+ata_init_blkdev(struct block_device *dev, int which) {
+	struct ata_channel *ata = &ata_channels[which];
+	dev->block_size = ata->sector_size;
+	// these functions are defined at the bottom
+	dev->read_block = ata_read_block;
+	dev->write_block = ata_write_block;
+	dev->pvt_data = ata;
+}
+
+/*
+ * Basic function to do the pio reads, knows nothing of commands or
+ * register state (except status)
+ */
 static int
 ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 	volatile uint8_t status;
 	while(words) {
 		do {
 			status = ata_read_status(ata);
+			// TODO: we should sleep here?
 		} while(!(status & ATA_STS_DRQ));
 
 		if (!(status & ATA_STS_DRDY)) {
@@ -59,6 +89,18 @@ ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 	return 0;
 }
 
+static int
+do_read_sectors_28lba(struct ata_channel *ata, uint32_t lba, uint16_t *buf, uint64_t sectors) {
+	uint8_t dev_bits = ATA_DEV_BITS | ata->devid | ATA_DEV_LBA | (lba >> 24);
+	possibly_update_dev(ata, dev_bits);
+	ata->write_port8(ata, ATA_SECTCOUNT_REG, sectors);
+	ata->write_port8(ata, ATA_LBAL_REG, lba & 0xFF);
+	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 8) & 0xFF);
+	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 16) & 0xFF);
+	ata_write_cmd(ata, ATA_CMD_READ_SECTORS);
+	ata_pio_read(ata, buf, (sectors * ata->sector_size) / 2);
+}
+
 int
 ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t count) {
 	if (count > 256) {
@@ -69,7 +111,7 @@ ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t coun
 }
 
 static void
-ata_do_identify(struct ata_channel *ata) {
+do_ata_identify(struct ata_channel *ata) {
 	if (ata->identify_data != NULL) {
 		printf("Warning, identify was already executed on ATA channel %d\n", ata->id);
 	} else {
@@ -115,10 +157,11 @@ ata_do_identify(struct ata_channel *ata) {
 
 	// size is in words, so divide by 2
 	ata_pio_read(ata, (uint16_t *)ata->identify_data, sizeof(struct ata_identify_data) / 2);
+
 }
 
 /* Helper function for scan devs */
-static void INITSECTION
+static void _INITSECTION_
 set_funcandbars(struct ata_channel *ata, uint32_t barN, uint32_t barN1, uint32_t barN4) {
 	if(barN == 0) {
 		ata->ata_cmd_base = IDE_BAR0_DEFAULT;
@@ -150,7 +193,7 @@ set_funcandbars(struct ata_channel *ata, uint32_t barN, uint32_t barN1, uint32_t
 	ata->ata_busm_base = barN4;
 }
 
-static void INITSECTION
+static void _INITSECTION_
 set_other_stuff(struct ata_channel *ata, uint8_t devid, bdfo_t bdfo) {
 	ata->devid = devid;
 
@@ -158,7 +201,7 @@ set_other_stuff(struct ata_channel *ata, uint8_t devid, bdfo_t bdfo) {
 	MUTEX_INIT(ata->chan_mtx, "Ata channel mutex");
 }
 
-static void INITSECTION
+static void _INITSECTION_
 initialize_channel(struct ata_channel *ata) {
 	uint8_t status = ata_read_status(ata);
 	if (!(status & ATA_STS_BSY || status & ATA_STS_DRDY))
@@ -167,19 +210,19 @@ initialize_channel(struct ata_channel *ata) {
 		// It's safe to use write_port here (for now) because
 		// status above called possible_update_dev()
 		ata->write_port8(ata, ATA_CTRL_REG, ATA_CTRL_nIEN);
-		ata_do_identify(ata);
+		do_ata_identify(ata);
 		//uint32_t total_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
-		//uint32_t logical_sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
+		ata->sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
 	}
 }
 
-static void INITSECTION
+static void _INITSECTION_
 ata_setup_bus(struct ide_bus *idebus) {
 	// TODO: sprintf
 	MUTEX_INIT(idebus->ide_bus_mtx, "IDE bus mutex");
 }
 
-void INITSECTION
+void _INITSECTION_
 ata_scan_devs() {
 	int count_temp, count = 0;
 	bdfo_t *temp = malloc(sizeof(bdfo_t) * PCI_MAX_BUS * PCI_MAX_DEV * PCI_MAX_FUNC);
@@ -207,6 +250,7 @@ ata_scan_devs() {
 		ata_setup_bus(ata->idebus);
 	}
 	free((void *)temp);
+	scanned = 1;
 }
 
 /* val is all bits except the device ID */
@@ -286,3 +330,16 @@ ata_dump_identity(struct ata_channel *ata) {
 	}
 }
 
+static int 
+ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
+	struct ata_channel *ata = ATA_FROM_BLK(dev);
+	ATA_CH_LOCK(ata);
+	ATA_CH_RELEASE(ata);
+
+	return count;
+}
+
+static int 
+ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
+	return 0;
+}
