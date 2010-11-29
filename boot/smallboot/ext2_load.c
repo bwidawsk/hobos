@@ -179,56 +179,79 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 	unsigned int *doubly = 0;
 
 	unsigned int blocks = n;
+
+	// This is where we'll store all the tables and other info
 	void *indirect_blocks = scratch + blocks * block_size;
 
-	const int single_start = 12;
+	/* 
+	 * These constants represent the logical blocks in each new level of the FS.
+	 * It is dependent on block size, but if we assume a 1024 byte block, then as an example
+	 * direct = block 0-11
+	 * singly indirect = block 12 - 267
+	 * doubly indirect = block 268 - 65803
+	 * triply indirect = block 65804 - 16777215
+	 */
+	const int single_start = EXT2_IND_BLOCK;
 	const int single_end = single_start + (block_size / 4) - 1;
 	const int double_start = single_end + 1;
 	const int double_end = double_start + (block_size / 4 * block_size / 4) - 1;
-	const int triple_start = double_start + 1;
+	const int triple_start = double_end + 1;
 	const int triple_end = triple_start + (block_size * block_size * block_size / 4 * 4 * 4) - 1;
 
+	/* Read all the direct blocks of the inode */
 	for ( i = 0; blocks && i < single_start; i++, blocks--) {
 		read_block(scratch, inode->i_block[i], 1);
 		scratch += block_size;
 	}
+
+	/* If there are no more blocks to read, exit */
 	if (!blocks)
 		return i;
 
 	for ( i = single_start; blocks && i < double_start; i++, blocks--) {
 		if (!singly) {
 			singly = indirect_blocks;
-			read_block(singly, inode->i_block[12], 1);
+			read_block(singly, inode->i_block[EXT2_IND_BLOCK], 1);
 		}
 		read_block(scratch, singly[i - single_start], 1);
 		scratch += block_size;
 	}
+	
+	/* If there are no more blocks to read, exit */
 	if (!blocks)
 		return i;
 		
 	for ( i = double_start; blocks && i < triple_start; i++, blocks--) {
 		if (!doubly) {
-			doubly = indirect_blocks + block_size;
-			read_block(doubly, inode->i_block[13], 1);
+			// doubly table starts one block after the singly table
+			// we can safely wipe out the stored singly table 
+			//doubly = indirect_blocks + block_size; // if we want to preserve singly
+			doubly = indirect_blocks;
+
+			// read in the table, it should have a bunch of 4 byte entries
+			read_block(doubly, inode->i_block[EXT2_DIND_BLOCK], 1);
 			unsigned int *temp = doubly;
 			int j;
 			for (j = 0; j < block_size / 4; j++) {
 				if (temp[j] == 0)
 					break;
 
-				read_block(doubly + (block_size * j) , temp[j], 1);
+				read_block(doubly + (block_size) + (block_size * j) , temp[j], 1);
 			}
 		}
+
+		// We know have a linear table starting at doubly + block_size
 		unsigned int *doubly_start = (void *)doubly + block_size;
 		read_block(scratch, doubly_start[i - double_start], 1);
 		scratch += block_size;
 	}
 
+	/* If there are no more blocks to read, exit */
 	if (!blocks)
 		return i;
 
 	/*  TODO: implement triply indirect */
-	printf("%x blocks remain\n", blocks);
+	printf("%x/%x (%x) blocks remain\n", blocks, n, triple_start);
 	ASSERT(0);
 	return i;
 }
