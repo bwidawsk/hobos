@@ -21,15 +21,21 @@ __hbuiltin_memcpy(void *dest, const void *src, uint64_t n) {
 		return dest;
 
 	// check if memory areas overlap, if so do nothing
-	if (src == dest)
+	KASSERT(src != dest, ("src == dest, you probably didn't mean for this to happen\n"));
+	if (src == dest) {
 		return dest;
+	}
 
 	if (src > dest) {
-		if ((dest + n) >= src)
+		KASSERT(((dest + n) <= src), ("(dest + n) >= src, you probably didn't mean for this to happen\n"));
+		if ((dest + n) > src) {
 			return dest;
+		}
 	} else {
-		if ((src + n) >= dest)
+		KASSERT(((src + n) <= dest), ("(src + n) >= dest, you probably didn't mean for this to happen\n"));
+		if ((src + n) > dest) {
 			return dest;
+		}
 	}
 
 	while(n > 8) {
