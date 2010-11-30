@@ -27,12 +27,12 @@ __hbuiltin_memcpy(void *dest, const void *src, uint64_t n) {
 	}
 
 	if (src > dest) {
-		KASSERT(((dest + n) <= src), ("(dest + n) >= src, you probably didn't mean for this to happen\n"));
+		KASSERT(((dest + n) <= src), ("(dest + n) > src, you probably didn't mean for this to happen\n"));
 		if ((dest + n) > src) {
 			return dest;
 		}
 	} else {
-		KASSERT(((src + n) <= dest), ("(src + n) >= dest, you probably didn't mean for this to happen\n"));
+		KASSERT(((src + n) <= dest), ("(src + n) > dest, you probably didn't mean for this to happen\n"));
 		if ((src + n) > dest) {
 			return dest;
 		}
