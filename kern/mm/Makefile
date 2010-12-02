@@ -1,16 +1,6 @@
 SOURCES=mm.c ds_allocator.c malloc.c
-OBJS=$(subst .c,.o,$(SOURCES))
-DEPS=$(subst .c,.d,$(SOURCES))
 OUTPUT=mm.a
-
-all : $(OUTPUT)
-
-$(OUTPUT) : $(OBJS)
-	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
-
-.PHONY : clean
-clean :
-	-rm $(OUTPUT) $(OBJS) $(DEPS)
-
-depend: $(SOURCES)
-	$(MAKEDEPEND) $(INCLUDES) $^
+include $(ROOTDIR)/hobo_kernel.mk
+SOURCES=early_putc.c libc_memfuncs.c libc_strfuncs.c freebsd_printf.c printf.c quicksort.c
+OUTPUT=lib.a
+include $(ROOTDIR)/hobo_kernel.mk

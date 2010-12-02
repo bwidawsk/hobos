@@ -1,20 +1,9 @@
 SOURCES=main.c noarch.c console.c mutex.c bs_commands.c interrupt.c timer.c init_funcs.c
 SOURCES+=vers.c
-OBJS=$(subst .c,.o,$(SOURCES))
 OUTPUT=core.a
+INCLUDES+=-I$(ROOTDIR)/../common/include
 
-INCLUDES+=-I../../common/include -I..
-CFLAGS+=$(INCLUDES)
-
-$(OUTPUT) : $(OBJS)
-	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
-
-.PHONY : clean
-clean :
-	-rm $(OUTPUT) $(OBJS)
-
-depend: $(SOURCES)
-	$(MAKEDEPEND) $(INCLUDES) $^
+include $(ROOTDIR)/hobo_kernel.mk
 
 # DO NOT DELETE
 
