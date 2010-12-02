@@ -7,5 +7,7 @@ bochs.o :
 
 .PHONY : clean
 clean :
-	-rm *.d
 	-rm bochs.a $(OBJS)
+
+depend: bochs_cons.c
+	$(MAKEDEPEND) $(INCLUDES) $^

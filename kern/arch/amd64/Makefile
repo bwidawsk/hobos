@@ -12,11 +12,6 @@ OBJS=$(subst .c,.o,$(SOURCES)) idt_handlers.o
 
 all : kernel 
 	
-%.d: %.c
-	$(CC) -M $(CFLAGS) $< > $@.$$$$;                  \
-	sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
-	rm -f $@.$$$$
-
 idt_handlers.o : idt_handlers.S ../ia_common/idt_common.h
 	$(CC) $(CFLAGS) -DASM_FILE -c $< -o $@
 
@@ -34,8 +29,6 @@ kernel : $(OBJS) $(HEADEROBJS)
 clean :
 	-rm arch.a
 	-rm *.o
-	-rm *.d
 	
-ifneq ($(MAKECMDGOALS),clean)
-	include $(subst .c,.d,$(SOURCES))
-endif
+depend: $(SOURCES)
+	$(MAKEDEPEND) $(INCLUDES) $^
