@@ -32,7 +32,6 @@ struct ide_bus {
 	struct mutex *ide_bus_mtx;
 };
 
-void ata_scan_devs(void);
 int ata_get_numdevs(void);
 void ata_init_blkdev(struct block_device *dev, int which);
 

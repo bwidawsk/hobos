@@ -3,6 +3,7 @@
 #include <mm/malloc.h>
 #include <mutex.h>
 #include <timer.h> // timed_delay
+#include <init_funcs.h>
 #include "ata.h"
 
 static void ata_dump_identity(struct ata_channel *ata);
@@ -222,8 +223,7 @@ ata_setup_bus(struct ide_bus *idebus) {
 	MUTEX_INIT(idebus->ide_bus_mtx, "IDE bus mutex");
 }
 
-void _INITSECTION_
-ata_scan_devs() {
+INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 	int count_temp, count = 0;
 	bdfo_t *temp = malloc(sizeof(bdfo_t) * PCI_MAX_BUS * PCI_MAX_DEV * PCI_MAX_FUNC);
 	pci_get_devs(PCI_CLASS_MASS_STORAGE, temp, &count);

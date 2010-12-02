@@ -1,10 +1,6 @@
 #ifndef __CONSOLE_H__
 #define __CONSOLE_H__
 
-#ifndef KERNEL
-#error POO ON YOU
-#endif
-
 #define CONSOLE_KEY sect_cons
 
 #define CONSOLE_CREATE_LIST CTLIST_CREATE(CONSOLE_KEY, struct console_driver *); 

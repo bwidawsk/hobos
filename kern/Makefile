@@ -4,17 +4,20 @@ LD=x86_64-pc-linux-gnu-ld
 #CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
 CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -Wall 
 CFLAGS+=-DKERNEL -DAMD64 
-CFLAGS+=-I$(PWD)/include -I$(PWD)/arch/$(TARGET)
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET)
+CFLAGS+=$(INCLUDES)
 CFLAGS+=-include $(PWD)/include/common.h
 
 LDFLAGS?=
-
+MAKEDEPEND = makedepend
 MEMORY_ALLOCATOR=DS_ALLOCATOR
 CFLAGS+=-D$(MEMORY_ALLOCATOR)
+export MAKEDEPEND
 export CC
 export LD
 export CFLAGS
 export LDFLAGS
+export INCLUDES
 DIRS = include arch/$(TARGET) core dev lib mm
 OBJS = arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a
 OUTPUT = kernel
@@ -63,3 +66,9 @@ clean :
 	-rm -rf include/arch
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done
+# DO NOT DELETE
+
+core/init_funcs.o: /usr/include/stdint.h /usr/include/features.h
+core/init_funcs.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
+core/init_funcs.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
+core/init_funcs.o: /usr/include/bits/wchar.h include/init_funcs.h

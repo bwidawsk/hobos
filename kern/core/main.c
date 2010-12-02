@@ -6,7 +6,6 @@
 #include <noarch.h>
 #include <thread.h>
 #include <timer.h>
-#include <dev/block/ata_block.h> // ata_scan_devs, TODO: remove?
 
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
@@ -48,7 +47,6 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// TODO abstract sti
 	__asm__ volatile("sti");
 	call_initialization_functions();
-	ata_scan_devs();
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
 	__asm__ volatile("ud2");
