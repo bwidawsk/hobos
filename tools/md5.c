@@ -23,6 +23,7 @@ const uint32_t k[] = {
 };
 
 #define MD5_BLOCK_SIZE (512 / 8) // 512 bit blocks
+#define MD5_PRE_PAD_BLOCK_SIZE (448 / 8) // 512 bit blocks
 
 uint32_t leftrotate(uint32_t x, uint32_t y) {
 	return (x << y) | (x >> (32UL - y));
@@ -30,26 +31,22 @@ uint32_t leftrotate(uint32_t x, uint32_t y) {
 
 void
 pad_md5(uint8_t *data, uint64_t size) {
-	int remainder = size % MD5_BLOCK_SIZE;
-	if (size == 0)
-		remainder = MD5_BLOCK_SIZE;
-
-	if (remainder == 0)
-		return;
-
-	if(remainder <= 8) {
-		printf("not sure how to handle this\n");
+	//int remainder = size % ;
+	const uint64_t orig_size = size;
+	int bytes_to_write;
+	if (size < MD5_PRE_PAD_BLOCK_SIZE) {
+		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - size;
+	} else {
+		// how many bytes to pad up to the next block size
+		bytes_to_write = size % MD5_PRE_PAD_BLOCK_SIZE;
+		bytes_to_write = (MD5_BLOCK_SIZE - bytes_to_write);
+		printf("bytes_to_write %d\n", bytes_to_write);
 	}
 
-	int first_bytes = MD5_BLOCK_SIZE - remainder;
-	data[first_bytes++] = 0x80;
-	remainder--;
-	while(remainder > 8) {
-		data[first_bytes++] = 0;
-		remainder--;
-	}
-
-	*(uint64_t *)(&data[first_bytes]) = (size * 8);
+	data[size++] = 0x80;
+	bytes_to_write--;
+	memset(&(data[size]), 0, bytes_to_write);
+	*(uint64_t *)(&data[size + bytes_to_write]) = (orig_size * 8);
 }
 
 void
@@ -132,10 +129,17 @@ dump_block(uint8_t *block) {
 }
 int main() {
 	uint8_t foo[512];
-	memset(foo, 0, 512);
-	pad_md5(foo, 0);
-//	dump_block(foo);
+	memset(foo, 'a', 512);
+	pad_md5(foo, 55);
 	md5_chunk(foo, 1);
+	memset(foo, 'a', 512);
+	pad_md5(foo, 57);
+	md5_chunk(foo, 1);
+	memset(foo, 'a', 512);
+	pad_md5(foo, 64);
+	md5_chunk(foo, 1);
+	dump_block(foo);
+	dump_block(&foo[64]);
 #if 0
 #include <math.h>
 	int i;
