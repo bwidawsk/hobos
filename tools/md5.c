@@ -1,4 +1,14 @@
 #include <stdint.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
 
 // Algorithm from http://en.wikipedia.org/wiki/MD5
 
@@ -29,36 +39,42 @@ uint32_t leftrotate(uint32_t x, uint32_t y) {
 	return (x << y) | (x >> (32UL - y));
 }
 
-void
-pad_md5(uint8_t *data, uint64_t size) {
-	//int remainder = size % ;
+uint64_t
+pad_md5(uint8_t **orig_data, uint64_t size) {
 	const uint64_t orig_size = size;
 	int bytes_to_write;
-	if (size < MD5_PRE_PAD_BLOCK_SIZE) {
-		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - size;
+	int offset = size % MD5_BLOCK_SIZE;
+	if (offset < MD5_PRE_PAD_BLOCK_SIZE) {
+		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - offset;
 	} else {
 		// how many bytes to pad up to the next block size
-		bytes_to_write = size % MD5_PRE_PAD_BLOCK_SIZE;
-		bytes_to_write = (MD5_BLOCK_SIZE - bytes_to_write);
+		bytes_to_write = (MD5_PRE_PAD_BLOCK_SIZE + MD5_BLOCK_SIZE) - offset;
+//		bytes_to_write = size % MD5_PRE_PAD_BLOCK_SIZE;
+//		bytes_to_write = (MD5_BLOCK_SIZE - bytes_to_write);
 		printf("bytes_to_write %d\n", bytes_to_write);
 	}
-
+	uint64_t new_size = bytes_to_write + size + 8;
+	*orig_data = realloc(*orig_data, new_size);
+	uint8_t *data = *orig_data;
 	data[size++] = 0x80;
 	bytes_to_write--;
+	assert(bytes_to_write >= 0);
 	memset(&(data[size]), 0, bytes_to_write);
 	*(uint64_t *)(&data[size + bytes_to_write]) = (orig_size * 8);
+	return new_size;
 }
+
+static	uint32_t h0 = 0x67452301;
+static	uint32_t h1 = 0xEFCDAB89;
+static	uint32_t h2 = 0x98BADCFE;
+static	uint32_t h3 = 0x10325476;
 
 void
 md5_chunk(uint8_t *data, uint64_t num_chunks) {
 	uint64_t chunk = 0;
-	uint32_t h0 = 0x67452301;
-	uint32_t h1 = 0xEFCDAB89;
-	uint32_t h2 = 0x98BADCFE;
-	uint32_t h3 = 0x10325476;
 
 	for(chunk = 0; chunk < num_chunks; chunk++) {
-		uint32_t *words = (uint32_t *)(&data[chunk]);
+		uint32_t *words = (uint32_t *)(&data[chunk * MD5_BLOCK_SIZE]);
 		uint32_t a = h0;
 		uint32_t b = h1;
 		uint32_t c = h2;
@@ -95,6 +111,11 @@ md5_chunk(uint8_t *data, uint64_t num_chunks) {
 		h2 = h2 + c;
 		h3 = h3 + d;
 	}
+
+}
+
+void
+display_md5hash() {
 	int i;
 	for(i = 0; i < 4; i++) {
 		printf("%02x", ((uint8_t*)&h0)[i]);
@@ -108,7 +129,6 @@ md5_chunk(uint8_t *data, uint64_t num_chunks) {
 	for(i = 0; i < 4; i++) {
 		printf("%02x", ((uint8_t*)&h3)[i]);
 	}
-	printf("\n");
 }
 
 void
@@ -127,19 +147,61 @@ dump_block(uint8_t *block) {
 	}
 
 }
-int main() {
-	uint8_t foo[512];
-	memset(foo, 'a', 512);
-	pad_md5(foo, 55);
-	md5_chunk(foo, 1);
-	memset(foo, 'a', 512);
-	pad_md5(foo, 57);
-	md5_chunk(foo, 1);
-	memset(foo, 'a', 512);
-	pad_md5(foo, 64);
-	md5_chunk(foo, 1);
-	dump_block(foo);
-	dump_block(&foo[64]);
+int main(int argc, char *argv[]) {
+	if (argc > 1) {
+		int fd;
+		struct stat sb;
+		uint64_t size_to_md5 = 0;
+		fd = open(argv[1], O_RDONLY);
+		if (fd == -1) {
+			perror("open");
+			exit(-1);
+		}
+		if (fstat(fd, &sb) == -1) {
+			perror("fstat");
+			exit(-1);
+		}
+		size_t file_size = sb.st_size;
+
+		void *addr = mmap(NULL, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
+
+		if (addr == MAP_FAILED) {
+			perror("mmap");
+			exit(-1);
+		}
+		uint8_t *buf = (uint8_t *)malloc(file_size);
+		memcpy(buf, addr, file_size);
+		munmap(addr, file_size);
+		size_to_md5 = pad_md5(&buf, file_size);
+		assert(file_size < size_to_md5);
+		md5_chunk(buf, size_to_md5 / MD5_BLOCK_SIZE);
+		display_md5hash();
+		printf("\t%s\n", argv[1]);
+		free(buf);
+		close(fd);
+	} else {
+		uint8_t foo[512];
+		int size;
+		memset(foo, 0, 512);
+		size = 55;
+		memset(foo, 'a', size);
+		pad_md5(foo, size);
+		dump_block(&foo[0]);
+		md5_chunk(foo, (size + MD5_BLOCK_SIZE) / MD5_BLOCK_SIZE);
+#if 0	
+		memset(foo, 0, 512);
+		size = 57;
+		memset(foo, 'a', size);
+		pad_md5(foo, size);
+		dump_block(&foo[0]);
+		dump_block(&foo[64]);
+		md5_chunk(foo, (size + MD5_BLOCK_SIZE) / MD5_BLOCK_SIZE);
+#endif
+	}
+	return 0;
+}
+
+
 #if 0
 #include <math.h>
 	int i;
@@ -155,5 +217,3 @@ int main() {
 		printf("\n");
 	}
 #endif
-	return 0;
-}
