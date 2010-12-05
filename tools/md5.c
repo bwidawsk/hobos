@@ -34,6 +34,13 @@ const static uint32_t k[] = {
 	0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1, 0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391
 };
 
+const static uint8_t md5_pad[MD5_BLOCK_SIZE] = {
+	0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 void
 init_md5_ctx(struct md5_context *ctx, uint8_t *data, uint64_t size) {
 	ctx->h0 = 0x67452301;
@@ -42,6 +49,15 @@ init_md5_ctx(struct md5_context *ctx, uint8_t *data, uint64_t size) {
 	ctx->h3 = 0x10325476;
 	ctx->curptr = (void *)data;
 	ctx->size = size;
+
+	uint64_t bytes_to_write;
+	int offset = size % MD5_BLOCK_SIZE;
+	if (offset < MD5_PRE_PAD_BLOCK_SIZE) {
+		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - offset;
+	} else {
+		bytes_to_write = (MD5_PRE_PAD_BLOCK_SIZE + MD5_BLOCK_SIZE) - offset;
+	}
+	ctx->padded_size = size + bytes_to_write + 8;
 }
 
 static uint32_t 
@@ -49,30 +65,26 @@ leftrotate(uint32_t x, uint32_t y) {
 	return (x << y) | (x >> (32UL - y));
 }
 
-uint64_t
-pad_md5(uint8_t **orig_data, uint64_t size) {
-	const uint64_t orig_size = size;
+int
+pad_block(struct md5_context *ctx) {
+	int ret = 0;
+	int offset = ctx->size % MD5_BLOCK_SIZE;
 	int bytes_to_write;
-	int offset = size % MD5_BLOCK_SIZE;
 	if (offset < MD5_PRE_PAD_BLOCK_SIZE) {
 		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - offset;
 	} else {
 		bytes_to_write = (MD5_PRE_PAD_BLOCK_SIZE + MD5_BLOCK_SIZE) - offset;
+		ret++;
 	}
-	uint64_t new_size = bytes_to_write + size + 8;
-	*orig_data = realloc(*orig_data, new_size);
-	uint8_t *data = *orig_data;
-	data[size++] = 0x80;
-	bytes_to_write--;
-	assert(bytes_to_write >= 0);
-	memset(&(data[size]), 0, bytes_to_write);
-	*(uint64_t *)(&data[size + bytes_to_write]) = (orig_size * 8);
-	return new_size;
+
+	memcpy(ctx->curptr + offset, md5_pad, bytes_to_write);
+	*(uint64_t *)(ctx->curptr + offset + bytes_to_write) = (ctx->size * 8);
+	return ret;
 }
 
 void
 md5_hash_block(struct md5_context *ctx) {
-	uint32_t *words = (uint16_t *)ctx->curptr;
+	uint32_t *words = ctx->curptr;
 	uint32_t a = ctx->h0;
 	uint32_t b = ctx->h1;
 	uint32_t c = ctx->h2;
@@ -105,6 +117,7 @@ md5_hash_block(struct md5_context *ctx) {
 	ctx->h1 = ctx->h1 + b;
 	ctx->h2 = ctx->h2 + c;
 	ctx->h3 = ctx->h3 + d;
+	ctx->hashed_bytes += MD5_BLOCK_SIZE;
 }
 
 #ifndef KERNEL
@@ -148,18 +161,29 @@ int main(int argc, char *argv[]) {
 			perror("mmap");
 			exit(-1);
 		}
-		uint8_t *buf = (uint8_t *)malloc(file_size);
+
+		uint8_t *buf = (uint8_t *)malloc(file_size + (MD5_FILE_PADDING));
 		memcpy(buf, addr, file_size);
 		munmap(addr, file_size);
-		size_to_md5 = pad_md5(&buf, file_size);
-		assert(file_size < size_to_md5);
+
 		struct md5_context ctx;
 		init_md5_ctx(&ctx, buf, file_size);
-		uint64_t num_chunks = size_to_md5 / MD5_BLOCK_SIZE;
-		for (;num_chunks > 0 ; num_chunks--) {
+
+		//pad_md5(buf, file_size);
+
+		uint64_t num_chunks = ctx.size / MD5_BLOCK_SIZE;
+		// go until the last block which may need to be padded
+		for (;num_chunks > 1 ; num_chunks--) {
 			md5_hash_block(&ctx);
 			ctx.curptr += MD5_BLOCK_SIZE;
 		}
+		int need_another_block = pad_block(&ctx);
+		md5_hash_block(&ctx);
+		if (need_another_block) {
+			ctx.curptr += MD5_BLOCK_SIZE;
+			md5_hash_block(&ctx);
+		}
+
 		display_md5hash(&ctx);
 		printf("\t%s\n", argv[1]);
 		free(buf);
