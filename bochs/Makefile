@@ -40,7 +40,7 @@ PART_TABLE_STRING=$(shell echo "partition_table 0x80 \
 	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(FS_SECTORS_MINUS_ONE)) \
 	$(PART_START) $(FS_SECTORS_MINUS_SMALLBOOT)")
 
-all : bochsimg updatebochsrs
+all : bochsimg updatebochsrs ../tools/lba
 	@echo Created image with 
 	@echo "    Block Size $(BLOCK_SIZE)"
 	@echo "    Sectors per track $(SECTORS_PER_TRACK)"

@@ -28,9 +28,8 @@ all : $(OUTPUT)
 .PHONY : $(OUTPUT) 
 $(OUTPUT) : include_clean
 	./vers.sh
-	#rm is here because cp wasn't working all the time
-	-rm -rf include/arch
-	cp -rf arch/${TARGET}/include/ include/arch/
+	-rm include/arch
+	ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} $1 || exit 1) || exit 1; done
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel
 
@@ -64,6 +63,6 @@ help :
 .PHONY : clean
 clean :
 	-rm core/vers.c
-	-rm -rf include/arch
+	-rm include/arch
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done

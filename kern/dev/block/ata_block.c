@@ -250,6 +250,7 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 		ata_setup_bus(ata->idebus);
 	}
 	free((void *)temp);
+	printf("ATA scan completed\n");
 	scanned = 1;
 }
 

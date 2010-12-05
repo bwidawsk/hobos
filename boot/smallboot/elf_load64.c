@@ -13,8 +13,8 @@
 static __ElfN(Ehdr) *
 validate_header64(const void *addr) {
 	const char elf_magic[4] = { 0x7f, 'E', 'L', 'F' };
-	unsigned char *e_ident = (unsigned char *)addr;
-	int ret   = strncmp(e_ident, elf_magic, 4);
+	char *e_ident = (char *)addr;
+	int ret = strncmp(e_ident, elf_magic, 4);
 	//if (!IS_ELF(ehdr))
 	if (ret) {
 		ELF_PRINTF("not an elf\n");
@@ -45,6 +45,8 @@ validate_header64(const void *addr) {
 	return ehdr;
 }
 
+#define PADDR_TO_PTR(foo) ((void *)((uint32_t)foo))
+
 /* Returns address of where section header info */
 __ElfN(Addr)
 elf_load64(const void *addr, unsigned int loaded_len,
@@ -66,16 +68,15 @@ elf_load64(const void *addr, unsigned int loaded_len,
 			 */
 
 			ASSERT(phdr[phdr_count].p_memsz >= phdr[phdr_count].p_filesz);
-			ASSERT (addr > ((void *)phdr[phdr_count].p_paddr + phdr[phdr_count].p_memsz) ||
-				(addr + loaded_len) < ((void *)phdr[phdr_count].p_paddr));
+			ASSERT ((uint32_t)addr > (phdr[phdr_count].p_paddr + phdr[phdr_count].p_memsz) ||
+				(((uint32_t)addr + loaded_len) < phdr[phdr_count].p_paddr));
 
 			/* This assertion is platform specific and should be removed */
 			ASSERT(phdr[phdr_count].p_paddr > 0x100000);
-
-			memcpy(((void *)phdr[phdr_count].p_paddr),
+			memcpy(PADDR_TO_PTR(phdr[phdr_count].p_paddr),
 				(phdr[phdr_count].p_offset + addr),
 				(phdr[phdr_count].p_filesz));
-			memset((void *)phdr[phdr_count].p_paddr + phdr[phdr_count].p_filesz,
+			memset(PADDR_TO_PTR(phdr[phdr_count].p_paddr + (uint32_t)phdr[phdr_count].p_filesz),
 				0,
 				phdr[phdr_count].p_memsz - phdr[phdr_count].p_filesz);
 		} 

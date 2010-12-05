@@ -20,8 +20,6 @@ static struct ext2_inode get_root_inode();
 static void get_inode(int inode_index, struct ext2_inode *ret_node);
 static int get_inode_idx(struct ext2_inode *node, const char *path);
 
-static void ls();
-
 static int load_blocks(struct ext2_inode *inode, void *scratch);
 static int load_nblocks(struct ext2_inode *inode, void *scratch, int n);
 
@@ -72,8 +70,6 @@ initialize_block_loader(struct load_params *lparams) {
 
 unsigned int
 load_file(const char *name, void **addr) {
-	int i;
-
 	ASSERT(curptr != 0);
 
 	struct ext2_inode temp_node;
@@ -103,7 +99,6 @@ load_file(const char *name, void **addr) {
 
 unsigned int 
 load_file_bytes(const char *name, void **addr, unsigned int nbytes) {
-	int i;
 
 	ASSERT(curptr != 0);
 
@@ -131,7 +126,6 @@ load_file_bytes(const char *name, void **addr, unsigned int nbytes) {
 
 static void
 get_inode(int inode_index, struct ext2_inode *ret_node) {
-	int i;
 	int group = INODE_TO_GROUP(inode_index);
 
 	read_block(curptr, GROUP_TO_BLOCK(group), 1);
@@ -145,11 +139,13 @@ get_inode(int inode_index, struct ext2_inode *ret_node) {
 	*ret_node = *INODE_IN_TABLE(curptr, index);
 }
 
+#if 0
 static void 
 ls() {
 	struct ext2_inode root = get_root_inode();
 	get_inode_idx(&root, "garbanzo");
 }
+#endif
 
 static struct ext2_inode
 get_root_inode() {
@@ -196,7 +192,7 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 	const int double_start = single_end + 1;
 	const int double_end = double_start + (block_size / 4 * block_size / 4) - 1;
 	const int triple_start = double_end + 1;
-	const int triple_end = triple_start + (block_size * block_size * block_size / 4 * 4 * 4) - 1;
+	//const int triple_end = triple_start + (block_size * block_size * block_size / 4 * 4 * 4) - 1;
 
 	/* Read all the direct blocks of the inode */
 	for ( i = 0; blocks && i < single_start; i++, blocks--) {

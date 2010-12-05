@@ -1,5 +1,5 @@
 TARGET?=i386
-CFLAGS=-m32 -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -I../../common/include -I../../common/include/${TARGET}
+CFLAGS=-Wall -Werror -m32 -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -I../../common/include -I../../common/include/${TARGET}
 ASFLAGS=--32
 
 ifdef DEBUG

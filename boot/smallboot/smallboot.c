@@ -3,6 +3,8 @@
 #include "bios.h"
 #include "small_libc.h"
 #include "multiboot.h"
+#define __ELF_WORD_SIZE 32
+#include "elf.h"
 
 #define SECTOR_SIZE 512
 void
@@ -22,6 +24,9 @@ static int total_e820_count;
 unsigned char bss_sectors[SECTOR_SIZE * 127];
 uint8_t bios_device;
 int (*legacy_read_sector)(void *addr, unsigned char count, unsigned int lba[2], unsigned char bios_device);
+
+// we assume 32 bits is enough to represent the return value...
+extern Elf32_Addr elf_load(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
 
 /* machine independant read sector is the function that's passed to the 
  * FS specific code for it to load files. The idea is the FS specific code
@@ -94,8 +99,8 @@ build_memory_map() {
 		return_flags = legacy_int(0x15, &regs);
 		regs.eax = 0xe820;
 		regs.edx = *(unsigned int *)smap;
-		struct e820_entry *temp = (struct e820_entry *)regs.edi;
 		#ifdef E820_DEBUG
+		struct e820_entry *temp = (struct e820_entry *)regs.edi;
 		printf("E820: %x%x %x%x %x\n", temp->addr_high, temp->addr_low, temp->length_high, temp->length_low, temp->type);
 		#endif
 		regs.edi += sizeof(struct e820_entry);
@@ -123,8 +128,8 @@ get_suitable_e820_entry() {
 		if (e820_map[i].type != E820_FREE)
 			continue;
 
-		unsigned int basel =  e820_map[i].addr_low;
-		unsigned int baseh =  e820_map[i].addr_high;
+		//unsigned int basel =  e820_map[i].addr_low;
+		//unsigned int baseh =  e820_map[i].addr_high;
 		unsigned int lengthl = e820_map[i].length_low;
 		unsigned int lengthh = e820_map[i].length_high;
 		
@@ -182,7 +187,7 @@ get_sector_size(int drive) {
 	struct legacy_regs_32 regs = {
 		.eax = 0x4800,
 		.edx = (uint8_t) drive,
-		.esi = buf
+		.esi = (uint32_t)buf
 	};
 	legacy_int(0x13, &regs);
 	if (buf[2] & 0x2) {
@@ -338,7 +343,7 @@ create_mulitboot_info_struct(struct multiboot_elf_section_header_table *table) {
 	#error need to get the partition table
 	#endif
 	multiboot_info.flags |= MULTIBOOT_INFO_CMDLINE;
-	multiboot_info.cmdline = hload_info[HOBOLOAD_ARGS];
+	multiboot_info.cmdline = (multiboot_uint32_t)hload_info[HOBOLOAD_ARGS];
 	multiboot_info.flags |= MULTIBOOT_INFO_MODS;
 	multiboot_info.mods_count = 0;
 	multiboot_info.mods_addr = 0;
@@ -348,15 +353,15 @@ create_mulitboot_info_struct(struct multiboot_elf_section_header_table *table) {
 	for(i = 0; i < total_e820_count; i++) {
 		mboot_mmap[i].size = sizeof(struct multiboot_mmap_entry);
 		mboot_mmap[i].addr = e820_map[i].addr_high;
-		mboot_mmap[i].addr << 32;
+		mboot_mmap[i].addr <<= 32;
 		mboot_mmap[i].addr |= e820_map[i].addr_low;
 		mboot_mmap[i].len = e820_map[i].length_high;
-		mboot_mmap[i].len << 32;
+		mboot_mmap[i].len <<= 32;
 		mboot_mmap[i].len |= e820_map[i].length_low;
 		mboot_mmap[i].type = e820_map[i].type;
 	}
 	multiboot_info.mmap_length = total_e820_count * sizeof(struct multiboot_mmap_entry);
-	multiboot_info.mmap_addr = mboot_mmap;
+	multiboot_info.mmap_addr = (multiboot_uint32_t)mboot_mmap;
 	return multiboot_info;
 }
 
@@ -392,7 +397,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	nbytes = load_file(kern_name, &addr);
 
 	struct multiboot_elf_section_header_table table;
-	void (*kernel_entry)(void) = elf_load(addr, nbytes, &table);
+	void (*kernel_entry)(void) = (void *)elf_load(addr, nbytes, &table);
 	if (kernel_entry == 0) {
 		return -1;
 	}

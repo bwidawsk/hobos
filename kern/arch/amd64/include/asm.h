@@ -28,15 +28,15 @@ inb(uint16_t port) {
 
 static inline unsigned short 
 inw(uint16_t port) {
-	unsigned short retval;
-	__asm__ volatile ("inw %1, %0" : "=r"(retval) : "Nd"(port));
+	uint16_t retval;
+	__asm__ volatile ("inw %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
 
 static inline unsigned int 
 inl(uint16_t port) {
-	unsigned int  retval;
-	__asm__ volatile ("inl %1, %0" : "=r"(retval) : "Nd"(port));
+	uint32_t retval;
+	__asm__ volatile ("inl %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
 

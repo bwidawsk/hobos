@@ -6,8 +6,8 @@ lba: lba.o
 
 pt_walk : pt_walk.o
 
-md5: md5.c
-	$(CC) -I../common/include -o $@ $<
+md5: md5.c ../common/src/md5_base.c
+	$(CC) -I../common/include -o $@ $?
 
 clean :
 	-rm lba

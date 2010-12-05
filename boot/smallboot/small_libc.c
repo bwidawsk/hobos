@@ -1,6 +1,5 @@
 #ifndef va_list
 #include <stdarg.h>
-#warning using local stdarg.h
 #endif
 
 #include "small_libc.h"
@@ -199,5 +198,6 @@ printf(const char *format, ...) {
 
 	va_end(ap);
 	puts(test);	
+	return 0;
 }
 

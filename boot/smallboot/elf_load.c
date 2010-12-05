@@ -9,12 +9,13 @@
 #include "elf.h"
 
 #define ELF_PRINTF(...) printf(__VA_ARGS__)
+extern Elf64_Addr elf_load64(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
 
 static __ElfN(Ehdr) *
 validate_header(const void *addr) {
 	const char elf_magic[4] = { 0x7f, 'E', 'L', 'F' };
-	unsigned char *e_ident = (unsigned char *)addr;
-	int ret   = strncmp(e_ident, elf_magic, 4);
+	char *e_ident = (char *)addr;
+	int ret = strncmp(e_ident, elf_magic, 4);
 	//if (!IS_ELF(ehdr))
 	if (ret) {
 		ELF_PRINTF("not an elf\n");
@@ -46,7 +47,7 @@ elf_load(const void *addr, unsigned int loaded_len,
 	__ElfN(Ehdr) *ehdr = validate_header(addr);
 	
 	if (ehdr == 0)
-		return elf_load64(addr, loaded_len);
+		return elf_load64(addr, loaded_len, ret);
 
 	if (ehdr == 0)
 		return 0;

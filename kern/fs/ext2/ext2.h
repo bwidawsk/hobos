@@ -6,7 +6,6 @@
 	#include <stdint.h>
 	#define __le32 unsigned int
 	#define __le16 unsigned short
-#warning "We should have a better way to define these"
 #endif
 
 #ifndef __u8
