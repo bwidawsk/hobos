@@ -19,7 +19,7 @@ struct ata_channel {
 	struct ata_identify_data *identify_data;
 
 	uint32_t sector_size;
-	uint64_t size;
+	uint32_t num_sectors;
 	int disabled;
 	uint8_t bus;
 	uint8_t dev;

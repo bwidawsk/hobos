@@ -27,6 +27,7 @@ static struct ide_bus ide_busses[(MAX_CHANNEL + 1) / 2];
 static int total_channel = 0;
 static int scanned = 0;
 
+#define ATA1_SUPPORT
 #ifdef ATA1_SUPPORT
 	// ATA1 devices need bits 7 and 5 set
 	#define ATA_DEV_BITS 0xA0
@@ -91,24 +92,26 @@ ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 }
 
 static int
-do_read_sectors_28lba(struct ata_channel *ata, uint32_t lba, uint16_t *buf, uint64_t sectors) {
+do_read_sectors_28lba(struct ata_channel *ata, uint16_t *buf, uint32_t lba, uint8_t sectors) {
 	uint8_t dev_bits = ATA_DEV_BITS | ata->devid | ATA_DEV_LBA | (lba >> 24);
 	possibly_update_dev(ata, dev_bits);
 	ata->write_port8(ata, ATA_SECTCOUNT_REG, sectors);
 	ata->write_port8(ata, ATA_LBAL_REG, lba & 0xFF);
 	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 8) & 0xFF);
-	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 16) & 0xFF);
+	ata->write_port8(ata, ATA_LBAH_REG, (lba >> 16) & 0xFF);
 	ata_write_cmd(ata, ATA_CMD_READ_SECTORS);
-	ata_pio_read(ata, buf, (sectors * ata->sector_size) / 2);
+	return ata_pio_read(ata, buf, (sectors * ata->sector_size) / 2);
 }
 
 int
 ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t count) {
-	if (count > 256) {
+	if (count >= 256) {
 		printf("Count > 256 sectors is not yet supported\n");
+	} else {
+		printf("read %lld sectors starting at %lld\n", count, lba);
 	}
 
-	return 0;
+	return do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
 }
 
 static void
@@ -120,21 +123,24 @@ do_ata_identify(struct ata_channel *ata) {
 	}
 
 	possibly_update_dev(ata, ATA_DEV_BITS);
-
 	ata->write_port8(ata, ATA_SECTCOUNT_REG, 0);
 	ata->write_port8(ata, ATA_LBAL_REG, 0);
 	ata->write_port8(ata, ATA_LBAM_REG, 0);
 	ata->write_port8(ata, ATA_LBAH_REG, 0);
 
 	// Wait for DRDY to issue the identify command
-	ata_wait_for(ata, ATA_STS_DRDY);
+	// spec says i should do this, but it doesn't seem to work properly
+	//ata_wait_for(ata, ATA_STS_DRDY);
 
 	ata_write_cmd(ata, ATA_CMD_IDENTIFY);
 
 	uint8_t status = 0;
 	status = ata_read_status(ata);
-	if (status == 0)
-		printf("HELP, device doesn't exist?");
+	if (status == 0) {
+		printf("ATA channel %d, device %d does not exist\n",  ata->id, ata->devid >> 4);
+		ata->disabled = 1;
+		return;
+	}
 
 	// Wait until no longer busy
 	ata_wait_clear(ata, ATA_STS_BSY);
@@ -212,8 +218,12 @@ initialize_channel(struct ata_channel *ata) {
 		// status above called possible_update_dev()
 		ata->write_port8(ata, ATA_CTRL_REG, ATA_CTRL_nIEN);
 		do_ata_identify(ata);
-		//uint32_t total_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
+		ata->num_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
 		ata->sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
+		if(ata->sector_size == 0) {
+			printf("Warning sector size came up as 0, fix this!\n");
+			ata->sector_size = 512;
+		}
 	}
 }
 
@@ -234,7 +244,6 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 		// We set up these devices like traditional IDE devices
 		// TODO: is this appropriate for SATA?
 		struct ata_channel *ata = alloc_ata_dev();
-
 		set_funcandbars(ata, header.bar0, header.bar1, header.bar4);
 		set_other_stuff(ata, ATA_DEV_DEV0, temp[count_temp]);
 		initialize_channel(ata);
@@ -258,7 +267,7 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 static void
 possibly_update_dev(struct ata_channel *ata, uint8_t val) {
 	// adjust val to de device id specific
-	val = ata->devid | (val & ATA_DEV_DEV0);
+	val = ata->devid | (val & ~ATA_DEV_DEV0);
 
 	if (ata->idebus->current_dev != ata)  {
 		ata->devreg = val;
@@ -274,14 +283,12 @@ possibly_update_dev(struct ata_channel *ata, uint8_t val) {
 
 static uint8_t
 ata_read_status(struct ata_channel *ata) {
-	possibly_update_dev(ata, ATA_DEV_BITS);
 	return (uint8_t)ata->read_port8(ata, ATA_STS_REG);
 }
 
 static void
 ata_wait_for(struct ata_channel *ata, uint8_t mask) {
 	volatile uint8_t status;
-	possibly_update_dev(ata, ATA_DEV_BITS);
 	do {
 		status = ata_read_status(ata);
 	} while((status & mask) == 0);
@@ -290,7 +297,6 @@ ata_wait_for(struct ata_channel *ata, uint8_t mask) {
 static void
 ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
 	uint8_t status;
-	possibly_update_dev(ata, ATA_DEV_BITS);
 	do {
 		status = ata_read_status(ata);
 	} while((status & mask));
@@ -301,9 +307,9 @@ ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
 	ata->write_port8(ata, ATA_DEV_REG, devdata);
 }
 
+/* Should only be called after we've switched to the correct device */
 static void
 ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd) {
-	possibly_update_dev(ata, ATA_DEV_BITS);
 	if (cmd != ATA_CMD_DEVICE_RESET) {
 		// wait until DRQ and BSY are 0 before submitting a new command
 		uint8_t status ;
@@ -335,6 +341,7 @@ static int
 ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
 	ATA_CH_LOCK(ata);
+	ata_read_sectors(ata, buf, lba, count);
 	ATA_CH_RELEASE(ata);
 
 	return count;

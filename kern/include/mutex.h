@@ -10,8 +10,10 @@ struct mutex {
 		} \
 
 #define MUTEX_INIT(mtx, name) \
-	mtx = malloc(sizeof(struct mutex)); \
-	mtx->mutex_name = name
+	mtx = (struct mutex *)malloc(sizeof(struct mutex)); \
+	mtx->mutex_name = name; \
+	mtx->mutex_owner = 0; \
+	mtx->mutex_flags = 0
 
 struct mutex *mutex_init(char *name);
 void mutex_destroy(struct mutex *mtx);

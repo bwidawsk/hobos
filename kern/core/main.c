@@ -11,7 +11,7 @@
 struct mm_page_allocator *primary_allocator;
 
 struct thread first_thread = {
-	.tid = 0,
+	.tid = 1,
 	.debug = "poop"
 };
 extern char version[];
@@ -47,6 +47,9 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// TODO abstract sti
 	__asm__ volatile("sti");
 	call_initialization_functions();
+
+	do_ata_md5_test(0);
+
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
 	__asm__ volatile("ud2");

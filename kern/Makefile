@@ -2,9 +2,10 @@ TARGET?=amd64
 CC=x86_64-pc-linux-gnu-gcc
 LD=x86_64-pc-linux-gnu-ld
 #CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
+export ROOTDIR=$(PWD)
 CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -Wall 
 CFLAGS+=-DKERNEL -DAMD64 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD)
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include
 CFLAGS+=$(INCLUDES)
 CFLAGS+=-include $(PWD)/include/common.h
 
@@ -12,7 +13,6 @@ LDFLAGS?=
 MAKEDEPEND = makedepend
 MEMORY_ALLOCATOR=DS_ALLOCATOR
 CFLAGS+=-D$(MEMORY_ALLOCATOR)
-export ROOTDIR=$(PWD)
 export MAKEDEPEND
 export CC
 export LD
