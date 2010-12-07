@@ -4,6 +4,8 @@
 
 uint8_t temp_blks[256 * 512];
 
+#define MD5_BLOCKS_PER_ATA_SECTOR (512 / MD5_BLOCK_SIZE)
+
 void do_ata_md5_test(int whichdev) {
 	struct block_device blkdev;
 	ata_init_blkdev(&blkdev, 0);
@@ -11,6 +13,8 @@ void do_ata_md5_test(int whichdev) {
 	KASSERT(ata->disabled == 0, ("badness"));
 	printf("testing device with %d sectors of %d size\n", ata->num_sectors, ata->sector_size);
 
+	struct md5_context ctx;
+	init_md5_ctx(&ctx, NULL, ata->num_sectors * ata->sector_size);
 	int i = 0;
 	blkdev.read_block(&blkdev, i, temp_blks, 255);
 	printf("%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n", 

@@ -10,9 +10,9 @@ static void ata_dump_identity(struct ata_channel *ata);
 static uint8_t ata_read_status(struct ata_channel *ata);
 static void ata_wait_for(struct ata_channel *ata, uint8_t mask);
 static void ata_wait_clear(struct ata_channel *ata, uint8_t mask);
-static void ata_write_dev(struct ata_channel *ata, uint8_t devdata);
-static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd);
-static void possibly_update_dev(struct ata_channel *ata, uint8_t val);
+static void ata_write_dev(struct ata_channel *ata, uint8_t devdata, const int skip_check);
+static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd, const int skip_check);
+static int possibly_update_dev(struct ata_channel *ata, uint8_t val);
 static int ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
 static int ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
 
@@ -42,6 +42,10 @@ static int scanned = 0;
 
 #define ATA_FROM_BLK(blk) ((struct ata_channel *)blk->pvt_data)
 
+#define SKIP_CHECK 1
+#define MUST_CHECK 0
+#define UPDATE_CHECK(update) ((updated) ? MUST_CHECK : SKIP_CHECK)
+
 static struct ata_channel *
 alloc_ata_dev() {
 	KASSERT(total_channel < MAX_CHANNEL, ("not enough channel structures\n"));
@@ -66,25 +70,364 @@ ata_init_blkdev(struct block_device *dev, int which) {
 	dev->pvt_data = ata;
 }
 
+#define ata_read_status ata_read_asr
+static uint8_t
+ata_read_asr(struct ata_channel *ata) {
+	uint8_t ret = ata->read_port8(ata, ATA_ASTS_REG);
+	if (ret & ATA_STS_BSY) {
+		/* 5.2.2 -
+		 * When the BSY bit is set to one, the other bits in this register shall not be used. 
+		 */
+		return ATA_STS_BSY;
+	}
+
+	return ret;
+}
+
+static uint8_t
+ata_read_sr(struct ata_channel *ata) {
+	uint8_t ret = ata->read_port8(ata, ATA_ASTS_REG);
+	if (ret & ATA_STS_BSY) {
+		/* 5.14.2 -
+		 * When the BSY bit is set to one, the other bits in this register shall not be used. 
+		 */
+		return ATA_STS_BSY;
+	}
+	return ret;
+
+}
+
+static void
+ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd, const int skip_check) {
+	/* 5.3.2
+	 * this register shall only be written when BSY and DRQ are both
+	 * cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_CMD_REG, cmd);
+		return;
+	}
+	#endif
+	if (cmd != ATA_CMD_DEVICE_RESET) {
+		// wait until DRQ and BSY are 0 before submitting a new command
+		uint8_t status ;
+		do {
+			status= ata_read_status(ata);
+		} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
+	}
+	ata->write_port8(ata, ATA_CMD_REG, cmd);
+}
+
+static void
+ata_write_data_port(struct ata_channel *ata, uint16_t data) {
+
+	/* 5.4.2
+	 * This port shall be accessed for host DMA data transfers only when DMACK- and DMARQ are asserted.
+	 */
+	 // TODO: check DMACK and DMARQ?
+	ata->write_port16(ata, ATA_DATA_REG, data);
+}
+
+static uint16_t
+ata_read_data_port(struct ata_channel *ata) {
+
+	/* 5.4.2
+	 * This port shall be accessed for host DMA data transfers only when DMACK- and DMARQ are asserted.
+	 */
+	 // TODO: check DMACK and DMARQ?
+	return ata->read_port16(ata, ATA_DATA_REG);
+}
+
+static void
+ata_write_data(struct ata_channel *ata, uint16_t data, const int skip_check) {
+
+	/* 5.5.2
+	 * This register shall be accessed for host PIO data transfer only when DRQ is set to one and DMACK- is not
+	 * asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port16(ata, ATA_DATA_REG, data);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(!(status & ATA_STS_DRQ));
+	return ata->write_port16(ata, ATA_DATA_REG, data);
+}
+
+static uint16_t
+ata_read_data(struct ata_channel *ata, const int skip_check) {
+
+	/* 5.5.2
+	 * This register shall be accessed for host PIO data transfer only when DRQ is set to one and DMACK- is not
+	 * asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) 
+		return ata->read_port16(ata, ATA_DATA_REG);
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(!(status & ATA_STS_DRQ));
+
+	return ata->read_port16(ata, ATA_DATA_REG);
+}
+
+static void
+ata_write_dev(struct ata_channel *ata, uint8_t devdata, const int skip_check) {
+	/* 5.6.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_DEV_REG, devdata);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_DEV_REG, devdata);
+}
+
+/* val is all bits except the device ID */
+static int
+possibly_update_dev(struct ata_channel *ata, uint8_t val) {
+	// adjust val to de device id specific
+	val = ata->devid | (val & ~ATA_DEV_DEV0);
+
+	if (ata->idebus->current_dev != ata)  {
+		ata->devreg = val;
+		ata_write_dev(ata, ata->devreg, MUST_CHECK);
+		ata->idebus->current_dev = ata;
+		// wait 400 ns after changing device
+		timed_delay(1);
+		return 1;
+	} else if (ata->devreg != val) {
+		ata->devreg = val;
+		ata_write_dev(ata, ata->devreg, MUST_CHECK);
+		return 1;
+	}
+	return 0;
+}
+
+static void
+ata_write_ctrl(struct ata_channel *ata, uint8_t data, const int skip_check) {
+	/* 5.7.2
+	 * This register shall only be written when DMACK- is not asserted.
+	 */
+	 ata->write_port8(ata, ATA_CTRL_REG, data);
+}
+
+/* TODO: not really safe to just read this see 5.8.2 */
+static uint8_t
+ata_read_err(struct ata_channel *ata) {
+	return ata->read_port8(ata, ATA_ERROR_REG);
+}
+
+static uint8_t
+ata_read_dev(struct ata_channel *ata, const int skip_check) {
+	/* 5.6.2
+	 * The contents of this register are valid only when BSY is cleared to zero.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) 
+		return ata->read_port8(ata, ATA_DEV_REG);
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & ATA_STS_BSY);
+	return ata->read_port8(ata, ATA_DEV_REG);
+}
+
+static void
+ata_write_lbah(struct ata_channel *ata, uint8_t data, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_LBAH_REG, data);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_LBAH_REG, data);
+}
+
+static uint8_t
+ata_read_lbah(struct ata_channel *ata, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		return ata->read_port8(ata, ATA_LBAH_REG);
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	return ata->read_port8(ata, ATA_LBAH_REG);
+}
+
+static void
+ata_write_lbam(struct ata_channel *ata, uint8_t data, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_LBAM_REG, data);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_LBAM_REG, data);
+}
+
+static uint8_t
+ata_read_lbam(struct ata_channel *ata, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		return ata->read_port8(ata, ATA_LBAM_REG);
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	return ata->read_port8(ata, ATA_LBAM_REG);
+}
+
+static void
+ata_write_lbal(struct ata_channel *ata, uint8_t data, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_LBAL_REG, data);
+		return;
+	}
+	#endif
+
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_LBAL_REG, data);
+}
+
+static uint8_t
+ata_read_lbal(struct ata_channel *ata, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		return ata->read_port8(ata, ATA_LBAL_REG);
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	return ata->read_port8(ata, ATA_LBAL_REG);
+}
+
+
+static void
+ata_write_lba(struct ata_channel *ata, uint32_t lba, const int skip_check) {
+	/* 5.10.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_LBAH_REG, (lba >> 16) & 0xFF);
+		ata->write_port8(ata, ATA_LBAM_REG, (lba >> 8) & 0xFF);
+		ata->write_port8(ata, ATA_LBAL_REG, (lba >> 0) &0xFF);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_LBAH_REG, (lba >> 16) & 0xFF);
+	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 8) & 0xFF);
+	ata->write_port8(ata, ATA_LBAL_REG, (lba >> 0) &0xFF);
+}
+
+static void
+ata_write_sectcount(struct ata_channel *ata, uint8_t data, const int skip_check) {
+	/* 5.13.2
+	 * This register shall be written only when both BSY and DRQ are cleared to zero and DMACK- is not asserted.
+	 */
+	#ifndef ATA_EXTRA_SAFE
+	if (skip_check) {
+		ata->write_port8(ata, ATA_SECTCOUNT_REG, data);
+		return;
+	}
+	#endif
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+	} while(status & (ATA_STS_BSY | ATA_STS_DRQ));
+	ata->write_port8(ata, ATA_SECTCOUNT_REG, data);
+}
+
+// BELOW THIS POINT THERE SHOULD BE NO DIRECT READ OR WRITE PORTS
+
+#define ATA_POLL_DRQ0 -10
+static int
+ata_status_wait_unbusy(struct ata_channel *ata) {
+	uint8_t status;
+	do {
+		status = ata_read_status(ata);
+		if (status & ATA_STS_DFSE) 
+			return -3;
+		if (status & ATA_STS_ERRCHK) {
+			printf("Warning, error return %x\n", ata_read_err(ata));
+			return -2;
+		}
+	} while(status & ATA_STS_BSY);
+	
+	if (!(status & ATA_STS_DRQ)) {
+		return ATA_POLL_DRQ0;
+	}
+
+	return !(status & ATA_STS_DRDY);
+}
+
 /*
  * Basic function to do the pio reads, knows nothing of commands or
  * register state (except status)
  */
 static int
 ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
-	volatile uint8_t status;
 	while(words) {
-		do {
-			status = ata_read_status(ata);
-			// TODO: we should sleep here?
-		} while(!(status & ATA_STS_DRQ));
-
-		if (!(status & ATA_STS_DRDY)) {
-			printf("Fatal ATA error\n");
-			return -1;
-		}
-
-		*buf = ata->read_port16(ata, ATA_DATA_REG);
+		/* FACT CHECK:
+		 * we don't need to check DRQ bit if we're reading in the same block 
+		 */
+		*buf = ata_read_data(ata, SKIP_CHECK);
 		buf++;
 		words--;
 	}
@@ -94,24 +437,39 @@ ata_pio_read(struct ata_channel *ata, uint16_t *buf, uint64_t words) {
 static int
 do_read_sectors_28lba(struct ata_channel *ata, uint16_t *buf, uint32_t lba, uint8_t sectors) {
 	uint8_t dev_bits = ATA_DEV_BITS | ata->devid | ATA_DEV_LBA | (lba >> 24);
-	possibly_update_dev(ata, dev_bits);
-	ata->write_port8(ata, ATA_SECTCOUNT_REG, sectors);
-	ata->write_port8(ata, ATA_LBAL_REG, lba & 0xFF);
-	ata->write_port8(ata, ATA_LBAM_REG, (lba >> 8) & 0xFF);
-	ata->write_port8(ata, ATA_LBAH_REG, (lba >> 16) & 0xFF);
-	ata_write_cmd(ata, ATA_CMD_READ_SECTORS);
-	return ata_pio_read(ata, buf, (sectors * ata->sector_size) / 2);
-}
-
-int
-ata_read_sectors(struct ata_channel *ata, void *buf, uint64_t lba, uint64_t count) {
-	if (count >= 256) {
-		printf("Count > 256 sectors is not yet supported\n");
-	} else {
-		printf("read %lld sectors starting at %lld\n", count, lba);
+	uint16_t real_sectors = (sectors == 0) ? 256 : sectors;
+	int updated;
+	int i;
+	updated = possibly_update_dev(ata, dev_bits);
+	ata_write_sectcount(ata, sectors, UPDATE_CHECK(updated));
+	// Checked above
+	ata_write_lba(ata, lba, SKIP_CHECK);
+	// If the device wasn't updated, we don't have to check
+	ata_write_cmd(ata, ATA_CMD_READ_SECTORS, SKIP_CHECK);
+	timed_delay(1);
+	int ret = ata_status_wait_unbusy(ata);
+	if (ret != 0) {
+		printf("FIXME %d!!!\n", ret);
 	}
 
-	return do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
+	for(i = 0; i < real_sectors; i++) {
+		ata_pio_read(ata, &buf[i * ata->sector_size / 2], ata->sector_size / 2);
+		/* When entering this state from the HPIOI2 state,
+		the host shall wait one PIO transfer cycle time before reading the Status register. The wait may be
+		accomplished by reading the Alternate Status register and ignoring the result.
+		*/
+		// discard
+		ret = ata_read_asr(ata);
+
+		ret = ata_status_wait_unbusy(ata);
+		/* Wait unbusy normally tells us the status of drdy, which we don't care about for pio */
+
+		if (ret == ATA_POLL_DRQ0) {
+			if ( (i + 1) < real_sectors) {
+				printf("ATA WARNING!!! unexpected end to PIO\n");
+			}
+		}
+	}
 }
 
 static void
@@ -122,44 +480,30 @@ do_ata_identify(struct ata_channel *ata) {
 		ata->identify_data = malloc(sizeof(struct ata_identify_data));
 	}
 
-	possibly_update_dev(ata, ATA_DEV_BITS);
-	ata->write_port8(ata, ATA_SECTCOUNT_REG, 0);
-	ata->write_port8(ata, ATA_LBAL_REG, 0);
-	ata->write_port8(ata, ATA_LBAM_REG, 0);
-	ata->write_port8(ata, ATA_LBAH_REG, 0);
+	int updated = possibly_update_dev(ata, ATA_DEV_BITS);
+	ata_write_sectcount(ata, 0, UPDATE_CHECK(updated));
+	ata_write_lba(ata, 0, SKIP_CHECK);
 
 	// Wait for DRDY to issue the identify command
 	// spec says i should do this, but it doesn't seem to work properly
 	//ata_wait_for(ata, ATA_STS_DRDY);
 
-	ata_write_cmd(ata, ATA_CMD_IDENTIFY);
 
-	uint8_t status = 0;
-	status = ata_read_status(ata);
-	if (status == 0) {
+	// ata_write_lba asserted DRQ and BSDY
+	ata_write_cmd(ata, ATA_CMD_IDENTIFY, SKIP_CHECK);
+	int ret = ata_status_wait_unbusy(ata);
+	if(ret != 0) {
+		// DRDY should have been set
 		printf("ATA channel %d, device %d does not exist\n",  ata->id, ata->devid >> 4);
 		ata->disabled = 1;
 		return;
 	}
 
-	// Wait until no longer busy
-	ata_wait_clear(ata, ATA_STS_BSY);
-
 	// According to OSDev, we need to check LBAM and LBAH for some older packet devices
-	if (ata->read_port8(ata, ATA_LBAM_REG) || ata->read_port8(ata, ATA_LBAH_REG))
+	if(ata_read_lbam(ata, SKIP_CHECK) || ata_read_lbah(ata, SKIP_CHECK)) {
 		printf("HELP, device isn't ATA?");
-
-	uint8_t error;
-	while(1) {
-		status = ata_read_status(ata);
-		if (status & ATA_STS_DRQ)
-			break;
-		error = ata->read_port8(ata, ATA_ERROR_REG);
-		// TODO: why do this?
-		if (error & 1) {
-			printf("Bad again\n");
-			break;
-		}
+		ata->disabled = 1;
+		return;
 	}
 
 	// size is in words, so divide by 2
@@ -216,7 +560,7 @@ initialize_channel(struct ata_channel *ata) {
 	else {
 		// It's safe to use write_port here (for now) because
 		// status above called possible_update_dev()
-		ata->write_port8(ata, ATA_CTRL_REG, ATA_CTRL_nIEN);
+		ata_write_ctrl(ata, ATA_CTRL_nIEN, SKIP_CHECK);
 		do_ata_identify(ata);
 		ata->num_sectors = *(uint32_t*)&ata->identify_data->total_sectors;
 		ata->sector_size = *(uint32_t*)&ata->identify_data->logical_sector_size;
@@ -263,28 +607,7 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 	scanned = 1;
 }
 
-/* val is all bits except the device ID */
-static void
-possibly_update_dev(struct ata_channel *ata, uint8_t val) {
-	// adjust val to de device id specific
-	val = ata->devid | (val & ~ATA_DEV_DEV0);
 
-	if (ata->idebus->current_dev != ata)  {
-		ata->devreg = val;
-		ata_write_dev(ata, ata->devreg);
-		ata->idebus->current_dev = ata;
-		// wait 400 ns after changing device
-		timed_delay(1);
-	} else if (ata->devreg != val) {
-		ata->devreg = val;
-		ata_write_dev(ata, ata->devreg);
-	}
-}
-
-static uint8_t
-ata_read_status(struct ata_channel *ata) {
-	return (uint8_t)ata->read_port8(ata, ATA_STS_REG);
-}
 
 static void
 ata_wait_for(struct ata_channel *ata, uint8_t mask) {
@@ -302,23 +625,6 @@ ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
 	} while((status & mask));
 }
 
-static void
-ata_write_dev(struct ata_channel *ata, uint8_t devdata) {
-	ata->write_port8(ata, ATA_DEV_REG, devdata);
-}
-
-/* Should only be called after we've switched to the correct device */
-static void
-ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd) {
-	if (cmd != ATA_CMD_DEVICE_RESET) {
-		// wait until DRQ and BSY are 0 before submitting a new command
-		uint8_t status ;
-		do {
-			status= ata_read_status(ata);
-		} while(status & (ATA_STS_DRQ | ATA_STS_BSY));
-	}
-	ata->write_port8(ata, ATA_CMD_REG, cmd);
-}
 
 static void
 ata_dump_identity(struct ata_channel *ata) {
@@ -341,9 +647,17 @@ static int
 ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
 	ATA_CH_LOCK(ata);
-	ata_read_sectors(ata, buf, lba, count);
+	if (count > 256) {
+		printf("Count > 256 sectors is not yet supported\n");
+	} else {
+		printf("read %lld sectors starting at %lld\n", count, lba);
+	}
+
+	int ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
+
 	ATA_CH_RELEASE(ata);
 
+	return ret;
 	return count;
 }
 

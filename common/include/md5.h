@@ -10,6 +10,8 @@
 // end up writing in the remaining bytes, plus a full block, 64 + (64 - 56) = 72
 #define MD5_FILE_PADDING (MD5_BLOCK_SIZE + (MD5_BLOCK_SIZE - MD5_PRE_PAD_BLOCK_SIZE))
 
+#define MD5_SAFE_BLOCK_SIZE (MD5_BLOCK_SIZE + MD5_FILE_PADDING)
+
 struct md5_context {
 	uint64_t size;
 	uint64_t hashed_bytes;
