@@ -63,7 +63,7 @@ pad_block(struct md5_context *ctx) {
 		bytes_to_write = MD5_PRE_PAD_BLOCK_SIZE - offset;
 	} else {
 		bytes_to_write = (MD5_PRE_PAD_BLOCK_SIZE + MD5_BLOCK_SIZE) - offset;
-		ret++;
+		ret = bytes_to_write;
 	}
 
 	memcpy(ctx->curptr + offset, md5_pad, bytes_to_write);
@@ -108,3 +108,22 @@ md5_hash_block(struct md5_context *ctx) {
 	ctx->h3 = ctx->h3 + d;
 	ctx->hashed_bytes += MD5_BLOCK_SIZE;
 }
+
+void
+display_md5hash(struct md5_context *ctx) {
+	int i;
+	for(i = 0; i < 4; i++) {
+		printf("%02x", ((uint8_t*)&ctx->h0)[i]);
+	}
+	for(i = 0; i < 4; i++) {
+		printf("%02x", ((uint8_t*)&ctx->h1)[i]);
+	}
+	for(i = 0; i < 4; i++) {
+		printf("%02x", ((uint8_t*)&ctx->h2)[i]);
+	}
+	for(i = 0; i < 4; i++) {
+		printf("%02x", ((uint8_t*)&ctx->h3)[i]);
+	}
+}
+
+

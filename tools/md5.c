@@ -15,22 +15,21 @@
 #endif
 
 void
-display_md5hash(struct md5_context *ctx) {
+dump_block(uint8_t *block) {
 	int i;
-	for(i = 0; i < 4; i++) {
-		printf("%02x", ((uint8_t*)&ctx->h0)[i]);
+	for(i = 0; i < MD5_BLOCK_SIZE; i+=8) {
+		printf("%02x %02x %02x %02x %02x %02x %02x %02x\n",
+		block[i + 0], 
+		block[i + 1], 
+		block[i + 2], 
+		block[i + 3], 
+		block[i + 4], 
+		block[i + 5], 
+		block[i + 6], 
+		block[i + 7]);
 	}
-	for(i = 0; i < 4; i++) {
-		printf("%02x", ((uint8_t*)&ctx->h1)[i]);
-	}
-	for(i = 0; i < 4; i++) {
-		printf("%02x", ((uint8_t*)&ctx->h2)[i]);
-	}
-	for(i = 0; i < 4; i++) {
-		printf("%02x", ((uint8_t*)&ctx->h3)[i]);
-	}
-}
 
+}
 int main(int argc, char *argv[]) {
 	if (argc > 1) {
 		int fd;
@@ -64,6 +63,8 @@ int main(int argc, char *argv[]) {
 		//pad_md5(buf, file_size);
 
 		uint64_t num_chunks = ctx.size / MD5_BLOCK_SIZE;
+		if (((ctx.size % MD5_BLOCK_SIZE) == 0) && ctx.size != 0)
+			num_chunks++;
 		// go until the last block which may need to be padded
 		for (;num_chunks > 1 ; num_chunks--) {
 			md5_hash_block(&ctx);
@@ -75,7 +76,6 @@ int main(int argc, char *argv[]) {
 			ctx.curptr += MD5_BLOCK_SIZE;
 			md5_hash_block(&ctx);
 		}
-
 		display_md5hash(&ctx);
 		printf("\t%s\n", argv[1]);
 		free(buf);
@@ -101,21 +101,6 @@ create_k_values() {
 		printf("\n");
 	}
 }
-void
-dump_block(uint8_t *block) {
-	int i;
-	for(i = 0; i < MD5_BLOCK_SIZE; i+=8) {
-		printf("%02x %02x %02x %02x %02x %02x %02x %02x\n",
-		block[i + 0], 
-		block[i + 1], 
-		block[i + 2], 
-		block[i + 3], 
-		block[i + 4], 
-		block[i + 5], 
-		block[i + 6], 
-		block[i + 7]);
-	}
 
-}
 
 #endif

@@ -11,11 +11,65 @@ void do_ata_md5_test(int whichdev) {
 	ata_init_blkdev(&blkdev, 0);
 	struct ata_channel *ata = (struct ata_channel *)blkdev.pvt_data;
 	KASSERT(ata->disabled == 0, ("badness"));
-	printf("testing device with %d sectors of %d size\n", ata->num_sectors, ata->sector_size);
+
+	int test_sectors = ata->num_sectors;
+
+	printf("ATA MD5 testing %d sectors of %d size\n", test_sectors, ata->sector_size);
 
 	struct md5_context ctx;
-	init_md5_ctx(&ctx, NULL, ata->num_sectors * ata->sector_size);
-	int i = 0;
+	init_md5_ctx(&ctx, NULL, ata->sector_size * test_sectors);
+	int i = 0, j;
+
+	/* Do 256 ata blocks at a time since it goes faster in block IO */
+	for(i = 0; i < test_sectors - 257; i+=256)  {
+		blkdev.read_block(&blkdev, i, temp_blks, 256);
+		for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR * 256; j++)  {
+			ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
+			md5_hash_block(&ctx);
+		}
+		printf("*");
+	}
+	
+	/* Do 16 ata blocks at a time since it goes faster in block IO */
+	for(i; i < test_sectors - 17; i+=16)  {
+		blkdev.read_block(&blkdev, i, temp_blks, 16);
+		for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR * 16; j++)  {
+			ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
+			md5_hash_block(&ctx);
+		}
+		printf("+");
+	}
+
+	/* Do a block at a time until the last block */
+	for(i; i < test_sectors - 1; i++)  {
+		blkdev.read_block(&blkdev, i, temp_blks, 1);
+		for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR; j++)  {
+			ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
+			md5_hash_block(&ctx);
+		}
+		printf("-");
+	}
+
+	/* Do the last block and pad*/
+	blkdev.read_block(&blkdev, i, temp_blks, 1);
+	// Normally we'd do MD5_BLOCKS_PER_ATA_SECTOR - 1, but since we know our size is divisible by 64, we
+	// must add an extra
+	for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR; j++)  {
+		ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
+		md5_hash_block(&ctx);
+	}
+
+	ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
+	int ret = pad_block(&ctx);
+	md5_hash_block(&ctx);
+	if (ret) {
+		ctx.curptr += MD5_BLOCK_SIZE;
+		md5_hash_block(&ctx);
+	}
+	printf("\n");
+	display_md5hash(&ctx);
+	printf("\n");
+/*
 	blkdev.read_block(&blkdev, i, temp_blks, 255);
 	printf("%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n", 
 		temp_blks[0],
@@ -34,4 +88,5 @@ void do_ata_md5_test(int whichdev) {
 		temp_blks[13],
 		temp_blks[14],
 		temp_blks[15]);
+*/
 }

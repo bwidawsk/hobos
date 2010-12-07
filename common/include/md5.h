@@ -44,4 +44,5 @@ int pad_block(struct md5_context *ctx);
 // Hash the block at ctx.curptr
 void md5_hash_block(struct md5_context *ctx);
 
+void display_md5hash(struct md5_context *ctx);
 #endif

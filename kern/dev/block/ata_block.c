@@ -650,7 +650,7 @@ ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count
 	if (count > 256) {
 		printf("Count > 256 sectors is not yet supported\n");
 	} else {
-		printf("read %lld sectors starting at %lld\n", count, lba);
+	//	printf("read %lld sectors starting at %lld\n", count, lba);
 	}
 
 	int ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
