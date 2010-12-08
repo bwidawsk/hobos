@@ -2,7 +2,7 @@
 #include <md5.h>
 #include "ata_block.h"
 
-uint8_t temp_blks[256 * 512];
+uint8_t temp_blks[256 * 512] _INITSECTION_;
 
 #define MD5_BLOCKS_PER_ATA_SECTOR (512 / MD5_BLOCK_SIZE)
 
@@ -31,7 +31,7 @@ void do_ata_md5_test(int whichdev) {
 	}
 	
 	/* Do 16 ata blocks at a time since it goes faster in block IO */
-	for(i; i < test_sectors - 17; i+=16)  {
+	for( ;i < test_sectors - 17; i+=16)  {
 		blkdev.read_block(&blkdev, i, temp_blks, 16);
 		for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR * 16; j++)  {
 			ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
@@ -41,7 +41,7 @@ void do_ata_md5_test(int whichdev) {
 	}
 
 	/* Do a block at a time until the last block */
-	for(i; i < test_sectors - 1; i++)  {
+	for(; i < test_sectors - 1; i++)  {
 		blkdev.read_block(&blkdev, i, temp_blks, 1);
 		for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR; j++)  {
 			ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
@@ -69,24 +69,4 @@ void do_ata_md5_test(int whichdev) {
 	printf("\n");
 	display_md5hash(&ctx);
 	printf("\n");
-/*
-	blkdev.read_block(&blkdev, i, temp_blks, 255);
-	printf("%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n", 
-		temp_blks[0],
-		temp_blks[1],
-		temp_blks[2],
-		temp_blks[3],
-		temp_blks[4],
-		temp_blks[5],
-		temp_blks[6],
-		temp_blks[7],
-		temp_blks[8],
-		temp_blks[9],
-		temp_blks[10],
-		temp_blks[11],
-		temp_blks[12],
-		temp_blks[13],
-		temp_blks[14],
-		temp_blks[15]);
-*/
 }
