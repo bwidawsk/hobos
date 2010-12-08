@@ -2,14 +2,10 @@
 #include <dev/pci/pci_access.h>
 #include <mm/malloc.h>
 #include <mutex.h>
-#include <timer.h> // timed_delay
 #include <init_funcs.h>
 #include "ata.h"
 
 static void ata_dump_identity(struct ata_channel *ata);
-static uint8_t ata_read_status(struct ata_channel *ata);
-static void ata_wait_for(struct ata_channel *ata, uint8_t mask);
-static void ata_wait_clear(struct ata_channel *ata, uint8_t mask);
 static void ata_write_dev(struct ata_channel *ata, uint8_t devdata, const int skip_check);
 static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd, const int skip_check);
 static int possibly_update_dev(struct ata_channel *ata, uint8_t val);
@@ -45,6 +41,18 @@ static int scanned = 0;
 #define SKIP_CHECK 1
 #define MUST_CHECK 0
 #define UPDATE_CHECK(update) ((updated) ? MUST_CHECK : SKIP_CHECK)
+
+#ifdef ATA_TIMED_DELAY
+#include <timer.h> // timed_delay
+#define ATA_DELAY_400NS \
+	timed_delay(1)
+#else
+	#define ATA_DELAY_400NS \
+	ata_read_asr(ata); \
+	ata_read_asr(ata); \
+	ata_read_asr(ata); \
+	ata_read_asr(ata)
+#endif
 
 static struct ata_channel *
 alloc_ata_dev() {
@@ -207,7 +215,7 @@ possibly_update_dev(struct ata_channel *ata, uint8_t val) {
 		ata_write_dev(ata, ata->devreg, MUST_CHECK);
 		ata->idebus->current_dev = ata;
 		// wait 400 ns after changing device
-		timed_delay(1);
+		ATA_DELAY_400NS;
 		return 1;
 	} else if (ata->devreg != val) {
 		ata->devreg = val;
@@ -446,10 +454,11 @@ do_read_sectors_28lba(struct ata_channel *ata, uint16_t *buf, uint32_t lba, uint
 	ata_write_lba(ata, lba, SKIP_CHECK);
 	// If the device wasn't updated, we don't have to check
 	ata_write_cmd(ata, ATA_CMD_READ_SECTORS, SKIP_CHECK);
-	timed_delay(1);
+	ATA_DELAY_400NS;
 	int ret = ata_status_wait_unbusy(ata);
 	if (ret != 0) {
 		printf("FIXME %d!!!\n", ret);
+		return 0;
 	}
 
 	for(i = 0; i < real_sectors; i++) {
@@ -467,9 +476,11 @@ do_read_sectors_28lba(struct ata_channel *ata, uint16_t *buf, uint32_t lba, uint
 		if (ret == ATA_POLL_DRQ0) {
 			if ( (i + 1) < real_sectors) {
 				printf("ATA WARNING!!! unexpected end to PIO\n");
+				return real_sectors - 1;
 			}
 		}
 	}
+	return real_sectors;
 }
 
 static void
@@ -606,25 +617,6 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 	printf("ATA scan completed\n");
 	scanned = 1;
 }
-
-
-
-static void
-ata_wait_for(struct ata_channel *ata, uint8_t mask) {
-	volatile uint8_t status;
-	do {
-		status = ata_read_status(ata);
-	} while((status & mask) == 0);
-}
-
-static void
-ata_wait_clear(struct ata_channel *ata, uint8_t mask) {
-	uint8_t status;
-	do {
-		status = ata_read_status(ata);
-	} while((status & mask));
-}
-
 
 static void
 ata_dump_identity(struct ata_channel *ata) {
