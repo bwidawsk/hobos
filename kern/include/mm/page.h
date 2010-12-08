@@ -1,4 +1,3 @@
-#include "stdint.h"
 #ifdef AMD64
 	#include "../arch/ia_common/ia_defines.h"
 #endif

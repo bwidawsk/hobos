@@ -1,4 +1,3 @@
-#include <stdint.h>
 
 /*
  * This was coded by me, but based off of the wikipedia article

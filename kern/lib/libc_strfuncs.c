@@ -1,4 +1,3 @@
-#include <stdint.h>
 
 char *__hbuiltin_strcpy_safe(char *dest, const char *src);
 char *__hbuiltin_strncpy(char *dest, const char *src, uint64_t n);

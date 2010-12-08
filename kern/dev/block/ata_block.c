@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <dev/pci/pci_access.h>
 #include <mm/malloc.h>
 #include <mutex.h>

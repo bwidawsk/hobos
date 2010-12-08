@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <mm/mm.h>
 #include <mm/page.h>
 #include <mm/page_allocator.h>

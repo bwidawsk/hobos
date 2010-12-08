@@ -1,4 +1,3 @@
-#include <stdint.h>
 
 void *__hbuiltin_memcpy(void *dest, const void *src, uint64_t n);
 void *__hbuiltin_memset(void *s, int c, uint64_t n);

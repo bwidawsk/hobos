@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <console.h>
 #include "8250_regs.h"
 #include "8250.h"

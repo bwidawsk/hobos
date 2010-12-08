@@ -1,4 +1,3 @@
-#include "stdint.h"
 #include "amd64_defines.h"
 #include "../ia_common/ia_defines.h"
 /* 

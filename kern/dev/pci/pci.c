@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "pci_access.h"
 
 uint8_t

@@ -3,7 +3,6 @@
 /* http://web.mit.edu/tytso/www/linux/ext2intro.html */
 
 #ifndef __le32
-	#include <stdint.h>
 	#define __le32 unsigned int
 	#define __le16 unsigned short
 #endif

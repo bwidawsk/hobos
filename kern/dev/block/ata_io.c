@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <arch/asm.h>
 #include "ata.h"
 

@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <arch/asm.h>
 #include <arch/irq.h>
 #include <timer.h>

@@ -1,6 +1,5 @@
 // Algorithm from http://en.wikipedia.org/wiki/MD5
 
-#include <stdint.h>
 #include <md5.h>
 
 // Rotate values copied directly from wiki

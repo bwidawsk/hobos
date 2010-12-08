@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <arch/irq.h>
 
 /* Currently hardcoded to use 8259 */

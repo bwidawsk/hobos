@@ -1,3 +1,4 @@
+#include <stdarg.h> // This is defined in common/include
 
 /* Simple ring buffer for holding char data */
 char buf[64];
@@ -31,13 +32,6 @@ num_to_hex(unsigned long long num, char ret[16]) {
 	while(i--)
 		ret[15-i] = hex_chars[(num >> (i*4))& 0xf];
 }
-/* is it safe to use stdarg? I think as long as the cross compile stuff is
- * set up okay, it should be.
- * This is the same code from bootloader, only %x and %s available. There we
- * depended on memset, memcpy and strlen - here we've implemented C versions
- * in place as print speed shouldn't be an issue.
- */
-#include <stdarg.h>
 #define PRINTF_BUF_MAX 512
 static char test[PRINTF_BUF_MAX];
 int 

@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <md5.h>
 #include "ata_block.h"
 

@@ -3,12 +3,12 @@ CC=x86_64-pc-linux-gnu-gcc
 LD=x86_64-pc-linux-gnu-ld
 #CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
 export ROOTDIR=$(PWD)
-CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -Wall 
+CFLAGS+=-DGCC
+CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
 CFLAGS+=-DKERNEL -DAMD64 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include
-CFLAGS+=$(INCLUDES)
-CFLAGS+=-include $(PWD)/include/common.h
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
 
+CFLAGS+=$(INCLUDES)
 LDFLAGS?=
 MAKEDEPEND = makedepend
 MEMORY_ALLOCATOR=DS_ALLOCATOR
@@ -34,7 +34,7 @@ $(OUTPUT) : include_clean
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel
 
 # autocleans if critical files change
-include_clean : include/common.h 
+include_clean : include/common.h
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done
 	touch $@

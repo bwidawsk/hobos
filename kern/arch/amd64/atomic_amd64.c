@@ -1,4 +1,3 @@
-#include <stdint.h>
 /* if rax == dest
 	dest = src
 else

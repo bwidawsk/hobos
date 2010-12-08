@@ -1,4 +1,3 @@
-#include "stdint.h"
 #include <console.h> // start_interactive_console
 #include "gdt.h" // need KERNEL_CS64 in SET_IDT_INTR macro
 #include "include/irq.h" //AKA <arch/irq.h>

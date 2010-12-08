@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <bs_commands.h>
 #include "include/irq.h" // AKA <arch/irq.h>
 #include "idt_common.h"

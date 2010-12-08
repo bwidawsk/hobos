@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "console.h"
 
 #include <arch/asm.h>

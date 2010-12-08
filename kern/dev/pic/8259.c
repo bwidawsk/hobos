@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <interrupt.h> // request_irq
 #include <arch/asm.h>
 #include <arch/atomic.h>

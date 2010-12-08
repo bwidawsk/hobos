@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "init_funcs.h"
 
 INITFUNCS_CREATE_LIST;
@@ -41,7 +40,7 @@ call_initialization_functions() {
 	 * on total elements, it is relatively safe. Also since we only use AMD64 ABI
 	 * for now, much less stack is used than with i386 function calling ABI
 	 */
-	qsort((void *)funcs, 0, howmany - 1, sizeof(struct initfunc *), compare_initfuncs);
+	qsort((void *)funcs, 0, (uint64_t)(howmany - 1), sizeof(struct initfunc *), compare_initfuncs);
 
 	for(index = 0; index < howmany; index++) {
 		funcs[index]->func_2call_atinit();

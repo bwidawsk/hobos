@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include "amd64_defines.h"
 #include "mm_amd64.h"
 

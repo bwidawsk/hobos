@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <mm/malloc.h>
 #include <console.h>
 #include <mutex.h>

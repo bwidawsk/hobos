@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <mm/mm.h>
 #include "mm_amd64.h"
 #include <mm/page.h>

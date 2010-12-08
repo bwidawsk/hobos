@@ -1,4 +1,3 @@
-#include <stdint.h>
 #include <interrupt.h>
 #include <timer.h>
 #include <noarch.h> // arch_pause

@@ -1,4 +1,3 @@
-#include "stdint.h"
 #include "../ia_common/gdt_defines.h"
 #include "../ia_common/inlined_asm.h"
 #include "../ia_common/ia_defines.h"

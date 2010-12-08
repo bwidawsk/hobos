@@ -1,5 +1,4 @@
 #include <stdarg.h>
-#include <stdint.h>
 
 #define MAXNBUF 1024
 typedef uint8_t u_char;
@@ -11,6 +10,9 @@ typedef int64_t ssize_t;
 typedef uint64_t ptrdiff_t;
 typedef uint64_t u_long;
 typedef uint16_t u_short;
+typedef int64_t intmax_t;
+typedef uint64_t uintmax_t;
+typedef uint64_t uintptr_t;
 
 /* bw: this isn't copied */
 static inline char
