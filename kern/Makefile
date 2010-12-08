@@ -1,24 +1,30 @@
 TARGET?=amd64
 CC=x86_64-pc-linux-gnu-gcc
 LD=x86_64-pc-linux-gnu-ld
-#CFLAGS=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
-export ROOTDIR=$(PWD)
-CFLAGS+=-DGCC
-CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
-CFLAGS+=-DKERNEL -DAMD64 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
-
-CFLAGS+=$(INCLUDES)
-LDFLAGS?=
 MAKEDEPEND = makedepend
-MEMORY_ALLOCATOR=DS_ALLOCATOR
-CFLAGS+=-D$(MEMORY_ALLOCATOR)
-export MAKEDEPEND
+export ROOTDIR=$(PWD)
 export CC
 export LD
+export MAKEDEPEND
+
+MEMORY_ALLOCATOR=DS_ALLOCATOR
+
+# I'd like to have no builtins so that GCC isn't required, but can't avoid for now
+#CFLAGS+=-fno-builtin
+CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
+
+DEFINES=-DKERNEL -DAMD64 -D$(MEMORY_ALLOCATOR)
+CFLAGS+=$(DEFINES)
+
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
+CFLAGS+=$(INCLUDES)
+
+LDFLAGS?=
 export CFLAGS
 export LDFLAGS
+export DEFINES
 export INCLUDES
+
 DIRS = include arch/$(TARGET) core dev lib mm
 OBJS = arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a
 OUTPUT = kernel
