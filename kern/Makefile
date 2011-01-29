@@ -49,6 +49,10 @@ include_clean : include/common.h
 tags :
 	ctags -R .
 
+.PHONY : cscope
+cscope :
+	cscope -q -b -R
+
 .PHONY : picocom
 picocom :
 	sudo picocom -b 115200 -i -r /dev/ttyp9 -c
