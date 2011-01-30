@@ -40,6 +40,9 @@ PART_TABLE_STRING=$(shell echo "partition_table 0x80 \
 	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(FS_SECTORS_MINUS_ONE)) \
 	$(PART_START) $(FS_SECTORS_MINUS_SMALLBOOT)")
 
+#This is NOT multiprocess safe, but good enough...
+LOOP_DEV=$(shell sudo losetup -f)
+
 all : bochsimg updatebochsrs ../tools/lba
 	@echo Created image with 
 	@echo "    Block Size $(BLOCK_SIZE)"
@@ -82,14 +85,14 @@ bochsimg: myfs.img ../boot/bootimage
 myfs.img : ../kern/kernel
 	-cp ../kern/kernel files/
 	-dd if=/dev/zero of=temp.img bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
-	-sudo losetup /dev/loop0 temp.img
-	-sudo $(MKFS) $(MKFS_FLAGS) /dev/loop0  > /dev/null 2>&1
+	-sudo losetup $(LOOP_DEV) temp.img
+	-sudo $(MKFS) $(MKFS_FLAGS) $(LOOP_DEV)  > /dev/null 2>&1
 	-sudo mkdir -p hobosmnt/
-	-sudo mount -o loop /dev/loop0 hobosmnt/
+	-sudo mount -o loop $(LOOP_DEV)  hobosmnt/
 	-sudo chmod -R 777 hobosmnt/
 	-cp files/* hobosmnt/
 	-sudo umount hobosmnt/
-	-sudo losetup -d /dev/loop0
+	-sudo losetup -d $(LOOP_DEV)
 	-mv temp.img myfs.img
 
 .PHONY : clean
