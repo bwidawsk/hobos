@@ -33,7 +33,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	printf("Link time = %s\n", version);
 	printf("%p\n", this_thread());
 	printf("%s\n", this_thread()->debug);
-	
+
 	// interrupt setup (needed for when we enumerate)
 	// TODO: abstract PIC
 	pic8259_init(3);

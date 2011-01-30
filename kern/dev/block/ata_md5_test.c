@@ -5,6 +5,11 @@ uint8_t temp_blks[256 * 512] _INITSECTION_;
 
 #define MD5_BLOCKS_PER_ATA_SECTOR (512 / MD5_BLOCK_SIZE)
 
+/**
+ * do_ata_md5_test - Reads all blocks on a gven device, and calculate the md5.
+ *
+ * @whichdev: The device (from 0-x) to operate on
+ */
 void do_ata_md5_test(int whichdev) {
 	struct block_device blkdev;
 	ata_init_blkdev(&blkdev, 0);
@@ -14,6 +19,10 @@ void do_ata_md5_test(int whichdev) {
 	int test_sectors = ata->num_sectors;
 
 	printf("ATA MD5 testing %d sectors of %d size\n", test_sectors, ata->sector_size);
+
+	printf("* 256 sector\n"
+	       "+  16 setort\n"
+	       "-   1 sector\n");
 
 	struct md5_context ctx;
 	init_md5_ctx(&ctx, NULL, ata->sector_size * test_sectors);
@@ -28,7 +37,7 @@ void do_ata_md5_test(int whichdev) {
 		}
 		printf("*");
 	}
-	
+
 	/* Do 16 ata blocks at a time since it goes faster in block IO */
 	for( ;i < test_sectors - 17; i+=16)  {
 		blkdev.read_block(&blkdev, i, temp_blks, 16);
@@ -51,8 +60,8 @@ void do_ata_md5_test(int whichdev) {
 
 	/* Do the last block and pad*/
 	blkdev.read_block(&blkdev, i, temp_blks, 1);
-	// Normally we'd do MD5_BLOCKS_PER_ATA_SECTOR - 1, but since we know our size is divisible by 64, we
-	// must add an extra
+	// Normally we'd do MD5_BLOCKS_PER_ATA_SECTOR - 1, but since we know our
+	// size is divisible by 64, we must add an extra
 	for(j = 0; j < MD5_BLOCKS_PER_ATA_SECTOR; j++)  {
 		ctx.curptr = &temp_blks[j * MD5_BLOCK_SIZE];
 		md5_hash_block(&ctx);
@@ -65,7 +74,7 @@ void do_ata_md5_test(int whichdev) {
 		ctx.curptr += MD5_BLOCK_SIZE;
 		md5_hash_block(&ctx);
 	}
-	printf("\n");
+	printf("\nDevice %d MD5:", whichdev);
 	display_md5hash(&ctx);
 	printf("\n");
 }
