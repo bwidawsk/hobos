@@ -2,6 +2,8 @@ TARGET?=i386
 CFLAGS=-Wall -Werror -m32 -ansi -std=c99 -ffreestanding -nostartfiles -nodefaultlibs -nostdlib -I../../common/include -I../../common/include/${TARGET}
 ASFLAGS=--32
 
+CFLAGS+=-DBOCHS_INT13_WORKAROUND
+
 ifdef DEBUG
 CFLAGOPTS+=-DDEBUG -g -O0
 else
