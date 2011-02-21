@@ -11,9 +11,10 @@ MEMORY_ALLOCATOR=DS_ALLOCATOR
 
 # I'd like to have no builtins so that GCC isn't required, but can't avoid for now
 #CFLAGS+=-fno-builtin
-CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall 
+CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall
 
 DEFINES=-DKERNEL -DAMD64 -D$(MEMORY_ALLOCATOR)
+DEFINES+=$(shell cat build_options)
 CFLAGS+=$(DEFINES)
 
 INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
@@ -40,7 +41,7 @@ $(OUTPUT) : include_clean
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel
 
 # autocleans if critical files change
-include_clean : include/common.h
+include_clean : include/common.h build_options
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (cd $$dir; ${MAKE} clean $1 || exit 1) || exit 1; done
 	touch $@

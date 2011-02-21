@@ -4,7 +4,7 @@
 char buf[64];
 unsigned char ptr=0;
 
-void 
+void
 __hbuiltin_early_putc(char c) {
 	buf[ptr++] = c;
 	ptr &= 64;
@@ -12,8 +12,8 @@ __hbuiltin_early_putc(char c) {
 
 void early_putc(char c) __attribute__((weak, alias ("__hbuiltin_early_putc")));
 
-#ifdef STUBBED_EARLY_PRINTF
-int 
+#if (CONFIG_STUBBED_EARLY_PRINTF == 0)
+int
 early_printf(const char *format, ...) {
 	return 0;
 }
