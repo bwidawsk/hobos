@@ -1,4 +1,4 @@
-
+#include <lib.h>
 /*
  * This was coded by me, but based off of the wikipedia article
  * http://en.wikipedia.org/wiki/Quicksort
@@ -25,9 +25,9 @@ qswap(void *base, int64_t ndx_a, int64_t ndx_b, uint64_t elem_size) {
 		return;
 
 	// Move a into temp, b into a, and temp into b
-	memcpy(temp_buf, QSORT_TO_ELEM(ndx_a), elem_size);
-    memcpy(QSORT_TO_ELEM(ndx_a), QSORT_TO_ELEM(ndx_b), elem_size);
-    memcpy(QSORT_TO_ELEM(ndx_b), temp_buf, elem_size);
+	memcpy((void *)temp_buf, QSORT_TO_ELEM(ndx_a), elem_size);
+	memcpy(QSORT_TO_ELEM(ndx_a), QSORT_TO_ELEM(ndx_b), elem_size);
+	memcpy(QSORT_TO_ELEM(ndx_b), temp_buf, elem_size);
 }
 
 static int64_t

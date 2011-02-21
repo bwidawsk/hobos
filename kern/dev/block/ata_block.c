@@ -634,7 +634,7 @@ ata_dump_identity(struct ata_channel *ata) {
 	}
 }
 
-static int 
+static int
 ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
 	ATA_CH_LOCK(ata);

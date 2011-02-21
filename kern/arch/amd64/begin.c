@@ -223,7 +223,7 @@ change_pages_and_jump(void (*func)) {
 	__asm__ volatile (
 		"mov %0, %%cr3\n\t"
 		"movq %1, %%rsp\n\t"
-		"callq %%rax\n\t"
+		"callq *%%rax\n\t"
 		:
 		: "r" (pml4_phys), "r" (stack_va), "a" (func)
 	);

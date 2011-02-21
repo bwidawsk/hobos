@@ -5,6 +5,8 @@
 #include <noarch.h>
 #include <thread.h>
 #include <timer.h>
+#include <init_funcs.h>
+#include <dev/pic/pic.h>
 
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
@@ -16,7 +18,8 @@ struct thread first_thread = {
 extern char version[];
 
 /* FIXME: remove these */
-extern void pic8259_init(int);
+extern struct pic_dev pic_8259;
+extern void do_ata_md5_test(int);
 extern volatile uint64_t ttick;
 
 
@@ -36,12 +39,12 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 
 	// interrupt setup (needed for when we enumerate)
 	// TODO: abstract PIC
-	pic8259_init(3);
+	pic_8259.init(3);
 	timer_init();
 	// set up a tickrate for 100HZ
 	set_system_timer(HZ_TO_USECS(100));
 
-	pic8259_unmask(0);
+	pic_8259.unmask(0);
 
 	// TODO abstract sti
 	__asm__ volatile("sti");

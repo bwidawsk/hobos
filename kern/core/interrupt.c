@@ -1,6 +1,8 @@
 #include <arch/irq.h>
+#include <dev/pic/pic.h>
 
 /* Currently hardcoded to use 8259 */
+extern struct pic_dev pic_8259;
 
 // TODO: make this dynamic allocation
 typedef int (*irq_handler)(void *);
@@ -8,14 +10,14 @@ irq_handler handlers[16] = {0};
 void *handler_data[16] = {0};
 
 
-void 
+void
 generic_c_handler(uint64_t vector) {
 	KASSERT(vector != -1, ("No handler for interrupt\n"));
 //	printf("vector = %d\n", vector);
 //	pic8259_print_irrs();
 //	pic8259_print_isrs();
 	handlers[vector](handler_data[vector]);
-	pic8259_eoi(vector);
+	pic_8259.eoi(vector);
 	return;
 }
 
@@ -32,7 +34,7 @@ register_irq(int vector, int (*handler)(void *), void *data) {
 
 void
 unregister_irq(int vector) {
-	pic8259_mask(vector);
+	pic_8259.mask(vector);
 	arch_release_irq(vector);
     handler_data[vector] = NULL;
 	handlers[vector] = NULL;

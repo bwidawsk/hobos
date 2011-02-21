@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <lib.h>
 
 #define MAXNBUF 1024
 typedef uint8_t u_char;

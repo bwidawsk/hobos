@@ -9,19 +9,21 @@ static struct initfuncs *funcs[MAX_INITFUNCS] _INITSECTION_;
 
 int
 compare_initfuncs(const void *a, const void *b) {
-    struct initfuncs *firstf = *(struct initfuncs **)a;
-    struct initfuncs *secondf = *(struct initfuncs **)b;
+	struct initfuncs *firstf = *(struct initfuncs **)a;
+	struct initfuncs *secondf = *(struct initfuncs **)b;
 	uint64_t first = firstf->init_order;
 	uint64_t second = secondf->init_order;
 
-    if (first < second)
-        return -1;
-    if (first == second)
-        return 0;
-    if (first > second)
-        return 1;
+	if (first < second)
+		return -1;
+	if (first == second)
+		return 0;
+	if (first > second)
+		return 1;
+
+	return 0;
 }
-	
+
 void
 call_initialization_functions() {
 	struct initfuncs *funcstruct;

@@ -1,6 +1,11 @@
 // Algorithm from http://en.wikipedia.org/wiki/MD5
 
 #include <md5.h>
+#ifdef KERNEL
+ #include <lib.h>
+#else
+ #include <string.h>
+#endif
 
 // Rotate values copied directly from wiki
 const static uint8_t r[64] = {

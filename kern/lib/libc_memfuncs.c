@@ -43,7 +43,7 @@ __hbuiltin_memcpy(void *dest, const void *src, uint64_t n) {
 		src += 8;
 		n -= 8;
 	}
-	
+
 	while(n--) {
 		*(uint8_t *)dest = *(uint8_t *)src;
 		dest++;

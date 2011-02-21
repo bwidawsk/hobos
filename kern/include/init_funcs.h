@@ -44,3 +44,5 @@ struct initfuncs {
 	init_function_t func_2call_atinit;
 	uint64_t init_order;
 };
+
+void call_initialization_functions();

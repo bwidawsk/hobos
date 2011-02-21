@@ -1,6 +1,7 @@
 #include <interrupt.h> // request_irq
 #include <arch/asm.h>
 #include <arch/atomic.h>
+#include "pic.h"
 
 #define MASTER_CMD_PORT 0x20
 #define MASTER_DATA_PORT 0x21
@@ -44,8 +45,8 @@ enum which_ir {
 	PIC8259_ISR = 2,
 };
 
-void 
-pic8259_eoi(uint8_t irq) {
+static void
+pic8259_eoi(int irq) {
 	if(irq >= 8) {
 		KASSERT(slave_inited == 1, ("%s: slave not inited\n", __FUNCTION__));
 		outb(PIC8259_EOI, SLAVE_CMD_PORT);
@@ -54,8 +55,8 @@ pic8259_eoi(uint8_t irq) {
 	outb(PIC8259_EOI, MASTER_CMD_PORT);
 }
 
-void
-pic8259_mask(uint8_t irq) {
+static void
+pic8259_mask(int irq) {
 	uint8_t which_data_port;	
 	uint8_t which_cmd_port;	
 
@@ -73,8 +74,8 @@ pic8259_mask(uint8_t irq) {
 	outb(PIC8259_OCW3_NOP, which_cmd_port);
 }
 
-void
-pic8259_unmask(uint8_t irq) {
+static void
+pic8259_unmask(int irq) {
 	uint8_t which_data_port;	
 	uint8_t which_cmd_port;	
 
@@ -103,40 +104,40 @@ slave_spurious(void *data) {
 	return 0;
 }
 
-void
-pic8259_init(enum which_8259 which ) {
+static int
+pic8259_init(int which) {
 	int i;
 	if (which & PIC8259_MASTER) {
 		// Start the initialization sequence
 		outb(PIC8259_ICW1_DEFAULT, MASTER_CMD_PORT);
-	
+
 		// Set the vector to start at 32
 		outb(0x20, MASTER_DATA_PORT);
-	
+
 		// This says which bit has the slave
 		// historically, it's 4
 		outb(0x4, MASTER_DATA_PORT);
 
-		//8086 mode with no aeoi	
+		//8086 mode with no aeoi
 		outb(PIC8259_ICW4_8086, MASTER_DATA_PORT);
 		for(i = 0; i < 8; i++)
 			pic8259_mask(i);
 		master_inited = 1;
 		register_irq(7, master_spurious, NULL);
-	}	
-	
+	}
+
 	if (which & PIC8259_SLAVE) {
 		// Start the initialization sequence
 		outb(PIC8259_ICW1_DEFAULT, SLAVE_CMD_PORT);
-	
+
 		// Set the vector to start at 40
 		outb(0x28, SLAVE_DATA_PORT);
-	
+
 		// This says which bit on the master we're
 		// connected to
 		outb(0x2, SLAVE_DATA_PORT);
-	
-		//8086 mode with no aeoi	
+
+		//8086 mode with no aeoi
 		outb(PIC8259_ICW4_8086, SLAVE_DATA_PORT);
 
 		for(i = 8; i < 16; i++)
@@ -144,6 +145,7 @@ pic8259_init(enum which_8259 which ) {
 		slave_inited = 1;
 		register_irq(15, slave_spurious, NULL);
 	}
+	return 0;
 }
 
 uint8_t
@@ -183,6 +185,13 @@ pic8259_print_isrs() {
 	printf("Master ISR = %x\n", pic8259_get_ir(PIC8259_MASTER, PIC8259_OCW3_READ_ISR));
 	printf("Slave ISR = %x\n", pic8259_get_ir(PIC8259_SLAVE, PIC8259_OCW3_READ_ISR));
 }
+
+struct pic_dev pic_8259 = {
+	.init = pic8259_init,
+	.mask = pic8259_mask,
+	.unmask = pic8259_unmask,
+	.eoi = pic8259_eoi
+};
 
 
 #include <bs_commands.h>
