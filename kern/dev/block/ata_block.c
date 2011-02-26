@@ -2,6 +2,7 @@
 #include <mm/malloc.h>
 #include <mutex.h>
 #include <init_funcs.h>
+#include <device.h>
 #include "ata.h"
 
 static void ata_dump_identity(struct ata_channel *ata);
@@ -62,19 +63,28 @@ alloc_ata_dev() {
 	return &ata_channels[total_channel-1];
 }
 
-int 
+int
 ata_get_numdevs(void) {
 	return total_channel;
 }
 
-void 
-ata_init_blkdev(struct block_device *dev, int which) {
+struct device *
+ata_alloc_blkdev(int which) {
 	struct ata_channel *ata = &ata_channels[which];
-	dev->block_size = ata->sector_size;
+	struct device *dev;
+	struct block_device *blkdev;
+	dev= device_alloc(BLOCK_DEVICE);
+
+	blkdev = malloc(sizeof(*blkdev));
+	blkdev->block_size = ata->sector_size;
 	// these functions are defined at the bottom
-	dev->read_block = ata_read_block;
-	dev->write_block = ata_write_block;
-	dev->pvt_data = ata;
+	blkdev->read_block = ata_read_block;
+	blkdev->write_block = ata_write_block;
+	blkdev->pvt_data = ata;
+
+	dev->pvt = blkdev;
+
+	return dev;
 }
 
 #define ata_read_status ata_read_asr
@@ -601,12 +611,20 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
 		set_funcandbars(ata, header.bar0, header.bar1, header.bar4);
 		set_other_stuff(ata, ATA_DEV_DEV0, temp[count_temp]);
 		initialize_channel(ata);
+		if (!ata->disabled) {
+			struct device *dev = ata_alloc_blkdev(ata->id);
+			device_register(dev);
+		}
 
 		// Set up second channel
 		ata = alloc_ata_dev();
 		set_funcandbars(ata, header.bar2, header.bar3, header.bar4 + 8);
 		set_other_stuff(ata, ATA_DEV_DEV1, temp[count_temp]);
 		initialize_channel(ata);
+		if (!ata->disabled) {
+			struct device *dev = ata_alloc_blkdev(ata->id);
+			device_register(dev);
+		}
 
 		// TODO: for now it's okay to setup the bus after the ata channels
 		// but it's probably a good idea to do it before

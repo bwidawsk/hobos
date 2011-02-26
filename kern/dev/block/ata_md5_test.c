@@ -1,3 +1,4 @@
+#include <device.h>
 #include <md5.h>
 #include "ata_block.h"
 
@@ -12,7 +13,8 @@ uint8_t temp_blks[256 * 512] _INITSECTION_;
  */
 void do_ata_md5_test(int whichdev) {
 	struct block_device blkdev;
-	ata_init_blkdev(&blkdev, 0);
+	struct device *dev = device_get(BLOCK_DEVICE, 0);
+	blkdev = *(struct block_device *)dev->pvt;
 	struct ata_channel *ata = (struct ata_channel *)blkdev.pvt_data;
 	KASSERT(ata->disabled == 0, ("badness"));
 
