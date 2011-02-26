@@ -26,8 +26,8 @@ export LDFLAGS
 export DEFINES
 export INCLUDES
 
-DIRS = include arch/$(TARGET) core dev lib mm
-OBJS = arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a
+DIRS = include arch/$(TARGET) core dev lib mm fs
+OBJS = arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a fs/fs.a
 OUTPUT = kernel
 
 all : $(OUTPUT)
