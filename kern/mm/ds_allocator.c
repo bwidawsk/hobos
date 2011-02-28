@@ -94,6 +94,7 @@ setup_allocator_struct() {
 static pfn_t 
 ds_get_page(struct mm_page_allocator *pallocator) { 
 	// TODO: not threadsafe
+	KASSERT(pallocator->used_pages < pallocator->total_pages, "No more pages");
 	pfn_t ret = NO_PFN;
 	struct ds_page_allocator *allocator = (struct ds_page_allocator *)pallocator;
 	ret = allocator->page_array[allocator->next_free_pindex];
@@ -105,6 +106,7 @@ ds_get_page(struct mm_page_allocator *pallocator) {
 static int
 ds_get_contig_pages(struct mm_page_allocator *pallocator, int count, pfn_t *space)  { 
 	// TODO: not threadsafe
+	KASSERT((pallocator->used_pages + count ) < pallocator->total_pages, "No more pages");
 	struct ds_page_allocator *allocator = (struct ds_page_allocator *)pallocator;
 	for(int i = 0; i < count; i++) {
 		space[i] = allocator->page_array[allocator->next_free_pindex];

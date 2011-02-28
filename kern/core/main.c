@@ -8,6 +8,7 @@
 #include <init_funcs.h>
 #include <dev/pic/pic.h>
 #include <device.h>
+#include <fs/vfs.h>
 
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
@@ -22,7 +23,6 @@ extern char version[];
 extern struct pic_dev pic_8259;
 extern void do_ata_md5_test(int);
 extern volatile uint64_t ttick;
-extern int ext2_ls(struct block_device *, uint64_t);
 
 /*
  * Machine independent beginning. The machine dependent code can optionally
@@ -50,11 +50,12 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// TODO abstract sti
 	__asm__ volatile("sti");
 	call_initialization_functions();
-	struct device *dev = device_get(BLOCK_DEVICE, 0);
-
 	/* Hack we need to read the partition table for this number, it's
-	 * partition start + 2 block*/
-	ext2_ls((struct block_device *)dev->pvt, 65);
+	 * partition start */
+	struct device *dev = device_get(BLOCK_DEVICE, 0);
+	struct vfs *fs = ext2_init((struct block_device *)dev->pvt, 63);
+	//fs->ls(fs);
+
 	do_ata_md5_test(0);
 
 	printf("waiting 5 seconds\n");
