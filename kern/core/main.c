@@ -54,7 +54,7 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	 * partition start */
 	struct device *dev = device_get(BLOCK_DEVICE, 0);
 	struct vfs *fs = ext2_init((struct block_device *)dev->pvt, 63);
-	//fs->ls(fs);
+	fs->ls(fs);
 
 	do_ata_md5_test(0);
 

@@ -102,13 +102,35 @@ ext2_ls(struct vfs *fs)
 	struct ext2_driver *ext2 = ((struct ext2_driver *)fs);
 	struct block_device *bdev = fs->block_device;
 	struct ext2_super_block *super_block = ext2->super_block;
+	int i;
 
-	uint32_t inode_table_block = ext2->group_desc[inode_to_group(super_block, EXT2_ROOT_INO)].
-					bg_inode_table;
-	uint32_t table_blocks = ROUND_UP(super_block->s_inodes_per_group * super_block->s_inode_size, ext2->block_size) / ext2->block_size;
+	uint32_t inode_table_block = ext2->group_desc[inode_to_group(super_block, EXT2_ROOT_INO)].bg_inode_table;
+	uint32_t table_blocks = super_block->s_inodes_per_group * super_block->s_inode_size / ext2->block_size;
+	if (!table_blocks)
+		table_blocks++;
 
 	void *inode_table= malloc(table_blocks * ext2->block_size);
+	if (!inode_table)
+		printf("couldn't allocate inode table\n");
 
-	bdev->read_block(bdev, blkid_to_lba(ext2, inode_table_block),
-		inode_table, table_blocks);
+	bdev->read_block(bdev, blkid_to_lba(ext2, inode_table_block), inode_table, table_blocks);
+
+	/* - 1 because inodes are 1 based (not 0)*/
+	struct ext2_inode *root_inode = &((struct ext2_inode *)inode_table)[EXT2_ROOT_INO - 1];
+	int dir_blocks = root_inode->i_size / ext2->block_size;
+	if (!dir_blocks)
+		dir_blocks++;
+
+	void *dir = malloc(ext2->block_size * dir_blocks);
+
+	for (i = 0; i < dir_blocks; i++) {
+		bdev->read_block(bdev, blkid_to_lba(ext2, root_inode->i_block[i]), dir + (i * ext2->block_size), 1);
+	}
+
+	struct ext2_dir_entry_2 *root_dir = (struct ext2_dir_entry_2 *)dir;
+	struct ext2_dir_entry_2 *temp = root_dir;
+	while (temp->file_type != EXT2_FT_UNKNOWN) {
+		printf("%s\n", temp->name);
+		temp = ((void *)temp) + temp->rec_len;
+	}
 }
