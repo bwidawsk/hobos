@@ -96,6 +96,48 @@ group_to_blkid(struct ext2_super_block *super_block, uint64_t group)
 	return 1 + (super_block->s_first_data_block) + (super_block->s_blocks_per_group * group);
 }
 
+/*
+ * Load blocks for an inode into data
+ */
+int
+load_blocks(struct ext2_driver *ext2, struct ext2_inode *inode, void *data)
+{
+	struct block_device *bdev = ext2->base.block_device;
+	uint32_t blocks;
+	int i;
+
+	blocks = inode->i_size / ext2->block_size;
+	if (!blocks)
+		blocks++;
+
+	for (i = 0; i < blocks; i++) {
+		bdev->read_block(bdev, blkid_to_lba(ext2, inode->i_block[i]), data + (i * ext2->block_size), 1);
+	}
+
+	if (blocks <= EXT2_NDIR_BLOCKS) {
+		return 0;
+	}
+}
+
+struct ext2_inode *
+get_inode_table(struct ext2_driver *ext2, uint64_t inode) {
+	struct ext2_super_block *super_block = ext2->super_block;
+	struct block_device *bdev = ext2->base.block_device;
+
+	uint32_t inode_table_block = ext2->group_desc[inode_to_group(super_block, inode)].bg_inode_table;
+	uint32_t table_blocks = super_block->s_inodes_per_group * super_block->s_inode_size / ext2->block_size;
+	if (!table_blocks)
+		table_blocks++
+
+	void *inode_table= malloc(table_blocks * ext2->block_size);
+	KASSERT(inode_table, ("fail"));
+
+	bdev->read_block(bdev, blkid_to_lba(ext2, inode_table_block), inode_table, table_blocks);
+
+	struct ext2_inod *inode = &((struct ext2_inode *)inode_table)[inode - 1];
+	return inode;
+}
+
 static void
 ext2_ls(struct vfs *fs)
 {

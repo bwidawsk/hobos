@@ -1,10 +1,15 @@
 #ifndef __VFS_H__
 #define __VFS_H__
 
+struct vfs_infode {
+
+};
+
 struct vfs {
 	struct block_device *block_device;
 	uint64_t start_lba;
 
+	
 	void (*ls)(struct vfs *fs);
 };
 
