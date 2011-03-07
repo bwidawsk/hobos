@@ -96,30 +96,104 @@ group_to_blkid(struct ext2_super_block *super_block, uint64_t group)
 	return 1 + (super_block->s_first_data_block) + (super_block->s_blocks_per_group * group);
 }
 
+#define EXT2_POINTERS_PER_BLOCK(ext2) (ext2->block_size / sizeof(uint32_t))
+
+static uint32_t
+do_load_indirect(struct ext2_driver *ext2, int blocks, const uint32_t block, const void *data)
+{
+	struct block_device *bdev = ext2->base.block_device;
+	int i;
+	void *copyout_data = (void *)data;
+
+
+	const void *indirect_block = malloc(ext2->block_size);
+	bdev->read_block(bdev, blkid_to_lba(ext2, block), indirect_block, 1);
+	for (i = 0; i < EXT2_POINTERS_PER_BLOCK(ext2) && blocks--; i++) {
+		uint32_t blkptr = ((uint32_t *)indirect_block)[i];
+		bdev->read_block(bdev, blkid_to_lba(ext2, blkptr), copyout_data, 1);
+		copyout_data += ext2->block_size;
+	}
+	free(indirect_block);
+	return i;
+}
+
+static uint32_t
+do_load_dindirect(struct ext2_driver *ext2, int blocks, uint32_t block, const void *data)
+{
+	struct block_device *bdev = ext2->base.block_device;
+	int i;
+	void *copyout_data = (void *)data;
+	uint32_t ret = 0;
+
+	const uint32_t *indirect_block = malloc(ext2->block_size);
+	bdev->read_block(bdev, blkid_to_lba(ext2, block), indirect_block, 1);
+	for (i = 0; i <  EXT2_POINTERS_PER_BLOCK(ext2) && blocks; i++) {
+		int blocks_read = do_load_indirect(ext2, blocks, indirect_block[i], copyout_data);
+		blocks -= blocks_read;
+		ret += blocks_read;
+		copyout_data += (ext2->block_size * blocks_read);
+	}
+
+	free(indirect_block);
+	return ret;
+}
+
+static uint32_t
+do_load_tinderect(struct ext2_driver *ext2, int blocks, uint32_t block, const void *data)
+{
+	struct block_device *bdev = ext2->base.block_device;
+	int i;
+	void *copyout_data = (void *)data;
+	uint32_t ret = 0;
+
+	const uint32_t *indirect_block = malloc(ext2->block_size);
+	bdev->read_block(bdev, blkid_to_lba(ext2, block), indirect_block, 1);
+	for (i = 0; i <  EXT2_POINTERS_PER_BLOCK(ext2) && blocks; i++) {
+		int blocks_read = do_load_dindirect(ext2, blocks, indirect_block[i], copyout_data);
+		blocks -= blocks_read;
+		ret += blocks_read;
+		copyout_data += (ext2->block_size * blocks_read);
+	}
+
+	free(indirect_block);
+	return ret;
+}
+
 /*
  * Load blocks for an inode into data
  */
-int
-load_blocks(struct ext2_driver *ext2, struct ext2_inode *inode, void *data)
+static uint32_t
+load_blocks(struct ext2_driver *ext2, struct ext2_inode *inode, const void *data)
 {
 	struct block_device *bdev = ext2->base.block_device;
 	uint32_t blocks;
 	int i;
+	void *copyout_data = (void *)data;
 
+	KASSERT(inode->i_size > 0, ("unexpected inode size"));
 	blocks = inode->i_size / ext2->block_size;
 	if (!blocks)
 		blocks++;
 
-	for (i = 0; i < blocks; i++) {
-		bdev->read_block(bdev, blkid_to_lba(ext2, inode->i_block[i]), data + (i * ext2->block_size), 1);
+	int countdown_blocks = blocks;
+
+	/* Read direct blocks */
+	for (i = 0; i < EXT2_IND_BLOCK && countdown_blocks--; i++) {
+		bdev->read_block(bdev, blkid_to_lba(ext2, inode->i_block[i]), copyout_data, 1);
+		copyout_data += ext2->block_size;
 	}
+
+	/* Read indirect blocks */
+	int blocks_read = do_load_indirect(ext2, countdown_blocks, inode->i_block[EXT2_IND_BLOCK], (const void *)copyout_data);
+	copyout_data += (ext2->block_size * blocks_read);
+	countdown_blocks -= blocks_read;
 
 	if (blocks <= EXT2_NDIR_BLOCKS) {
 		return 0;
 	}
 }
 
-struct ext2_inode *
+static struct ext2_inode *
 get_inode_table(struct ext2_driver *ext2, uint64_t inode) {
 	struct ext2_super_block *super_block = ext2->super_block;
 	struct block_device *bdev = ext2->base.block_device;
@@ -127,15 +201,15 @@ get_inode_table(struct ext2_driver *ext2, uint64_t inode) {
 	uint32_t inode_table_block = ext2->group_desc[inode_to_group(super_block, inode)].bg_inode_table;
 	uint32_t table_blocks = super_block->s_inodes_per_group * super_block->s_inode_size / ext2->block_size;
 	if (!table_blocks)
-		table_blocks++
+		table_blocks++;
 
 	void *inode_table= malloc(table_blocks * ext2->block_size);
 	KASSERT(inode_table, ("fail"));
 
 	bdev->read_block(bdev, blkid_to_lba(ext2, inode_table_block), inode_table, table_blocks);
 
-	struct ext2_inod *inode = &((struct ext2_inode *)inode_table)[inode - 1];
-	return inode;
+	struct ext2_inode *ret = &((struct ext2_inode *)inode_table)[inode - 1];
+	return ret;
 }
 
 static void
