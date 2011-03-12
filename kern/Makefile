@@ -79,6 +79,13 @@ clean :
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 
-.PHONY : distclean
-distclean : clean
+#fix the lame rm of Makefile.bak below... sed is misbehaving for me
+.PHONY : depclean
+depclean:
 	$(shell find . -mindepth 2 -name 'Makefile' | xargs sed -i'' '/# DO NOT DELETE/,$$ d')
+	$(shell find . -mindepth 2 -name 'Makefile.bak' | xargs rm)
+
+.PHONY : distclean
+distclean : clean depclean
+	-rm cscope*
+	-rm tags
