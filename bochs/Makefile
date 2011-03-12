@@ -90,7 +90,7 @@ myfs.img : ../kern/kernel
 	-sudo mkdir -p hobosmnt/
 	-sudo mount -o loop $(LOOP_DEV)  hobosmnt/
 	-sudo chmod -R 777 hobosmnt/
-	-cp files/* hobosmnt/
+	-cp -r files/* hobosmnt/
 	-sudo umount hobosmnt/
 	-sudo losetup -d $(LOOP_DEV)
 	-mv temp.img myfs.img

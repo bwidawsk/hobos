@@ -267,6 +267,7 @@ get_inode_for_path(struct ext2_driver *ext2, const char *path, struct ext2_inode
 	struct ext2_inode parent = get_inode(ext2, EXT2_ROOT_INO);
 	struct ext2_dir_entry_2 temp_dir;
 
+again:
 	while (*begin == '/') {
 		begin++;
 		temp++;
@@ -281,7 +282,6 @@ get_inode_for_path(struct ext2_driver *ext2, const char *path, struct ext2_inode
 	if (end == NULL) {
 		get_dentry_from_parent(ext2, &parent, (const char *)begin, &temp_dir);
 		*inode = get_inode(ext2, temp_dir.inode);
-		return 0;
 	} else {
 		int ret;
 		struct ext2_inode temp_inode;
@@ -294,9 +294,17 @@ get_inode_for_path(struct ext2_driver *ext2, const char *path, struct ext2_inode
 		} else {
 			if (temp_dir.file_type != EXT2_FT_DIR) {
 				printf("%s is not a dir\n", temp_file);
+				return -1;
 			}
+			printf("found dir %s\n", temp_file);
+			begin = end;
+			end = NULL;
+			parent = get_inode(ext2, temp_dir.inode);
+			goto again;
 		}
 	}
+
+	return 0;
 }
 
 static void
@@ -304,8 +312,10 @@ ext2_ls(struct vfs *fs)
 {
 	struct ext2_inode inode;
 	get_inode_for_path((struct ext2_driver *)fs, "/", &inode);
+	printf("1\n");
 	get_inode_for_path((struct ext2_driver *)fs, "/random", &inode);
-	get_inode_for_path((struct ext2_driver *)fs, "/random/crap", &inode);
+	printf("2\n");
+	get_inode_for_path((struct ext2_driver *)fs, "/testdir/pooo", &inode);
 }
 
 static void
