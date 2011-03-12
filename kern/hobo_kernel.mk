@@ -2,7 +2,7 @@ CFLAGS+=$(INCLUDES)
 
 OBJS=$(subst .c,.o,$(SOURCES))
 
-$(OUTPUT) : $(OBJS)
+$(OUTPUT) : $(OBJS) depend
 	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
 
 .PHONY : clean
