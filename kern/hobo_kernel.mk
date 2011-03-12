@@ -7,7 +7,7 @@ $(OUTPUT) : $(OBJS) depend
 
 .PHONY : clean
 clean :
-	-rm $(OUTPUT) $(OBJS) 
+	-rm $(OUTPUT) $(OBJS)
 
 depend: $(SOURCES)
-	$(MAKEDEPEND) $(INCLUDES) $^
+	$(MAKEDEPEND) -Y $(INCLUDES) $^

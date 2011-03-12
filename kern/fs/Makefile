@@ -1,5 +1,5 @@
-DIRS = ext2
-OBJS = ext2/ext2.a
+DIRS = vfs ext2
+OBJS = vfs/vfs.a ext2/ext2.a
  
 OUTPUT = fs.a
 

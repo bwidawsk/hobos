@@ -78,4 +78,7 @@ clean :
 	-rm include/arch
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
-# DO NOT DELETE
+
+.PHONY : distclean
+distclean : clean
+	$(shell find . -mindepth 2 -name 'Makefile' | xargs sed -i'' '/# DO NOT DELETE/,$$ d')

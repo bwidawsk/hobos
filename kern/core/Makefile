@@ -5,4 +5,3 @@ INCLUDES+=-I$(ROOTDIR)/../common/include
 
 include $(ROOTDIR)/hobo_kernel.mk
 
-# DO NOT DELETE
