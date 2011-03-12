@@ -5,31 +5,38 @@ BS_COMANDS_CREATE_LIST;
 void
 do_shell_cmd(int argc, char *argv[]) {
 	int throwaway = 0;
-	struct bs_cmd *cmd;
+	struct bs_cmd *cmd, *next_best;
 	char *cmd_str = argv[0];
 
 	COMMAND_FOREACH(cmd, throwaway) {
 		int i = 0;
 		int match = 1;
 		while(cmd_str[i] != 0 && cmd->name[i] != 0) {
-			if(cmd_str[i] == cmd->name[i]) {
-			
+			if (cmd_str[i] == cmd->name[i]) {
 			} else {
 				match = 0;
 				break;
 			}
 			i++;
 		}
+
 		// if the matching string ended, but we still have more in our input
 		// command it wasn't a match
-		if(match && cmd_str[i]) {
+		if (match && (cmd_str[i] == 0)) {
+			next_best = cmd;
 			match = 0;
 		}
-		
-		if(match) {
+
+		if (match && (cmd->name[i] == 0))
+			match = 0;
+
+		if (match) {
+			printf("%s next = %d\n", cmd->name, cmd_str[i]);
 			break;
 		}
 	}
+	if (!cmd)
+		cmd = next_best;
 	cmd->execute(argc, argv);
 }
 
@@ -51,5 +58,5 @@ static void
 help_cmd_help() {
 
 }
-	
+
 BS_COMMAND_DECLARE(help_cmd, help_cmd_execute, help_cmd_help);
