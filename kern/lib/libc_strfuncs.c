@@ -4,12 +4,14 @@ char *__hbuiltin_strncpy(char *dest, const char *src, uint64_t n);
 int __hbuiltin_strcmp(const char *s1, const char *s2);
 int __hbuiltin_strncmp(const char *s1, const char *s2, uint64_t n);
 uint64_t __hbuiltin_strlen(const char *s);
-	   
+char *__hbuiltin_strchr(const char *s, int c);
+
 char *strcpy(char *dest, const char *src) __attribute__((weak, alias ("__hbuiltin_strcpy_safe")));
 char *strncpy(char *dest, const char *src, uint64_t n) __attribute__((weak, alias ("__hbuiltin_strncpy")));
 int strcmp(const char *s1, const char *s2) __attribute__((weak, alias ("__hbuiltin_strcmp")));
 int strncmp(const char *s1, const char *s2, uint64_t n) __attribute__((weak, alias ("__hbuiltin_strncmp")));
 uint64_t strlen(const char *s) __attribute__((weak, alias ("__hbuiltin_strlen")));
+char *strchr(const char *s, int c) __attribute__((weak, alias ("__hbuiltin_strchr")));
 
 // non-compliant strtol
 #define STRTOL_DEFAULT_BASE 10
@@ -21,7 +23,7 @@ __hbuiltin_strcpy_safe(char *dest, const char *src) {
 	uint64_t len = strlen(src);
 	KASSERT(len < STRCPY_MAX, ());
 	return strncpy(dest, src, len);
-	
+
 }
 /* This was copied from the strncpy man page, modified to use uint64_t */
 char*
@@ -37,14 +39,14 @@ __hbuiltin_strncpy(char *dest, const char *src, uint64_t n) {
 }
 
 /* Not quite the same as regular strcmp. 0 if equals, !0 otherwise */
-int 
+int
 __hbuiltin_strcmp(const char *s1, const char *s2) {
 	uint64_t len = strlen(s1);
 	uint64_t len2 = strlen(s2);
 	if (len != len2) {
 		return -1;
 	}
-	
+
 	return strncmp(s1, s2, len);
 }
 
@@ -164,4 +166,19 @@ strtol(const char *s, int base) {
 	}
 
 	return ret;
+}
+
+char *
+__hbuiltin_strchr(const char *s, int c) {
+	char *ret = (char *)s;
+	if (s == NULL)
+		return NULL;
+
+	while(*ret != 0 && *ret != c)
+		ret++;
+
+	if (*ret == c)
+		return ret;
+	else
+		return NULL;
 }
