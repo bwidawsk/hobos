@@ -87,8 +87,10 @@ inode_to_group(struct ext2_super_block *super_block, block_id inode)
 {
 	if (inode == 0)
 		return 0;
-	else
+	else {
+		/* inodes are numbered from 1 up, so -1 */
 		return (inode - 1) / super_block->s_inodes_per_group;
+	}
 }
 
 static block_id
@@ -179,7 +181,10 @@ load_blocks(struct ext2_driver *ext2, const struct ext2_inode *inode, const void
 	int i;
 	void *copyout_data = (void *)data;
 
-	KASSERT(inode->i_size > 0, ("unexpected inode size"));
+	KASSERT(inode->i_size >= 0, ("unexpected inode size"));
+	if (inode->i_size == 0)
+		return 0;
+
 	blocks = inode->i_size / ext2->block_size;
 	if (!blocks)
 		blocks++;
@@ -285,7 +290,7 @@ again:
 	} else {
 		int ret;
 		struct ext2_inode temp_inode;
-		char temp_file[end - begin + 1];
+		char temp_file[end - begin + 1]; /* +1 for null terminate */
 		temp_file[end - begin] = 0;
 		strncpy(temp_file, begin, end - begin);
 		ret = get_dentry_from_parent(ext2, &parent, temp_file, &temp_dir);
@@ -296,7 +301,6 @@ again:
 				printf("%s is not a dir\n", temp_file);
 				return -1;
 			}
-			printf("found dir %s\n", temp_file);
 			begin = end;
 			end = NULL;
 			parent = get_inode(ext2, temp_dir.inode);
@@ -312,9 +316,7 @@ ext2_ls(struct vfs *fs)
 {
 	struct ext2_inode inode;
 	get_inode_for_path((struct ext2_driver *)fs, "/", &inode);
-	printf("1\n");
 	get_inode_for_path((struct ext2_driver *)fs, "/random", &inode);
-	printf("2\n");
 	get_inode_for_path((struct ext2_driver *)fs, "/testdir/pooo", &inode);
 }
 
