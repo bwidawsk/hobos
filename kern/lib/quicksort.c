@@ -56,7 +56,7 @@ qsort(void *base, int64_t ndxl, int64_t ndxr, uint64_t elem_size, int(*compar)(c
         return;
 
     register int64_t pivot_ndx = ndxl + (ndxr - ndxl) / 2;
-	KASSERT(pivot_ndx > 0, ());
+	KASSERT(pivot_ndx >= 0, ("Pivot index was < 0"));
     register int64_t new_ndx = partition(base, ndxl, ndxr, elem_size, compar, pivot_ndx);
     qsort(base, ndxl, new_ndx - 1, elem_size, compar);
     qsort(base, new_ndx + 1, ndxr, elem_size, compar);
