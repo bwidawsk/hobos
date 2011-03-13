@@ -151,7 +151,7 @@ do_load_dindirect(struct ext2_driver *ext2, int blocks, uint32_t block, const vo
 }
 
 static uint32_t
-do_load_tinderect(struct ext2_driver *ext2, int blocks, uint32_t block, const void *data)
+do_load_tindirect(struct ext2_driver *ext2, int blocks, uint32_t block, const void *data)
 {
 	struct block_device *bdev = ext2->base.block_device;
 	int i;
@@ -202,23 +202,30 @@ load_blocks(struct ext2_driver *ext2, const struct ext2_inode *inode, const void
 		copyout_data += ext2->block_size;
 		countdown_blocks--;
 		if (!countdown_blocks)
-			break;
+			goto out;
 	}
 
-#define LOAD_INDIRECT(block) \
-	{ \
-		uint32_t indirect_blocks = do_load_indirect(ext2, countdown_blocks, inode->i_block[EXT2_DIND_BLOCK], copyout_data); \
-		copyout_data += (indirect_blocks * ext2->block_size); \
-		countdown_blocks -= indirect_blocks; \
-	}
-	/* Read indirect blocks */
-	LOAD_INDIRECT(inode->i_block[EXT2_IND_BLOCK]);
-	/*  The rest is not complete */
-	LOAD_INDIRECT(inode->i_block[EXT2_DIND_BLOCK]);
-	LOAD_INDIRECT(inode->i_block[EXT2_TIND_BLOCK]);
+	uint32_t indirect_blocks = do_load_indirect(ext2, countdown_blocks, inode->i_block[EXT2_IND_BLOCK], copyout_data);
+	copyout_data += (indirect_blocks * ext2->block_size);
+	countdown_blocks -= indirect_blocks;
+	if (!countdown_blocks)
+		goto out;
+
+	uint32_t dindirect_blocks = do_load_dindirect(ext2, countdown_blocks, inode->i_block[EXT2_DIND_BLOCK], copyout_data);
+	copyout_data += (dindirect_blocks * ext2->block_size);
+	countdown_blocks -= dindirect_blocks;
+	if (!countdown_blocks)
+		goto out;
+
+	uint32_t tindirect_blocks = do_load_tindirect(ext2, countdown_blocks, inode->i_block[EXT2_TIND_BLOCK], copyout_data);
+	copyout_data += (dindirect_blocks * ext2->block_size);
+	countdown_blocks -= tindirect_blocks;
+	if (!countdown_blocks)
+		goto out;
 
 	KASSERT(countdown_blocks == 0, ("badbad"));
 
+out:
 	return blocks - countdown_blocks + 1;
 }
 
