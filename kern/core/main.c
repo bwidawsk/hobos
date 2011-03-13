@@ -50,13 +50,8 @@ mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *prim
 	// TODO abstract sti
 	__asm__ volatile("sti");
 	call_initialization_functions();
-	/* Hack we need to read the partition table for this number, it's
-	 * partition start */
-	struct device *dev = device_get(BLOCK_DEVICE, 0);
-	struct vfs *fs = ext2_init((struct block_device *)dev->pvt, 63);
-	fs->ls(fs);
 
-	do_ata_md5_test(0);
+	//do_ata_md5_test(0);
 
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);

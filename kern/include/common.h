@@ -72,6 +72,18 @@
 #define CTLIST_FOREACH(elem, list_name, temp_var) \
 	for ((temp_var) = 0, ((elem) = CTLIST_FIRST_SYM(list_name)); temp_var < CTLIST_COUNT(list_name); (temp_var)++, (elem) = *(&CTLIST_FIRST_SYM(list_name) + temp_var))
 
+
+#define DUMP_BYTES(buf, count) \
+	{ \
+	int i; \
+	for (i = 0; i < count; i++) { \
+		if (i && (i % 16 == 0)) \
+				printf("\n"); \
+		printf("%02x ", ((uint8_t *)buf)[i]); \
+	} \
+	printf("\n"); \
+	}
+
 #ifndef ASM_FILE
 extern int printf(const char *fmt, ...);
 typedef int int8_t __attribute__ ((mode (QI)));

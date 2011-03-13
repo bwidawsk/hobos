@@ -43,7 +43,6 @@ $(OUTPUT) : include_clean
 # autocleans if critical files change
 include_clean : include/common.h build_options
 	-rm $(OUTPUT)
-	for dir in $(DIRS); do (${MAKE} -C $$dir depend $1 || exit 1) || exit 1; done
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 	touch $@
 

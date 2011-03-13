@@ -597,7 +597,7 @@ ata_setup_bus(struct ide_bus *idebus) {
 	MUTEX_INIT(idebus->ide_bus_mtx, "IDE bus mutex");
 }
 
-INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_EARLY) {
+INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_BLOCK) {
 	int count_temp, count = 0;
 	bdfo_t *temp = malloc(sizeof(bdfo_t) * PCI_MAX_BUS * PCI_MAX_DEV * PCI_MAX_FUNC);
 	pci_get_devs(PCI_CLASS_MASS_STORAGE, temp, &count);
@@ -656,21 +656,25 @@ static int
 ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
 	ATA_CH_LOCK(ata);
-	if (count > 256) {
-		printf("Count > 256 sectors is not yet supported\n");
-	} else {
-	//	printf("read %lld sectors starting at %lld\n", count, lba);
+	int ret;
+
+	while(count) {
+		if (count > 255)
+			ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)255);
+		else
+			ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
+		lba += ret;
+		count -= ret;
+		buf += ret;
 	}
 
-	int ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
 
 	ATA_CH_RELEASE(ata);
 
 	return ret;
-	return count;
 }
 
-static int 
+static int
 ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
 	return 0;
 }
