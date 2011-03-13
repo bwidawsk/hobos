@@ -9,8 +9,8 @@ static void ata_dump_identity(struct ata_channel *ata);
 static void ata_write_dev(struct ata_channel *ata, uint8_t devdata, const int skip_check);
 static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd, const int skip_check);
 static int possibly_update_dev(struct ata_channel *ata, uint8_t val);
-static int ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
-static int ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count);
+static int ata_read_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t count);
+static int ata_write_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t count);
 
 extern uint8_t ata_read8_io(struct ata_channel *ata, uint8_t which);
 extern uint16_t ata_read16_io(struct ata_channel *ata, uint8_t which);
@@ -653,7 +653,7 @@ ata_dump_identity(struct ata_channel *ata) {
 }
 
 static int
-ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
+ata_read_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
 	ATA_CH_LOCK(ata);
 	int ret;
@@ -675,6 +675,6 @@ ata_read_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count
 }
 
 static int
-ata_write_block(struct block_device *dev, uint64_t lba, void *buf, uint32_t count) {
+ata_write_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t count) {
 	return 0;
 }
