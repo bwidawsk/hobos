@@ -7,7 +7,7 @@ lba: lba.o
 pt_walk : pt_walk.o
 
 md5: md5.c ../common/src/md5_base.c
-	$(CC) -I../common/include -o $@ $?
+	$(CC) -idirafter../common/include -include stdint.h -include stdio.h -o $@ $?
 
 clean :
 	-rm lba
