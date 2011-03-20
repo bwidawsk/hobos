@@ -36,7 +36,7 @@ ds_init(memory_region_t *regions, int count) {
 	 * Firstly, find out how many pages total we have, and create an array
 	 * for those pages with the memory.
 	 */
-	KASSERT(count == 1); // for now we don't support sparse memory
+	KASSERT(count == 1, ("Sparse memory not supported"));
 	do {
 		total_pages += (PAGE_FROM_VAL(regions[i].len));
 	} while(++i < count);
@@ -54,8 +54,8 @@ ds_init(memory_region_t *regions, int count) {
 	ds_page_allocators[0].pa_diff = bottom_memory;
 	
 	/* Since it may be hobos bootloader, let's check */
-	KASSERT(top_memory == regions[0].addr + regions[0].len);
-	KASSERT(bottom_memory == regions[0].addr);
+	KASSERT(top_memory == regions[0].addr + regions[0].len, ("TODO"));
+	KASSERT(bottom_memory == regions[0].addr, ("TODO"));
 	
 	ds_page_allocators[0].page_array = (pfn_t *)top_memory - PAGE_TO_VAL(pages_for_array);
 	setup_allocator_struct();

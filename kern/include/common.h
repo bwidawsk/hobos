@@ -12,21 +12,26 @@
  */
 
 #ifndef NO_INVARIANTS
-#define KASSERT(x, ...) do { \
+#define KASSERT(x, format, ...) do { \
 		if (!(x)) { \
 			printf("%s: %s\n", __FILE__, #x); \
+			printf((const char *)format, ##__VA_ARGS__); \
+			printf("\n"); \
 			__asm__ volatile("ud2"); \
 		} \
 	} while (0);
-	#define panic(str) KASSERT(0, (str));
+#define panic(str) KASSERT(0, (str));
 #define KWARN(x, ...) do { \
 		if (!(x)) { \
 			printf("%s: %s\n", __FILE__, #x);  \
 		} \
 	} while (0);
 #else
-	#define KASSERT(x, ...)
+	#define KASSERT(x, format, ...)
 	#define KWARN(x, ...)
+#define panic(str) \
+	printf("panic: %s\n", str); \
+	__asm__ volatile("ud2");
 #endif
 
 

@@ -27,7 +27,7 @@ simple_malloc(uint64_t size) {
 void
 simple_free(const void *addr) {
 	KASSERT(malloc_inited != 0, ("Malloc not inited"));
-	KASSERT((((uint64_t)addr) & PAGE_OFFSET_MASK) == 0, ());
+	KASSERT((((uint64_t)addr) & PAGE_OFFSET_MASK) == 0, (""));
 
 	void *va = vaddr_to_paddr((void *)addr);
 

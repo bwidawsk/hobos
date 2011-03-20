@@ -21,7 +21,7 @@ char *
 __hbuiltin_strcpy_safe(char *dest, const char *src) {
 	#define STRCPY_MAX (1 << 20)
 	uint64_t len = strlen(src);
-	KASSERT(len < STRCPY_MAX, ());
+	KASSERT(len < STRCPY_MAX, (""));
 	return strncpy(dest, src, len);
 
 }
