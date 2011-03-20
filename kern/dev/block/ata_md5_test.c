@@ -15,7 +15,7 @@ void do_ata_md5_test(int whichdev) {
 	struct block_device blkdev;
 	struct device *dev = device_get(BLOCK_DEVICE, 0);
 	blkdev = *(struct block_device *)dev->pvt;
-	struct ata_channel *ata = (struct ata_channel *)blkdev.pvt_data;
+	struct ata_channel *ata = ATA_FROM_BLK(&blkdev);
 	KASSERT(ata->disabled == 0, ("badness"));
 
 	int test_sectors = ata->num_sectors;

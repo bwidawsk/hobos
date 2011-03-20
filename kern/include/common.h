@@ -84,7 +84,10 @@
 	printf("\n"); \
 	}
 
+#define OFFSET_OF(structure, member) __builtin_offsetof(structure, member)
+
 #ifndef ASM_FILE
+/* This should also be somewhere in common/include */
 extern int printf(const char *fmt, ...);
 typedef int int8_t __attribute__ ((mode (QI)));
 typedef unsigned int uint8_t __attribute__ ((mode (QI)));

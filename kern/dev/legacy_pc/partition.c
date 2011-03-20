@@ -7,6 +7,7 @@ struct master_boot_record temp_mbr;
 
 void load_mbr(struct block_device *block_dev)
 {
+	int i;
 	uint8_t read_amt = sizeof(temp_mbr) / block_dev->block_size;
 	if (!read_amt)
 		read_amt++;
@@ -14,6 +15,13 @@ void load_mbr(struct block_device *block_dev)
 	block_dev->read_block(block_dev, 0, &temp_mbr, read_amt);
 	if (temp_mbr.sig == 0xaa55) {
 		printf("Found a valid MBR for device\n");
+	}
+
+	for (i = 0; i < 4; i++) {
+		struct primary_partition *partition = &temp_mbr.partitions[i];
+		if (partition->type != LINUX_PARTITION_TYPE) {
+			continue;
+		}
 	}
 }
 

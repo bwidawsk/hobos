@@ -4,6 +4,7 @@
 #include "block.h"
 
 struct ata_channel {
+	struct block_device blkdev; /* parent structure */
 	struct mutex *chan_mtx;
 	struct ide_bus *idebus;
 	uint8_t (*read_port8)(struct ata_channel *ata, uint8_t which);
@@ -31,6 +32,9 @@ struct ide_bus {
 	struct ata_channel *current_dev;
 	struct mutex *ide_bus_mtx;
 };
+
+#define ATA_FROM_BLK(blk) \
+	((struct ata_channel *) (((void *)blk) - OFFSET_OF(struct ata_channel, blkdev)))
 
 int ata_get_numdevs(void);
 void ata_init_blkdev(struct block_device *dev, int which);

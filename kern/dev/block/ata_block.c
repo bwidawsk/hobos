@@ -36,8 +36,6 @@ static int scanned = 0;
 #define ATA_CH_LOCK(ata)		mutex_acquire(ata->chan_mtx)
 #define ATA_CH_RELEASE(ata)		mutex_release(ata->chan_mtx)
 
-#define ATA_FROM_BLK(blk) ((struct ata_channel *)blk->pvt_data)
-
 #define SKIP_CHECK 1
 #define MUST_CHECK 0
 #define UPDATE_CHECK(update) ((updated) ? MUST_CHECK : SKIP_CHECK)
@@ -68,23 +66,19 @@ ata_get_numdevs(void) {
 	return total_channel;
 }
 
-struct device *
-ata_alloc_blkdev(int which) {
-	struct ata_channel *ata = &ata_channels[which];
+static void
+ata_register_blkdev(struct ata_channel *ata) {
 	struct device *dev;
-	struct block_device *blkdev;
-	dev= device_alloc(BLOCK_DEVICE);
 
-	blkdev = malloc(sizeof(*blkdev));
-	blkdev->block_size = ata->sector_size;
+	dev = device_alloc(BLOCK_DEVICE);
+	ata->blkdev.block_size = ata->sector_size;
 	// these functions are defined at the bottom
-	blkdev->read_block = ata_read_block;
-	blkdev->write_block = ata_write_block;
-	blkdev->pvt_data = ata;
+	ata->blkdev.read_block = ata_read_block;
+	ata->blkdev.write_block = ata_write_block;
 
-	dev->pvt = blkdev;
+	dev->pvt = &ata->blkdev;
 
-	return dev;
+	device_register(dev);
 }
 
 #define ata_read_status ata_read_asr
@@ -612,8 +606,7 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_BLOCK) {
 		set_other_stuff(ata, ATA_DEV_DEV0, temp[count_temp]);
 		initialize_channel(ata);
 		if (!ata->disabled) {
-			struct device *dev = ata_alloc_blkdev(ata->id);
-			device_register(dev);
+			ata_register_blkdev(ata);
 		}
 
 		// Set up second channel
@@ -622,8 +615,7 @@ INITFUNC_DECLARE(ata_scan_devs, INITFUNC_DEVICE_BLOCK) {
 		set_other_stuff(ata, ATA_DEV_DEV1, temp[count_temp]);
 		initialize_channel(ata);
 		if (!ata->disabled) {
-			struct device *dev = ata_alloc_blkdev(ata->id);
-			device_register(dev);
+			ata_register_blkdev(ata);
 		}
 
 		// TODO: for now it's okay to setup the bus after the ata channels
@@ -655,14 +647,15 @@ ata_dump_identity(struct ata_channel *ata) {
 static int
 ata_read_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t count) {
 	struct ata_channel *ata = ATA_FROM_BLK(dev);
+
 	ATA_CH_LOCK(ata);
 	int ret;
 
 	while(count) {
 		if (count > 255)
-			ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)255);
+			ret = do_read_sectors_28lba(ata, (uint16_t *)buf, (uint32_t)lba, (uint8_t)255);
 		else
-			ret = do_read_sectors_28lba(ata, buf, (uint32_t)lba, (uint8_t)count);
+			ret = do_read_sectors_28lba(ata, (uint16_t *)buf, (uint32_t)lba, (uint8_t)count);
 		lba += ret;
 		count -= ret;
 		buf += ret;

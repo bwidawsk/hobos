@@ -49,6 +49,7 @@ include_clean : include/common.h build_options
 .PHONY : tags
 tags :
 	ctags -R .
+	ctags -Ra ../common
 
 .PHONY : cscope
 cscope :
@@ -80,9 +81,9 @@ clean :
 
 #fix the lame rm of Makefile.bak below... sed is misbehaving for me
 .PHONY : depclean
-depclean:
+depclean: clean
 	$(shell find . -mindepth 2 -name 'Makefile' | xargs sed -i'' '/# DO NOT DELETE/,$$ d')
-	$(shell find . -mindepth 2 -name 'Makefile.bak' | xargs rm)
+	$(shell find . -mindepth 2 -name 'Makefile.bak' -exec rm -f {} \;)
 
 .PHONY : distclean
 distclean : clean depclean
