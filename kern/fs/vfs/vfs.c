@@ -1,5 +1,6 @@
 #include <init_funcs.h>
 #include <device.h>
+#include <dev/block/block.h>
 #include "../vfs.h"
 
 static struct vfs *rootfs;
@@ -16,7 +17,7 @@ INITFUNC_DECLARE(vfs_bootstrap, INITFUNC_DEVICE_VFS) {
 	/* TODO undo ext2 hardcoding */
 	/*  Hack we need to read the partition table for this number, it's
 	 * partition start */
-	rootfs = ext2_init((struct block_device *)dev->pvt, 63);
+	rootfs = ext2_init(BLKDEV_FROM_DEV(dev), 63);
 }
 
 #include <bs_commands.h>

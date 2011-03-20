@@ -68,17 +68,14 @@ ata_get_numdevs(void) {
 
 static void
 ata_register_blkdev(struct ata_channel *ata) {
-	struct device *dev;
+	struct device *dev = &ata->blkdev.base;
 
-	dev = device_alloc(BLOCK_DEVICE);
 	ata->blkdev.block_size = ata->sector_size;
 	// these functions are defined at the bottom
 	ata->blkdev.read_block = ata_read_block;
 	ata->blkdev.write_block = ata_write_block;
 
-	dev->pvt = &ata->blkdev;
-
-	device_register(dev);
+	device_register(dev, BLOCK_DEVICE);
 }
 
 #define ata_read_status ata_read_asr
@@ -413,14 +410,14 @@ ata_status_wait_unbusy(struct ata_channel *ata) {
 	uint8_t status;
 	do {
 		status = ata_read_status(ata);
-		if (status & ATA_STS_DFSE) 
+		if (status & ATA_STS_DFSE)
 			return -3;
 		if (status & ATA_STS_ERRCHK) {
 			printf("Warning, error return %x\n", ata_read_err(ata));
 			return -2;
 		}
 	} while(status & ATA_STS_BSY);
-	
+
 	if (!(status & ATA_STS_DRQ)) {
 		return ATA_POLL_DRQ0;
 	}
@@ -570,7 +567,7 @@ static void _INITSECTION_
 initialize_channel(struct ata_channel *ata) {
 	uint8_t status = ata_read_status(ata);
 	if (!(status & ATA_STS_BSY || status & ATA_STS_DRDY))
-		ata->disabled = 1; 
+		ata->disabled = 1;
 	else {
 		// It's safe to use write_port here (for now) because
 		// status above called possible_update_dev()
@@ -652,10 +649,14 @@ ata_read_block(struct block_device *dev, uint64_t lba, const void *buf, uint32_t
 	int ret;
 
 	while(count) {
-		if (count > 255)
-			ret = do_read_sectors_28lba(ata, (uint16_t *)buf, (uint32_t)lba, (uint8_t)255);
-		else
+		if (count >= 256) {
+			ret = do_read_sectors_28lba(ata, (uint16_t *)buf, (uint32_t)lba, (uint8_t)0);
+			KASSERT(ret == 256, ("do_read_sectors_28lba read %d instead of 256"), ret);
+		}
+		else {
 			ret = do_read_sectors_28lba(ata, (uint16_t *)buf, (uint32_t)lba, (uint8_t)count);
+			KASSERT(ret == count, ("do_read_sectors_28lba read %d instead of %d"), ret, count);
+		}
 		lba += ret;
 		count -= ret;
 		buf += ret;

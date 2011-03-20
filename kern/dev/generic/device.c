@@ -4,18 +4,9 @@
 static int last_dev=0;
 struct device *all_devices[CONFIG_MAX_SYSTEM_DEVICES];
 
-struct device *
-device_alloc(int type) {
-	struct device *ret;
-	ret = malloc(sizeof(*ret));
-	if (ret)
-		ret->type = type;
-
-	return ret;
-}
-
 int
-device_register(struct device *dev) {
+device_register(struct device *dev, int type) {
+	dev->type = type;
 	all_devices[last_dev] = dev;
 	last_dev++;
 	return 0;

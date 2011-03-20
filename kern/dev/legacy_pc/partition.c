@@ -1,6 +1,6 @@
 #include <master_boot_record.h>
-#include <dev/block/block.h>
 #include <device.h>
+#include <dev/block/block.h>
 #include <init_funcs.h>
 
 struct master_boot_record temp_mbr;
@@ -33,7 +33,7 @@ INITFUNC_DECLARE(partition_check, INITFUNC_DEVICE_BLOCK_ANY) {
 		if (dev == NULL)
 			break;
 
-		load_mbr((struct block_device *)dev->pvt);
+		load_mbr(BLKDEV_FROM_DEV(dev));
 	}
 	printf("Done checking partitions\n");
 }

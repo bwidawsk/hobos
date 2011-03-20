@@ -1,3 +1,4 @@
+#include <device.h>
 #include <dev/block/block.h>
 #include <fs/vfs.h>
 #include <mm/malloc.h>

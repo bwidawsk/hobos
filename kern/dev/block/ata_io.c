@@ -1,4 +1,5 @@
 #include <arch/asm.h>
+#include <device.h>
 #include "ata.h"
 
 #define ATA_IO_DEBUG 0

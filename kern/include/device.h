@@ -8,11 +8,9 @@ enum {
 
 struct device {
 	uint32_t type;
-	void *pvt;
 };
 
-struct device *device_alloc(int type);
-int device_register(struct device *dev);
+int device_register(struct device *dev, int type);
 struct device *device_get(int type, int order);
 
 #endif
