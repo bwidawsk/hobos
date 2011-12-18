@@ -1,6 +1,6 @@
 TARGET?=amd64
-CC=x86_64-pc-linux-gnu-gcc
-LD=x86_64-pc-linux-gnu-ld
+CC=gcc
+LD=ld
 MAKEDEPEND = makedepend
 export ROOTDIR=$(PWD)
 export CC
