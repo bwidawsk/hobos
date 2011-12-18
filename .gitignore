@@ -2,6 +2,7 @@
 *.d
 *.o
 *.gch
+*.bak
 tags
 cscope*
 bochs/bochsimg
