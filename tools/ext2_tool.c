@@ -5,11 +5,32 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <errno.h>
 
 #include "ext2.h"
 
-int 
+#define GROUP_BLOCK(addr) \
+	((volatile struct ext2_group_desc*) (addr))
+
+#define BLOCK_X(x) \
+	(crap + (block_size * x))
+
+/*  Group block descriptor to real block # */
+#define GROUP_TO_BLOCK(x) \
+	(1 + (superblock->s_first_data_block) + (superblock->s_blocks_per_group * x))
+
+#define INODE_TO_GROUP(x) \
+	((x - 1) / superblock->s_inodes_per_group)
+
+#define INODE_TO_INDEX(x) \
+	((x - 1) % superblock->s_inodes_per_group)
+
+#define INODE_IN_TABLE(table_addr, x) \
+	((volatile struct ext2_inode *)((table_addr + (superblock->s_inode_size) * x)))
+
+
+int
 main(int argc, char *argv[]) {
 	int i,j;
 	int fd = open("../bochs/myfs.img", 0);
@@ -24,15 +45,17 @@ main(int argc, char *argv[]) {
 		perror("mmap");
 		exit(0);
 	}
-	
-	struct ext2_super_block *sup_block = (struct ext2_super_block *) (crap);
 
-	if (sup_block->s_magic == EXT2_MAGIC) {
+	struct ext2_super_block *superblock = (struct ext2_super_block *) (crap);
+
+	if (superblock->s_magic == EXT2_MAGIC) {
 		printf("this looks like an ext2 superblock\n");
 	}
-	int nblocks = sup_block->s_blocks_count;
-	int block_size = 1024 * (1 << sup_block->s_log_block_size);
+	int nblocks = superblock->s_blocks_count;
+	int block_size = 1024 * (1 << superblock->s_log_block_size);
 	printf("total size is = %d (bs=%d)\n", nblocks * block_size, block_size);
+	printf("first useful block #%d\n", superblock->s_first_data_block);
+	uint32_t first = superblock->s_first_data_block;
 	/* try to map the actual size */
 	crap -=0x400;
 	crap = mremap(crap, sizeof(struct ext2_super_block), nblocks * block_size, MREMAP_MAYMOVE);
@@ -40,32 +63,36 @@ main(int argc, char *argv[]) {
 		perror("mremap");
 		exit(0);
 	}
+	superblock = BLOCK_X(first);
 	///crap -= 0x400;
-	struct ext2_group_desc *group = (struct ext2_group_desc*) (crap + (2*block_size));
-	printf("inode table, block #%d\n", group->bg_inode_table);
+	struct ext2_group_desc *group = (struct ext2_group_desc*)
+					BLOCK_X(GROUP_TO_BLOCK(INODE_TO_GROUP(2)));
+	uint32_t table_block = group->bg_inode_table;
+	printf("inode table, block #%d\n", table_block);
 
-	// crap is actually pointing to block 1, so our math is a little off
-	// inode #2 should be root
-		struct ext2_inode *root_node = (struct ext2_inode *)((crap + (8* block_size)) + (sizeof(struct ext2_inode) * 1));
-		for(i=0; i < EXT2_N_BLOCKS; i++) {
-			printf("data = %d\n", root_node->i_block[i]);
-		}
-		printf("\n");
+	int index = INODE_TO_INDEX(EXT2_ROOT_INO);
 
-		printf("root i_blocks = %x\n", root_node->i_blocks);
-		printf("root i_flag = %x\n", root_node->i_flags);
+	struct ext2_inode *root_node = INODE_IN_TABLE(BLOCK_X(table_block), index);
+
+	for(i=0; i < EXT2_N_BLOCKS; i++) {
+		printf("data = %d\n", root_node->i_block[i]);
+	}
+	printf("\n");
+
+	printf("root i_blocks = %x\n", root_node->i_blocks);
+	printf("root i_flag = %x\n", root_node->i_flags);
 
 	struct ext2_dir_entry_2 *root_dir = (struct ext2_dir_entry_2*) (crap + (root_node->i_block[0] * block_size));
-	uint32_t addr = root_dir;
+	void *addr = root_dir;
 	struct ext2_dir_entry_2 *temp = addr;
 	while (temp->file_type != EXT2_FT_UNKNOWN) {
 		if (!strcmp(temp->name, "hload")) {
-			
+
 		}
 		printf("inode %x (%s)\n", temp->inode, temp->name);
-		addr+=temp->rec_len;	
+		addr+=temp->rec_len;
 		temp = addr;
 	}
-	
+
 	return 0;
 }
