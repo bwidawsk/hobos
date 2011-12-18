@@ -10,7 +10,7 @@ outb(char byte, short port) {
 	__asm__ volatile("out %0, %1" : : "a" (byte), "d" (port));
 }
 
-/* 
+/*
  * It's easiest to just use the Bochs debug port 0xe9 for now
  */
 void
@@ -30,7 +30,7 @@ void *
 memset(void *s, int c, int n) {
 	while(n--) 
 		*(unsigned char *)s++ = (unsigned char)c;
-	
+
 	return s;
 }
 
@@ -43,10 +43,10 @@ memcpy(void *dest, const void *src, int n) {
 	if (dir) {
 		dest = dest + n - 1;
 		src = src + n - 1;
-		while(n--) 
+		while(n--)
 			*(unsigned char *)dest-- = *(unsigned char *)src--;
 	} else {
-		while(n--) 
+		while(n--)
 			*(unsigned char *)dest++ = *(unsigned char *)src++;
 	}
 
@@ -66,12 +66,12 @@ strlen(const char *s) {
 	return count;
 }
 
-int 
+int
 strcmp(const char *s1, const char *s2) {
 	int matched = 0;
 	if(s1 == 0 || s2 == 0)
 		return 1;
-	
+
 	while(*s1 != 0) {
 		if(*s2 == 0 || *s2 != *s1) {
 			return 1;
@@ -88,12 +88,12 @@ strcmp(const char *s1, const char *s2) {
 	return !matched;
 }
 
-int 
-strncmp(const char *s1, const char *s2, int n) {	
+int
+strncmp(const char *s1, const char *s2, int n) {
 	int matched = 0;
 	if(s1 == 0 || s2 == 0)
 		return 1;
-	
+
 	while(*s1 != 0 && n--) {
 		if(*s2 == 0 || *s2 != *s1) {
 			return 1;
@@ -139,7 +139,7 @@ num_to_hex(unsigned int num, char ret[8]) {
 }
 
 #define PRINTF_BUF_MAX 512
-int 
+int
 printf(const char *format, ...) {
 	char test[PRINTF_BUF_MAX];
 	char num[8];
@@ -150,7 +150,7 @@ printf(const char *format, ...) {
 	const char *string = format;
 	va_list ap;
 
-	if (format == (const char *)0) 
+	if (format == (const char *)0)
 		return 0;
 
 	if (format[0] == (char)0)
@@ -171,7 +171,7 @@ printf(const char *format, ...) {
 					innum = va_arg(ap, unsigned int);
 					num_to_hex(innum, num);
 					memcpy(&test[count], num, 8);
-					count += 8;	
+					count += 8;
 					break;
 
 				case 's':
@@ -197,7 +197,7 @@ printf(const char *format, ...) {
 	} while (*string != 0);
 
 	va_end(ap);
-	puts(test);	
+	puts(test);
 	return 0;
 }
 

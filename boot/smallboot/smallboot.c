@@ -33,7 +33,7 @@ extern Elf32_Addr elf_load(const void *addr, unsigned int loaded_len, struct mul
  * need not know much about the load medium. We pass a sector size to the
  * FS code, but that's it
  */
-unsigned int 
+unsigned int
 mi_read_sector(const void *addr, unsigned int count, unsigned int start[2]) {
 	ASSERT((unsigned int)addr >= 0x100000);
 	const int sector_size = SECTOR_SIZE;
@@ -132,7 +132,7 @@ get_suitable_e820_entry() {
 		//unsigned int baseh =  e820_map[i].addr_high;
 		unsigned int lengthl = e820_map[i].length_low;
 		unsigned int lengthh = e820_map[i].length_high;
-		
+
 		if (which == 0) {
 			which = &e820_map[i];
 		} else {
@@ -194,7 +194,7 @@ get_sector_size(int drive) {
 	if (buf[2] & 0x2) {
 		return *(uint16_t *)(&buf[24]);
 	}
-	
+
 	return 0;
 }
 #else
@@ -215,7 +215,7 @@ get_sector_size(int drive) {
 	if (buf[2] & 0x2) {
 		return *(uint16_t *)(&buf[24]);
 	}
-	
+
 	return 0;
 }
 #endif
@@ -234,10 +234,10 @@ main (
 
 	clear_bss();
 	int i;
-	
+
 	/* Make a big assumption here, and get the partition table */
 	memcpy(partition_table, (void *)(0x7a00 + 0x1be), sizeof(struct partition) * 4);
-	
+
 	bios_device = device;
 	ASSERT(check_extensions(device) & INT13_EXT_FIXED_DISK_SUPPORT);
 	ASSERT(get_sector_size(device) == SECTOR_SIZE);
@@ -273,11 +273,11 @@ main (
 	ASSERT(start_mb >= 0x1);
 	ASSERT(num_mb >= 1); // how many MBs is sufficient
 
-  	struct load_params params = {
+	struct load_params params = {
 		.read_sector = mi_read_sector,
 		.sector_size = SECTOR_SIZE,
 		.start_mb = start_mb + 2,
-		.num_mb = num_mb, 
+		.num_mb = num_mb,
 		.private_data = e820_map,
 		.drive = device,
 		.partitions = partition_entry
@@ -287,7 +287,7 @@ main (
 
 	void *addr = 0;
 	unsigned int num_chars = load_file("hload", &addr);
-	
+
 	i = HOBOLOAD_VER;
 	//hload_info[i++] = addr;
 	char *args = addr;
@@ -304,7 +304,7 @@ main (
 			break;
 		}
 	} while (i < HOBOLOAD_ARGS);
-	
+
 	char *kernel = hload_info[HOBOLOAD_KERNEL_NAME];
 	printf("loading \"%s\"\n", kernel);
 	load_kernel(kernel, args);
@@ -334,6 +334,7 @@ calc_lower_mem() {
 
 	return ret;
 }
+
 static unsigned int
 calc_upper_mem() {
 	unsigned int ret = 0;
@@ -398,7 +399,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	if (nbytes < 8 ) {
 		printf("File not found or too small\n");
 		return 1;
-	} 
+	}
 
 	do {
 		struct multiboot_header *mboot_hdr = (struct multiboot_header *)addr;
@@ -416,7 +417,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	if (!found)
 		return 1;
 
-	/* Load the rest of the file so that we can do the elf stuff */	
+	/* Load the rest of the file so that we can do the elf stuff */
 	nbytes = load_file(kern_name, &addr);
 
 	struct multiboot_elf_section_header_table table;

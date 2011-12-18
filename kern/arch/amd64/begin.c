@@ -22,7 +22,7 @@ static void *stack_va;
 // 20 is Random
 #define MAX_BOOT_MMAP_ENTRIES 20
 struct multiboot_mmap_entry copied_map[MAX_BOOT_MMAP_ENTRIES];
-	
+
 struct segment_descriptor mboot_gdt[NUM_SEGMENTS] 
 	__attribute__((section(".multiboot"))) = {
 		GDT_SEGMENTS
@@ -119,7 +119,6 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 	map[best_entry].addr+=ROUND_UP(kernel_size, PAGE_SIZE);
 	map[best_entry].len-=ROUND_UP(kernel_size, PAGE_SIZE);
 
-	
 	#ifdef DS_ALLOCATOR
 	primary_allocator = (struct mm_page_allocator *)
 		ds_init((memory_region_t *)&map[best_entry], 1);
@@ -159,7 +158,7 @@ static void
 change_pages_and_jump(void (*func)) {
 	pfn_t temp;
 	int pdpte, pde;
-	
+
 	// Allocate our page table pages directly from the page allocator we 
 	// initialized. We do this because we can't reliably translate a VA from
 	// halloc into the PA we need.
@@ -169,7 +168,7 @@ change_pages_and_jump(void (*func)) {
 	kernel_pdpt_phys = (pdpte_t *)PAGE_TO_VAL(temp);
 	temp = primary_allocator->get_page(primary_allocator);
 	dmap_pdpt_phys = (pdpte_t *)PAGE_TO_VAL(temp);
-	
+
 	// TODO: we assume 2 pages is enough to hold the dmap pages
 	// TODO: we assume allocator gives ascending continuous page frames
 	pfn_t pd_pages[MAX_KERNSIZE_GB];
@@ -184,11 +183,11 @@ change_pages_and_jump(void (*func)) {
 	// Use the pages we got to store our real page table pages
 	primary_allocator->get_contig_pages(primary_allocator, DMAP_GBS, dmap_pages);
 	dmap_pagedir_phys = (pde_t *)PAGE_TO_VAL(dmap_pages[0]);
-	
+
 	for(pde = 0; pde < 512 * DMAP_GBS; pde++) {
 		dmap_pagedir_phys[pde] = (pde * (1 << 21)) | PDPTE_P | PDPTE_RW | PDPTE_PS;
 	}
-	
+
 	for(pde = 0; pde < 512 * MAX_KERNSIZE_GB; pde++) {
 		kernel_pd_phys[pde] = (pde * (1 << 21)) | PDPTE_P | PDPTE_RW | PDPTE_PS;
 	}
@@ -196,20 +195,20 @@ change_pages_and_jump(void (*func)) {
 	for(pdpte = 0; pdpte < 512; pdpte++) {
 		dmap_pdpt_phys[pdpte] = ((uint64_t)dmap_pagedir_phys)  | PDE_P | PDE_RW;
 	}
-	
+
 	kernel_pdpt_phys[0x1fe] = ((uint64_t)kernel_pd_phys) | PDE_P | PDE_RW;
 	#if MAX_KERNSIZE_GB > 1
 	#error we dont support > 1 yet
 	#endif
-	
+
 	pml4_phys[RECURSIVE_PML] = ((uint64_t)pml4_phys) | PML4E_P | PML4E_RW;
-	
+
 	pml4_phys[DMAP_PML] = ((uint64_t)dmap_pdpt_phys) | PML4E_P | PML4E_RW;
 	if (use_xd)
 		pml4_phys[DMAP_PML] |= PML4E_XD;
 
 	pml4_phys[KERNEL_PML] = ((uint64_t)kernel_pdpt_phys) | PML4E_P | PML4E_RW;
-	
+
 	primary_allocator->free_page(primary_allocator, dmap_temp_pages[0]);
 	primary_allocator->free_page(primary_allocator, dmap_temp_pages[1]);
 
@@ -219,7 +218,7 @@ change_pages_and_jump(void (*func)) {
 
 	// We're going to put our thread struct at the top of the stack
 	stack_va -= sizeof(struct thread *);
-	
+
 	__asm__ volatile (
 		"mov %0, %%cr3\n\t"
 		"movq %1, %%rsp\n\t"
@@ -251,7 +250,7 @@ amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	int i;
 	multiboot_uint32_t count;
 	struct multiboot_mmap_entry *map;
-	
+
 	/* Setup the exception handlers as early as possible to catch errors */
 	setup_exception_handlers();
 	task.ist1 = (uint64_t)temp_interrupt_stack;

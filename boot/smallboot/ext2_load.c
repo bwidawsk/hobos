@@ -29,8 +29,8 @@ block_to_lba(int block) {
         return (block * sectors_per_block) + start_lba;
 }
 
-/*  
- *  
+/*
+ *
  */
 static int
 read_block(const void *dest, int block, int count) {
@@ -45,7 +45,7 @@ read_block(const void *dest, int block, int count) {
 	return read_sector(dest, count * sectors_per_block, lba);
 }
 
-void 
+void
 initialize_block_loader(struct load_params *lparams) {
 
 	read_sector = lparams->read_sector;
@@ -86,7 +86,7 @@ load_file(const char *name, void **addr) {
 	load_blocks(&temp_node, *addr);
 
 	// example of loading /foo/bar
-	/*  
+	/*
 	struct ext2_inode root = get_root_inode();
 	int foo_index = get_inode_idx(&root, "foo");
 	get_inode(foo_index, &foo_node)
@@ -97,7 +97,7 @@ load_file(const char *name, void **addr) {
 	return temp_node.i_size;
 }
 
-unsigned int 
+unsigned int
 load_file_bytes(const char *name, void **addr, unsigned int nbytes) {
 
 	ASSERT(curptr != 0);
@@ -140,7 +140,7 @@ get_inode(int inode_index, struct ext2_inode *ret_node) {
 }
 
 #if 0
-static void 
+static void
 ls() {
 	struct ext2_inode root = get_root_inode();
 	get_inode_idx(&root, "garbanzo");
@@ -179,7 +179,7 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 	// This is where we'll store all the tables and other info
 	void *indirect_blocks = scratch + blocks * block_size;
 
-	/* 
+	/*
 	 * These constants represent the logical blocks in each new level of the FS.
 	 * It is dependent on block size, but if we assume a 1024 byte block, then as an example
 	 * direct = block 0-11
@@ -212,15 +212,15 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 		read_block(scratch, singly[i - single_start], 1);
 		scratch += block_size;
 	}
-	
+
 	/* If there are no more blocks to read, exit */
 	if (!blocks)
 		return i;
-		
+
 	for ( i = double_start; blocks && i < triple_start; i++, blocks--) {
 		if (!doubly) {
 			// doubly table starts one block after the singly table
-			// we can safely wipe out the stored singly table 
+			// we can safely wipe out the stored singly table
 			//doubly = indirect_blocks + block_size; // if we want to preserve singly
 			doubly = indirect_blocks;
 
@@ -269,7 +269,7 @@ get_inode_idx(struct ext2_inode *parent_dir, const char *file) {
 		if (!strcmp((char *)dir->name, file)) {
 			return dir->inode;
 		}
-		addr2 += dir->rec_len;	
+		addr2 += dir->rec_len;
 		dir = (struct ext2_dir_entry_2 *)addr2;
 	}
 
