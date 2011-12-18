@@ -90,15 +90,15 @@ build_memory_map() {
 		.eax = 0xe820,
 		.ebx = 0,
 		.ecx = sizeof(struct e820_entry),
-		.edx = *(unsigned int *)smap,
 		.edi = (unsigned int)entry
 	};
+	memcpy(&regs.edx, smap, sizeof(smap));
 
 	memset(e820_map, 0, sizeof(e820_map));
 	do {
 		return_flags = legacy_int(0x15, &regs);
 		regs.eax = 0xe820;
-		regs.edx = *(unsigned int *)smap;
+		memcpy(&regs.edx, smap, sizeof(smap));
 		#ifdef E820_DEBUG
 		struct e820_entry *temp = (struct e820_entry *)regs.edi;
 		printf("E820: %x%x %x%x %x\n", temp->addr_high, temp->addr_low, temp->length_high, temp->length_low, temp->type);
@@ -431,7 +431,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	__asm__ volatile("movl	%%esp, %0;" : "=r" (current_esp));
 	ASSERT(current_esp > 0x1000 && current_esp < 0x9f000);
 	__asm__ volatile(
-		"call %1"
+		"call *%1"
 		:
 		: "a" (MULTIBOOT_BOOTLOADER_MAGIC), "g" (kernel_entry), "b" (&mboot_info));
 	return 0;
