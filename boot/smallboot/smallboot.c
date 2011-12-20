@@ -180,46 +180,27 @@ check_extensions(int drive) {
 	return 0;
 }
 
+static uint16_t
+get_sector_size(int drive) {
 #ifdef BOCHS_INT13_WORKAROUND
-static uint16_t
-get_sector_size(int drive) {
-	uint8_t buf[26];
+	int8_t buf[26];
 	buf[0] = 26;
-	struct legacy_regs_32 regs = {
-		.eax = 0x4800,
-		.edx = (uint8_t) drive,
-		.esi = (uint32_t)buf
-	};
-	legacy_int(0x13, &regs);
-	if (buf[2] & 0x2) {
-		return *(uint16_t *)(&buf[24]);
-	}
-
-	return 0;
-}
 #else
-static uint16_t
-get_sector_size(int drive) {
-	int i;
 	uint8_t buf[100];
 	buf[0] = 100;
+#endif
 	struct legacy_regs_32 regs = {
 		.eax = 0x4800,
 		.edx = (uint8_t) drive,
 		.esi = (uint32_t)buf
 	};
 	legacy_int(0x13, &regs);
-	for (i = 0; i < 100; i++)
-		printf("%x ", buf[i]);
-
 	if (buf[2] & 0x2) {
 		return *(uint16_t *)(&buf[24]);
 	}
 
 	return 0;
 }
-#endif
-
 struct partition partition_table[4];
 
 #define HOBOLOAD_VER 0
