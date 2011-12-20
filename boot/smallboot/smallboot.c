@@ -267,7 +267,9 @@ main (
 	initialize_block_loader(&params);
 
 	void *addr = 0;
+
 	unsigned int num_chars = load_file("hload", &addr);
+	ASSERT(num_chars > 0);
 
 	i = HOBOLOAD_VER;
 	//hload_info[i++] = addr;
@@ -287,6 +289,7 @@ main (
 	} while (i < HOBOLOAD_ARGS);
 
 	char *kernel = hload_info[HOBOLOAD_KERNEL_NAME];
+	ASSERT(strlen(kernel) > 0);
 	printf("loading \"%s\"\n", kernel);
 	load_kernel(kernel, args);
 
