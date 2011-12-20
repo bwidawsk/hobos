@@ -13,6 +13,5 @@ struct load_params {
 };
 
 void initialize_block_loader(struct load_params *lparams);
-unsigned int load_file(const char *name, void **addr);
-unsigned int load_file_bytes(const char *name, void **addr, unsigned int nbytes);
-
+unsigned int load_file_bytes(const char *name, void **addr, int nbytes);
+#define load_file(name, addr) load_file_bytes(name, addr, -1)

@@ -53,37 +53,63 @@ initialize_block_loader(struct load_params *lparams) {
 	// TODO: don't assume a partition in the future, pass in lparams
 	start_lba = lparams->partitions->lba;
 	curptr = (void *)(lparams->start_mb << 20);
+#ifdef EXT2_DEBUG
+	printf("ext2: %x choosen as memory base\n", curptr);
+#endif
 
 	// take a guess on block size, which is good enough for super block
 	block_size = 1024;
 	read_block(curptr, 0, 2);
 	superblock = *(volatile struct ext2_super_block *)(curptr + 1024);
 	block_size = 1024 << superblock.s_log_block_size;
+
+#ifdef EXT2_DEBUG
+	printf("Found superblock with block size %x\n", block_size);
+#endif
 }
 
-#define GET_INODE_OR_DIE(name, inode) do {\
-		struct ext2_inode root = get_root_inode(); \
-		int inode_index = get_inode_idx(&root, name); \
-		if (inode_index < 0) return 0; \
-		get_inode(inode_index, &temp_node); \
+#define GET_INODE_OR_DIE(__name, __inode) \
+	do {\
+		struct ext2_inode __root = get_root_inode(); \
+		int __inode_index = get_inode_idx(&__root, __name); \
+		if (__inode_index < 0) { \
+			return 0; \
+		} \
+		get_inode(__inode_index, &__inode); \
 	} while(0);
 
 unsigned int
-load_file(const char *name, void **addr) {
+load_file_bytes(const char *name, void **addr, int nbytes) {
+
 	ASSERT(curptr != 0);
 
+	unsigned int num_blocks = nbytes / block_size;
 	struct ext2_inode temp_node;
 
+	if (num_blocks % block_size && nbytes > 0)
+		num_blocks++;
+
 	GET_INODE_OR_DIE(name, temp_node);
+	if (nbytes <= 0)
+		num_blocks = temp_node.i_blocks;
 
 	if (*addr == 0) {
 		*addr = curptr;
-		curptr += temp_node.i_blocks * block_size;
+#ifdef EXT2_DEBUG
+		printf("curptr moved from %x->%x\n",
+		       curptr, curptr + num_blocks * block_size);
+#endif
+		curptr += num_blocks * block_size;
 	} else {
-
+#ifdef EXT2_DEBUG
+		printf("load file to %x\n", *addr);
+#endif
 	}
 
-	load_blocks(&temp_node, *addr);
+	ASSERT(num_blocks > 0);
+	load_nblocks(&temp_node, *addr, num_blocks);
+	return num_blocks * block_size;
+}
 
 	// example of loading /foo/bar
 	/*
@@ -94,45 +120,30 @@ load_file(const char *name, void **addr) {
 	get_inode(bar_index, &bar_node);
 	load_block(&bar_node, location);
 	*/
-	return temp_node.i_size;
-}
-
-unsigned int
-load_file_bytes(const char *name, void **addr, unsigned int nbytes) {
-
-	ASSERT(curptr != 0);
-
-	int num_blocks = nbytes / block_size;
-
-	if (num_blocks % block_size)
-		num_blocks++;
-
-	struct ext2_inode temp_node;
-
-	GET_INODE_OR_DIE(name, temp_node);
-
-	if (*addr == 0) {
-		*addr = curptr;
-		curptr += temp_node.i_blocks * block_size;
-	} else {
-
-	}
-
-	load_nblocks(&temp_node, *addr, num_blocks);
-
-	return num_blocks * block_size;
-}
-
 
 static void
 get_inode(int inode_index, struct ext2_inode *ret_node) {
+#ifdef EXT2_DEBUG
+	printf("get_inode %x\n", inode_index);
+#endif
 	int group = INODE_TO_GROUP(inode_index);
+
+#ifdef EXT2_DEBUG
+	printf("get_inode, group = %x\n", group);
+	printf("get_inode, block = %x\n", GROUP_TO_BLOCK(group));
+#endif
 
 	read_block(curptr, GROUP_TO_BLOCK(group), 1);
 	struct ext2_group_desc gdesc = *(volatile struct ext2_group_desc *)curptr;
 
 	int inode_table_size = superblock.s_inodes_per_group * superblock.s_inode_size;
 	int amt_to_read = inode_table_size / block_size;
+
+#ifdef EXT2_DEBUG
+	printf("get_inode, inode_table_size = %x (%x)\n", inode_table_size,
+amt_to_read);
+	printf("get_inode, inode table block = %x\n", gdesc.bg_inode_table);
+#endif
 	read_block(curptr, gdesc.bg_inode_table, amt_to_read);
 
 	int index = INODE_TO_INDEX(inode_index);
