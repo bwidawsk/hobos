@@ -243,7 +243,11 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 				if (temp[j] == 0)
 					break;
 
-				read_block(doubly + (block_size) + (block_size * j) , temp[j], 1);
+				/* NB double is unsigned int *, so math is in
+				 * dwords */
+				read_block(doubly + (((block_size) +
+						    (block_size * j)) >> 2),
+					   temp[j], 1);
 			}
 		}
 
