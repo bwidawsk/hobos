@@ -228,13 +228,14 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 	if (!blocks)
 		return i;
 
+	// doubly table starts one block after the singly table
+	// we can safely wipe out the stored singly table
+	//doubly = indirect_blocks + block_size; // if we want to preserve singly
+	unsigned int *doubly_start = 0;
 	for ( i = double_start; blocks && i < triple_start; i++, blocks--) {
 		if (!doubly) {
-			// doubly table starts one block after the singly table
-			// we can safely wipe out the stored singly table
-			//doubly = indirect_blocks + block_size; // if we want to preserve singly
 			doubly = indirect_blocks;
-
+			doubly_start = (void *)doubly + block_size;
 			// read in the table, it should have a bunch of 4 byte entries
 			read_block(doubly, inode->i_block[EXT2_DIND_BLOCK], 1);
 			unsigned int *temp = doubly;
@@ -248,12 +249,18 @@ load_nblocks(struct ext2_inode *inode, void *scratch, int n) {
 				read_block(doubly + (((block_size) +
 						    (block_size * j)) >> 2),
 					   temp[j], 1);
+				// We know have a linear table starting at doubly + block_size
 			}
 		}
 
-		// We know have a linear table starting at doubly + block_size
-		unsigned int *doubly_start = (void *)doubly + block_size;
-		read_block(scratch, doubly_start[i - double_start], 1);
+		/* NB: recent experiments show entries can be zero, and we must
+		 * fill them
+		 * TODO: check spec on that */
+		if (doubly_start[i - double_start] == 0) {
+			memset(scratch, 0, block_size);
+		} else {
+			read_block(scratch, doubly_start[i - double_start], 1);
+		}
 		scratch += block_size;
 	}
 
@@ -280,7 +287,9 @@ get_inode_idx(struct ext2_inode *parent_dir, const char *file) {
 	unsigned int addr2 = (unsigned int) dir;
 
 	while (dir->file_type != EXT2_FT_UNKNOWN) {
-		//printf("i_node %x (%s)\n", dir->inode, dir->name);
+#ifdef EXT2_DEBUG
+		printf("i_node %x (%s)\n", dir->inode, dir->name);
+#endif
 		if (!strcmp((char *)dir->name, file)) {
 			return dir->inode;
 		}
