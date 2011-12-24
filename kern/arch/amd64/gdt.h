@@ -156,9 +156,12 @@ enum {
 	#error must have a KERNEL SEGMENT defined
 #endif
 
-// TODO: lgdt has become AMD64 specific
+/* TODO: lgdt has become AMD64 specific 
+ * NB: bochs and qemu seem to behave differently regarding the iretq. qemu is
+ * only popping 4 qwords, while bochs pops 5. ie. qemu needs the extra pop
+ */
 static
-inline void lgdt(void *gdtdesc) { 
+inline void lgdt(const void *gdtdesc) {
 __asm__ volatile (
 		"lgdt (%0)\n\t"
 		"movq %%ss, %%rax\n\t"
@@ -167,7 +170,7 @@ __asm__ volatile (
 		"pushfq\n\t"
 		"pushq %1\n\t"
 		"pushq $place_to_jump\n\t"
-		"iretq\n\t" 
+		"iretq\n\t"
 		"place_to_jump:\n\t"
 		"movq %2, %%rax\n\t"
 		"movq %%rax, %%ds\n\t"
@@ -175,12 +178,14 @@ __asm__ volatile (
 		"movq %%rax, %%fs\n\t"
 		"movq %%rax, %%gs\n\t"
 		"movq %%rax, %%ss\n\t"
+#ifndef BOCHS
+		"popq %%rbx\n\t"
+#endif
 		:
 		: "p" (gdtdesc), "i" (KERNEL_CS64), "i" (KERNEL_DS)
-		: "%rax"
+		: "%rax", "%rbx"
 		);
 }
-
 #endif // ASM_FILE
 
 #endif
