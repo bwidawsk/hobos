@@ -402,6 +402,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 		return 1;
 
 	/* Load the rest of the file so that we can do the elf stuff */
+	addr = 0;
 	nbytes = load_file(kern_name, &addr);
 
 	struct multiboot_elf_section_header_table table;
