@@ -45,12 +45,26 @@ validate_header64(const void *addr) {
 	return ehdr;
 }
 
-#define PADDR_TO_PTR(foo) ((void *)((uint32_t)foo))
+
+/* I thought paddr was always useable. A newer ld however seems to be
+ * giving junk paddr (also perhaps a link script bug.
+ */
+static void *
+get_load_addr(__ElfN(Phdr) *phdr)
+{
+#define PADDR_TO_PTR ((void *)((uint32_t)phdr->p_paddr))
+#define VADDR_TO_PTR ((void *)(((uint32_t)phdr->p_vaddr)&0x7FFFFFFFU))
+	return VADDR_TO_PTR;
+#undef PADDR_TO_PTR
+#undef VADDR_TO_PTR
+}
 
 /* Returns address of where section header info */
 __ElfN(Addr)
 elf_load64(const void *addr, unsigned int loaded_len,
 	struct multiboot_elf_section_header_table *ret) {
+	int i;
+
 	__ElfN(Ehdr) *ehdr = validate_header64(addr);
 	if (ehdr == 0)
 		return 0;
@@ -61,27 +75,33 @@ elf_load64(const void *addr, unsigned int loaded_len,
 	ASSERT(ehdr->e_phentsize == sizeof(__ElfN(Phdr)));
 	__ElfN(Half) phdr_count = ehdr->e_phnum;
 
-	while(phdr_count--) {
-		if (phdr[phdr_count].p_type == PT_LOAD) {
+	for (i = 0; i < phdr_count; i++) {
+		if (phdr[i].p_type == PT_LOAD) {
 			/* TODO: we could relocate things also, it's easy for 1 segment,
 			 * but a pain for more than 1
 			 */
 
-			ASSERT(phdr[phdr_count].p_memsz >= phdr[phdr_count].p_filesz);
-			ASSERT ((uint32_t)addr > (phdr[phdr_count].p_paddr + phdr[phdr_count].p_memsz) ||
-				(((uint32_t)addr + loaded_len) < phdr[phdr_count].p_paddr));
+			ASSERT(phdr[i].p_memsz >= phdr[i].p_filesz);
+			ASSERT ((uint32_t)addr > (phdr[i].p_paddr + phdr[i].p_memsz) ||
+				(((uint32_t)addr + loaded_len) < phdr[i].p_paddr));
 
 			/* This assertion is platform specific and should be removed */
-			ASSERT(phdr[phdr_count].p_paddr > 0x100000);
-			memcpy(PADDR_TO_PTR(phdr[phdr_count].p_paddr),
-				(phdr[phdr_count].p_offset + addr),
-				(phdr[phdr_count].p_filesz));
-			memset(PADDR_TO_PTR(phdr[phdr_count].p_paddr + (uint32_t)phdr[phdr_count].p_filesz),
-				0,
-				phdr[phdr_count].p_memsz - phdr[phdr_count].p_filesz);
-		} 
-	}
+			ASSERT(phdr[i].p_paddr > 0x100000);
 
+			/* Only handle full loaded or zero'd sections for now */
+			ASSERT((phdr[i].p_memsz == phdr[i].p_filesz) || phdr[i].p_filesz == 0);
+
+			memcpy(get_load_addr(&phdr[i]),
+				((phdr[i].p_offset) + addr),
+				(phdr[i].p_filesz));
+			memset(get_load_addr(&phdr[i]), 0,
+			       (phdr[i].p_memsz - phdr[i].p_filesz));
+			ELF_PRINTF("loaded segment to %x\n", get_load_addr(&phdr[i]));
+			ELF_PRINTF("cleared from %x\n",
+				   get_load_addr(&phdr[i]) +
+				   (uint32_t)phdr[i].p_filesz);
+		}
+	}
 	ret->num = (multiboot_uint32_t)ehdr->e_shnum;
 	ret->size = (multiboot_uint32_t)ehdr->e_shentsize;
 	ret->addr = (multiboot_uint32_t)ehdr->e_shoff + (multiboot_uint32_t)addr;
@@ -89,3 +109,4 @@ elf_load64(const void *addr, unsigned int loaded_len,
 
 	return ehdr->e_entry;
 }
+
