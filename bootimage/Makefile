@@ -3,7 +3,8 @@ SHELL?=bash
 SED?=sed
 AWK?=awk
 MKFS?=/sbin/mkfs.ext2
-MKFS_FLAGS?=
+MKFS_FLAGS?=-F
+TEMP_IMG?=temp.img
 
 #User settable FS size
 FS_SIZE?=31457280
@@ -43,7 +44,7 @@ PART_TABLE_STRING=$(shell echo "partition_table 0x80 \
 #This is NOT multiprocess safe, but good enough...
 LOOP_DEV=$(shell sudo losetup -f)
 
-all : bochsimg updatebochsrs ../tools/lba
+all : disk_image updatebochsrs ../tools/lba
 	@echo Created image with 
 	@echo "    Block Size $(BLOCK_SIZE)"
 	@echo "    Sectors per track $(SECTORS_PER_TRACK)"
@@ -54,9 +55,6 @@ all : bochsimg updatebochsrs ../tools/lba
 syms : ../kern/kernel
 	./makesyms.bash ../kern/kernel symbols.txt
 
-run :  bochsimg updatebochsrs
-	bochs -q
-
 force : all myfs.img
 
 .PHONY : updatembr
@@ -65,15 +63,15 @@ updatembr :
 
 .PHONY : updatebochsrs
 updatebochsrs :
-	$(SED) -i.orig 's/^ata0-master.*/ata0-master: type=disk, mode=flat, path="bochsimg", cylinders=$(USED_CYLINDERS), heads=$(HEADS_PER_CYLINDER), spt=$(SECTORS_PER_TRACK)/' bochsrc.txt
+	$(SED) -i.orig 's/^ata0-master.*/ata0-master: type=disk, mode=flat, path="disk_image", cylinders=$(USED_CYLINDERS), heads=$(HEADS_PER_CYLINDER), spt=$(SECTORS_PER_TRACK)/' bochsrc.txt
 
 ../boot/bootimage: updatembr
 	${MAKE} -C ../boot DEBUG=1
-	
-bochsimg: myfs.img ../boot/bootimage
-	cp ../boot/bootimage ./bochsimg
-	dd if=../boot/bootimage of=bochsimg ibs=$(SMALLBOOT_SIZE) conv=sync count=1  > /dev/null 2>&1
-	cat myfs.img >> bochsimg
+
+disk_image: myfs.img ../boot/bootimage
+	cp ../boot/bootimage ./disk_image
+	dd if=../boot/bootimage of=disk_image ibs=$(SMALLBOOT_SIZE) conv=sync count=1  > /dev/null 2>&1
+	cat myfs.img >> disk_image
 
 # put something like below in sudoers file to not need a password
 #%wheel  ALL=(ALL)       NOPASSWD: /sbin/losetup, \
@@ -84,8 +82,8 @@ bochsimg: myfs.img ../boot/bootimage
 
 myfs.img : ../kern/kernel
 	-cp ../kern/kernel files/
-	-dd if=/dev/zero of=temp.img bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
-	-sudo losetup $(LOOP_DEV) temp.img
+	-dd if=/dev/zero of=$(TEMP_IMG) bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
+	-sudo losetup $(LOOP_DEV) $(TEMP_IMG)
 	-sudo $(MKFS) $(MKFS_FLAGS) $(LOOP_DEV)  > /dev/null 2>&1
 	-sudo mkdir -p hobosmnt/
 	-sudo mount -o loop $(LOOP_DEV)  hobosmnt/
@@ -93,9 +91,12 @@ myfs.img : ../kern/kernel
 	-cp -r files/* hobosmnt/
 	-sudo umount hobosmnt/
 	-sudo losetup -d $(LOOP_DEV)
-	-mv temp.img myfs.img
+	-mv $(TEMP_IMG) myfs.img
+
+check:
+	../tools/ext2_tool
 
 .PHONY : clean
 clean :
-	rm bochsimg
+	rm disk_image
 	rm myfs.img
