@@ -85,16 +85,28 @@ movl %eax, %esi
  * 64 bit long mode needs PAE + EFER.LME + a valid CR3 + CR0.PG 
  * For CR3 we use statically allocated, identity mapped page tables.
  */
+
+/* 9.8.5 #1 Disable paging */
+movl %cr0, %eax
+btrl $31, %eax
+movl %eax, %cr0
+
+/* 9.8.5 #2 Enable PAE */
 movl %cr4, %eax
 or $CR4_PAE, %eax
 movl %eax, %cr4
+
+/* 9.8.5 #3 Load cr3 with PA of PML4a */
 lea early_pml4e, %eax
 movl %eax, %cr3
+
+/* 9.8.5 #4 Set IA32_EFER.LME */
 movl $IA32_EFER, %ecx
 rdmsr
 or $IA32_EFER_LME, %eax
 wrmsr
 
+/* 9.8.5 #5 Enable paging */
 movl %cr0, %eax
 or $CR0_PG, %eax #enable paging
 movl %eax, %cr0
