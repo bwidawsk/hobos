@@ -72,7 +72,7 @@ do_ata_md5_test(int argc, char *argv[]) {
 	md5_hash_block(&ctx);
 	if (ret) {
 		KWARN(1, ("Pad required, not expected, bailing\n"));
-		return;
+		return NULL;
 	}
 #if 0
 	/* Do the last block and pad */
@@ -88,6 +88,8 @@ do_ata_md5_test(int argc, char *argv[]) {
 	printf("\n");
 	display_md5hash(&ctx);
 	printf("\n");
+
+	return NULL;
 }
 
 static void
