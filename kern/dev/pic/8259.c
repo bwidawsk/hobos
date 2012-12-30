@@ -48,10 +48,10 @@ enum which_ir {
 static void
 pic8259_eoi(int irq) {
 	if(irq >= 8) {
-		KASSERT(slave_inited == 1, ("%s: slave not inited\n", __FUNCTION__));
+		KASSERT(slave_inited, ("%s: slave not inited\n"), __FUNCTION__);
 		outb(PIC8259_EOI, SLAVE_CMD_PORT);
 	}
-	KASSERT(master_inited == 1, ("%s: master not inited\n", __FUNCTION__));
+	KASSERT(master_inited, ("%s: master not inited\n"), __FUNCTION__);
 	outb(PIC8259_EOI, MASTER_CMD_PORT);
 }
 
@@ -156,11 +156,11 @@ pic8259_get_ir(enum which_8259 which, uint8_t which_ir) {
 	uint8_t ret;
 
 	if (which & PIC8259_SLAVE) {
-		KASSERT(slave_inited == 1, ("%s: slave not inited\n", __FUNCTION__));
+		KASSERT(slave_inited == 1, ("%s: slave not inited\n"), __FUNCTION__);
 		which_data_port = SLAVE_DATA_PORT;
 		which_cmd_port = SLAVE_CMD_PORT;
 	} else {
-		KASSERT(master_inited == 1, ("%s: master not inited\n", __FUNCTION__));
+		KASSERT(master_inited == 1, ("%s: master not inited\n"), __FUNCTION__);
 		which_data_port = MASTER_DATA_PORT;
 		which_cmd_port = MASTER_CMD_PORT;
 	}
