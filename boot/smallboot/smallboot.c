@@ -196,7 +196,7 @@ get_sector_size(int drive) {
 	};
 	legacy_int(0x13, &regs);
 	if (buf[2] & 0x2) {
-		return *(uint16_t *)(&buf[24]);
+		return ((uint16_t)buf[25]) << 8 | buf[24];
 	}
 
 	return 0;
