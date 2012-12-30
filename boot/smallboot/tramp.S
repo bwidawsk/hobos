@@ -53,8 +53,8 @@ legacy_interrupt_real:
 	movl (%esp), %ebx
 	add $4, %esp
 
-	.globl
-	tramp_opcode:
+.globl tramp_opcode
+tramp_opcode:
 #	int ??$
 	.byte 0xcd
 	.byte 0x00
