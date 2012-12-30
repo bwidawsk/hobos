@@ -77,6 +77,8 @@ elf_load64(const void *addr, unsigned int loaded_len,
 
 	for (i = 0; i < phdr_count; i++) {
 		if (phdr[i].p_type == PT_LOAD) {
+			unsigned int pad_space;
+			void *pad_start;
 			/* TODO: we could relocate things also, it's easy for 1 segment,
 			 * but a pain for more than 1
 			 */
@@ -88,18 +90,16 @@ elf_load64(const void *addr, unsigned int loaded_len,
 			/* This assertion is platform specific and should be removed */
 			ASSERT(phdr[i].p_paddr > 0x100000);
 
-			/* Only handle full loaded or zero'd sections for now */
-			ASSERT((phdr[i].p_memsz == phdr[i].p_filesz) || phdr[i].p_filesz == 0);
-
 			memcpy(get_load_addr(&phdr[i]),
 				((phdr[i].p_offset) + addr),
 				(phdr[i].p_filesz));
-			memset(get_load_addr(&phdr[i]), 0,
-			       (phdr[i].p_memsz - phdr[i].p_filesz));
+			pad_space = phdr[i].p_memsz - phdr[i].p_filesz;
+			pad_start = get_load_addr(&phdr[i]) + phdr[i].p_filesz;
 			ELF_PRINTF("loaded segment to %x\n", get_load_addr(&phdr[i]));
-			ELF_PRINTF("cleared from %x\n",
-				   get_load_addr(&phdr[i]) +
-				   (uint32_t)phdr[i].p_filesz);
+			if (pad_space) {
+				memset(pad_start, 0, pad_space);
+				ELF_PRINTF("cleared %x-%x\n", pad_start, pad_start + pad_space);
+			}
 		}
 	}
 	ret->num = (multiboot_uint32_t)ehdr->e_shnum;
