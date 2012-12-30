@@ -16,16 +16,16 @@ SECTORS_PER_TRACK?=63
 HEADS_PER_CYLINDER?=16
 
 #Derived info from media dependent stuff
-SECTORS_PER_CYLINDER:=$(shell echo $(SECTORS_PER_TRACK)\*$(HEADS_PER_CYLINDER) | bc)
-BYTES_PER_CYLINDER:=$(shell echo $(SECTORS_PER_CYLINDER)\*$(BLOCK_SIZE) | bc)
+SECTORS_PER_CYLINDER:=$(shell echo $$[$(SECTORS_PER_TRACK)*$(HEADS_PER_CYLINDER)])
+BYTES_PER_CYLINDER:=$(shell echo $$[$(SECTORS_PER_CYLINDER)*$(BLOCK_SIZE)])
 # Assume bootloader uses 1 track
-SMALLBOOT_SIZE=$(shell echo $(SECTORS_PER_TRACK)\*$(BLOCK_SIZE) | bc)
+SMALLBOOT_SIZE=$(shell echo $$[$(SECTORS_PER_TRACK)*$(BLOCK_SIZE)])
 
 # Do some math, what we actually want is a FS that is rounded up to a cylinder boundary
 # boundary, and then subtract the smallboot size, which is assumed to be 1 track
 
 # get number of blocks
-FS_SECTORS_ORIG:=$(shell echo $(FS_SIZE)\/$(BLOCK_SIZE) | bc)
+FS_SECTORS_ORIG:=$(shell echo $$[$(FS_SIZE)/$(BLOCK_SIZE)])
 
 #I couldn't get the rounding to work in 1 step
 # (fs_sectors + (sectors per cyclinder -) / sectors_per cylinder)
@@ -33,9 +33,9 @@ FS_CYLINDERS=$(shell echo "$(FS_SECTORS_ORIG)" | $(AWK) '{printf("%d\n",(($$0 + 
 FS_SECTORS=$(shell echo "$(FS_CYLINDERS)" | $(AWK) '{printf("%d\n",($$0 * $(SECTORS_PER_CYLINDER)))}')
 
 #Assume smallboot is 1 track
-FS_SECTORS_MINUS_SMALLBOOT=$(shell echo $(FS_SECTORS)\-$(SECTORS_PER_TRACK) | bc)
-FS_SECTORS_MINUS_ONE=$(shell echo $(FS_SECTORS)\- 1 | bc)
-USED_CYLINDERS=$(shell echo $(FS_SECTORS)\/$(SECTORS_PER_CYLINDER) | bc)
+FS_SECTORS_MINUS_SMALLBOOT=$(shell echo $$[$(FS_SECTORS)-$(SECTORS_PER_TRACK)])
+FS_SECTORS_MINUS_ONE=$(shell echo $$[$(FS_SECTORS)-1])
+USED_CYLINDERS=$(shell echo $$[$(FS_SECTORS)/$(SECTORS_PER_CYLINDER)])
 PART_TABLE_STRING=$(shell echo "partition_table 0x80 \
 	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(PART_START)) 0x83 \
 	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(FS_SECTORS_MINUS_ONE)) \
