@@ -3,7 +3,9 @@
 *.o
 *.gch
 *.bak
+*.orig
 tags
+depend
 cscope*
 bochs/bochsimg
 bochs/bochsout.txt
@@ -16,7 +18,10 @@ boot/mbr/mbr.elf
 boot/mbr/mbr.img
 boot/smallboot/smallboot.img
 boot/smallboot/smallboot.img.elf
+bootimage/bochsrc.txt
+bootimage/disk_image
+bootimage/files/*
+bootimage/myfs.img
 kern/kernel
-kern/include/arch/*
+kern/include/arch
 kern/core/vers.c
-
