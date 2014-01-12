@@ -8,6 +8,12 @@ $(OUTPUT) : $(OBJS) depend
 .PHONY : clean
 clean :
 	-rm $(OUTPUT) $(OBJS)
+	-rm depend
+	-rm depend.bak
 
 depend: $(SOURCES)
-	$(MAKEDEPEND) -Y $(INCLUDES) $^
+	rm -f depend
+	touch depend
+	$(MAKEDEPEND) -fdepend -Y $(INCLUDES) $^
+
+-include depend

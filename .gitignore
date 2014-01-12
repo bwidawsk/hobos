@@ -6,7 +6,7 @@
 *.orig
 tags
 depend
-cscope*
+depend.bak
 bochs/bochsimg
 bochs/bochsout.txt
 bochs/debugger.out
