@@ -63,6 +63,7 @@ help :
 	@echo "Available targets: "
 	@echo " all (default)"
 	@echo " tags"
+	@echo " cscope"
 	@echo " picocom"
 	@echo " clean"
 	@echo "Variables which you may want to change: "
