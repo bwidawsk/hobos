@@ -1,6 +1,6 @@
 CFLAGS+=$(INCLUDES)
 
-OBJS=$(subst .c,.o,$(SOURCES))
+OBJS=$(subst .c,.o,$(abspath $(SOURCES)))
 
 $(OUTPUT) : $(OBJS) depend
 	$(LD) $(LDFLAGS) -r $(OBJS) -o $@
