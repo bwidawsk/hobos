@@ -16,6 +16,7 @@ CFLAGS+=-Wno-unused-function
 DEFINES=-DKERNEL -DAMD64 -D$(MEMORY_ALLOCATOR)
 DEFINES+=$(shell cat build_options)
 CFLAGS+=$(DEFINES)
+LD_SCRIPT=linker_script.ld -S
 
 INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
 CFLAGS+=$(INCLUDES)
@@ -38,7 +39,7 @@ $(OUTPUT) : include_clean
 	-rm include/arch
 	ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
 	for dir in $(DIRS); do (${MAKE} -C $$dir $1 || exit 1) || exit 1; done
-	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/linker_script.ld -S $(OBJS) -o kernel
+	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/$(LD_SCRIPT) $(OBJS) -o kernel
 
 # autocleans if critical files change
 include_clean : include/common.h build_options
