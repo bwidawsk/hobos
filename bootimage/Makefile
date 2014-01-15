@@ -63,6 +63,8 @@ updatembr :
 
 .PHONY : updatebochsrs
 updatebochsrs :
+	-rm -f bochsrc.txt
+	touch bochsrc.txt
 	$(SED) -i.orig 's/^ata0-master.*/ata0-master: type=disk, mode=flat, path="disk_image", cylinders=$(USED_CYLINDERS), heads=$(HEADS_PER_CYLINDER), spt=$(SECTORS_PER_TRACK)/' bochsrc.txt
 
 ../boot/bootimage: updatembr
