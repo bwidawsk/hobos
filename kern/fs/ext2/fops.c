@@ -44,49 +44,6 @@ ext2_blocks_to_native(struct ext2_driver *ext2, uint32_t ext2_blocks)
 
 #define ONE_BLOCK ext2_blocks_to_native(ext2, 1)
 
-struct vfs *
-ext2_init(struct block_device *dev, uint64_t lba_start)
-{
-	struct ext2_super_block *super_block;
-	struct ext2_driver *ext2;
-
-	ext2 = malloc(sizeof(struct ext2_driver));
-	if (!ext2)
-		return NULL;
-
-	ext2->base.start_lba = lba_start;
-	ext2->base.block_device = dev;
-	ext2->base.ls = ext2_ls;
-
-	dev->read_block(dev, lba_start + (1024 / dev->block_size), temp_storage1, 2);
-
-	super_block = (struct ext2_super_block *)temp_storage1;
-	ext2->super_block = super_block;
-	ext2->block_size = 1 << (super_block->s_log_block_size + 10);
-
-	/* TODO: try to find another superblock? */
-	if(super_block->s_magic != EXT2_MAGIC) {
-		DUMP_BYTES((uint8_t *)super_block, 100);
-		return NULL;
-	}
-
-	ext2->groups = super_block->s_blocks_count / super_block->s_blocks_per_group;
-	if (super_block->s_blocks_count % super_block->s_blocks_per_group) {
-		KWARN(1, ("Unexpected group calculation"));
-		ext2->groups++;
-	}
-	ext2->blocks_for_gdesc_table = ROUND_UP((sizeof(struct ext2_group_desc) * ext2->groups), ext2->block_size) / ext2->block_size;
-	/*
-	 * The first block after the super block has the group descriptor table
-	 * TODO: similar to superblock, we can find backups
-	 */
-	dev->read_block(dev, blkid_to_lba(ext2, 1 + super_block->s_first_data_block),
-			temp_storage2, ext2_blocks_to_native(ext2, ext2->blocks_for_gdesc_table));
-//	ext2->group_desc = (struct ext2_group_desc *)temp_storage2;
-
-	return &ext2->base;
-}
-
 static uint32_t
 inode_to_group(struct ext2_super_block *super_block, block_id inode)
 {
@@ -387,4 +344,47 @@ ext2_ls(struct vfs *fs,  const char *path, struct vfs_inode **inodes)
 	}
 	free(dentries);
 	return ret;
+}
+
+struct vfs *
+ext2_init(struct block_device *dev, uint64_t lba_start)
+{
+	struct ext2_super_block *super_block;
+	struct ext2_driver *ext2;
+
+	ext2 = malloc(sizeof(struct ext2_driver));
+	if (!ext2)
+		return NULL;
+
+	ext2->base.start_lba = lba_start;
+	ext2->base.block_device = dev;
+	ext2->base.ls = ext2_ls;
+
+	dev->read_block(dev, lba_start + (1024 / dev->block_size), temp_storage1, 2);
+
+	super_block = (struct ext2_super_block *)temp_storage1;
+	ext2->super_block = super_block;
+	ext2->block_size = 1 << (super_block->s_log_block_size + 10);
+
+	/* TODO: try to find another superblock? */
+	if(super_block->s_magic != EXT2_MAGIC) {
+		DUMP_BYTES((uint8_t *)super_block, 100);
+		return NULL;
+	}
+
+	ext2->groups = super_block->s_blocks_count / super_block->s_blocks_per_group;
+	if (super_block->s_blocks_count % super_block->s_blocks_per_group) {
+		KWARN(1, ("Unexpected group calculation"));
+		ext2->groups++;
+	}
+	ext2->blocks_for_gdesc_table = ROUND_UP((sizeof(struct ext2_group_desc) * ext2->groups), ext2->block_size) / ext2->block_size;
+	/*
+	 * The first block after the super block has the group descriptor table
+	 * TODO: similar to superblock, we can find backups
+	 */
+	dev->read_block(dev, blkid_to_lba(ext2, 1 + super_block->s_first_data_block),
+			temp_storage2, ext2_blocks_to_native(ext2, ext2->blocks_for_gdesc_table));
+//	ext2->group_desc = (struct ext2_group_desc *)temp_storage2;
+
+	return &ext2->base;
 }
