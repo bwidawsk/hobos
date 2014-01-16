@@ -18,17 +18,20 @@ void load_mbr(struct block_device *block_dev)
 	block_dev->read_block(block_dev, 0, &temp_mbr, read_amt);
 	if (temp_mbr.sig == 0xaa55)
 		printf("Found a valid MBR for device\n");
+	else
+		return;
 
 	block_dev->partition_table = malloc(sizeof(partition) * MAX_PARTITIONS);
 
 	for (i = 0; i < MAX_PARTITIONS; i++) {
 		partition = &temp_mbr.partitions[i];
-		if (partition->type != LINUX_PARTITION_TYPE) {
-			continue;
-		}
 
 		block_dev->partition_table[i] = malloc(sizeof(*partition));
 		init_block_partition(block_dev->partition_table[i], partition->lba_first);
+
+		if (partition->type != LINUX_PARTITION_TYPE) {
+			continue;
+		}
 	}
 }
 
