@@ -3,6 +3,10 @@
 #include <dev/block/block.h>
 #include "../vfs.h"
 
+/* First partition is assumed to be root. We can change this by using a kernel
+ * commandline option, or just always force it to be 0. For simplicity do the
+ * latter. */
+#define ROOTFS_PARTITION 0
 static struct vfs *rootfs;
 
 struct vfs *
@@ -12,12 +16,13 @@ vfs_get(const char *path) {
 }
 
 INITFUNC_DECLARE(vfs_bootstrap, INITFUNC_DEVICE_VFS) {
-	/* TODO First partitin is assumed to be root... fix this */
+	/* FIXME: It is assumed that the first block device is the device
+	 * containing rootfs */
 	struct device *dev = device_get(BLOCK_DEVICE, 0);
+	struct block_device *bdev = BLKDEV_FROM_DEV(dev);
+
 	/* TODO undo ext2 hardcoding */
-	/*  Hack we need to read the partition table for this number, it's
-	 * partition start */
-	rootfs = ext2_init(BLKDEV_FROM_DEV(dev), 63);
+	rootfs = ext2_init(bdev, bdev->partition_table[ROOTFS_PARTITION]->first_block);
 }
 
 #include <bs_commands.h>
