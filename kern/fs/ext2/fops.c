@@ -346,21 +346,15 @@ ext2_ls(struct vfs *fs,  const char *path, struct vfs_inode **inodes)
 	return ret;
 }
 
-struct vfs *
-ext2_init(struct block_device *dev, uint64_t lba_start)
+static int
+ext2_probe(struct vfs *fs)
 {
 	struct ext2_super_block *super_block;
-	struct ext2_driver *ext2;
+	struct block_device *bdev = fs->block_device;
+	struct ext2_driver *ext2 = (struct ext2_driver *)fs;
 
-	ext2 = malloc(sizeof(struct ext2_driver));
-	if (!ext2)
-		return NULL;
-
-	ext2->base.start_lba = lba_start;
-	ext2->base.block_device = dev;
-	ext2->base.ls = ext2_ls;
-
-	dev->read_block(dev, lba_start + (1024 / dev->block_size), temp_storage1, 2);
+	bdev->read_block(bdev, fs->start_lba + (1024 / bdev->block_size),
+					 temp_storage1, 2);
 
 	super_block = (struct ext2_super_block *)temp_storage1;
 	ext2->super_block = super_block;
@@ -369,7 +363,7 @@ ext2_init(struct block_device *dev, uint64_t lba_start)
 	/* TODO: try to find another superblock? */
 	if(super_block->s_magic != EXT2_MAGIC) {
 		DUMP_BYTES((uint8_t *)super_block, 100);
-		return NULL;
+		return -1;
 	}
 
 	ext2->groups = super_block->s_blocks_count / super_block->s_blocks_per_group;
@@ -382,9 +376,27 @@ ext2_init(struct block_device *dev, uint64_t lba_start)
 	 * The first block after the super block has the group descriptor table
 	 * TODO: similar to superblock, we can find backups
 	 */
-	dev->read_block(dev, blkid_to_lba(ext2, 1 + super_block->s_first_data_block),
-			temp_storage2, ext2_blocks_to_native(ext2, ext2->blocks_for_gdesc_table));
+	bdev->read_block(bdev, blkid_to_lba(ext2, 1 + super_block->s_first_data_block),
+					 temp_storage2,
+					 ext2_blocks_to_native(ext2, ext2->blocks_for_gdesc_table));
 //	ext2->group_desc = (struct ext2_group_desc *)temp_storage2;
 
-	return &ext2->base;
+	return 0;
+}
+
+static const struct vfs_ops ext2_ops = {
+	.probe = ext2_probe,
+	.ls = ext2_ls,
+	.load_file = NULL
+};
+
+#include <init_funcs.h>
+INITFUNC_DECLARE(ext2_init, INITFUNC_DEVICE_FS) {
+	struct ext2_driver *ext2;
+
+	ext2 = malloc(sizeof(struct ext2_driver));
+	if (!ext2)
+		return;
+
+	vfs_register_fs(&ext2->base, &ext2_ops);
 }
