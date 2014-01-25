@@ -1,5 +1,6 @@
 #include <mm/page.h>
 #include <mm/page_allocator.h>
+#include <init_funcs.h>
 
 #define DS_ALLOC_PRINT(x, ...)
 
@@ -132,4 +133,8 @@ ds_fixup_structures(struct mm_page_allocator *pallocator,
 {
 	struct ds_page_allocator *allocator = (struct ds_page_allocator *)pallocator;
 	allocator->page_array = convert(allocator->page_array);
+}
+
+INITFUNC_DECLARE(ds_alloc_init, INITFUNC_ALLOCATION_PAGE) {
+	register_page_allocator(&ds_page_allocators[0].allocator);
 }

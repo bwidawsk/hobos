@@ -35,6 +35,11 @@ typedef void (*init_function_t)();
 // All machine specific here
 #define INITFUNC_ARCHINIT		0x01000000UL
 
+// Whatever is needed to get page allocators + malloc up
+#define INITFUNC_ALLOCATION		0x02000000UL
+#define INITFUNC_ALLOCATION_PAGE		(0x02000000UL + INITFUNC_SUBSYSTEM_FIRST)
+#define INITFUNC_ALLOCATION_SUBSYSTEM	(0x02000000UL + INITFUNC_SUBSYSTEM_ANY)
+
 // All device specific here
 #define INITFUNC_DEVINIT				 0x10000000UL
 #define INITFUNC_DEVICE_BLOCK			 0x10002000UL

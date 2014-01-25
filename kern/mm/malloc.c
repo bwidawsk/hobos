@@ -1,17 +1,28 @@
 #include <mm/mm.h>
 #include <mm/page.h>
 #include <mm/page_allocator.h>
+#include <init_funcs.h>
 
+#define EARLY_MALLOC_INITED (1<<0)
+#define MALLOC_INITED		(1<<1)
 static int malloc_inited = 0;
 struct mm_page_allocator *page_allocator;
 
-void 
-init_malloc(struct mm_page_allocator *allocator) {
+void
+init_early_malloc(struct mm_page_allocator *allocator) {
 	page_allocator = allocator;
-	malloc_inited = 1;
+	malloc_inited |= EARLY_MALLOC_INITED;
 }
 
-/* 
+
+INITFUNC_DECLARE(malloc_init, INITFUNC_ALLOCATION_SUBSYSTEM) {
+	KASSERT(malloc_inited & EARLY_MALLOC_INITED, ("Early malloc wasn't done"));
+
+	/* Call back to the core to get our possibly different page allocator */
+	page_allocator = get_page_allocator(page_allocator_default);
+}
+
+/*
  * Simple malloc just gets a page from the page allocator and uses the DMAP
  * functions to translate it to a good VA.
  * TODO: heap based allocation.

@@ -29,10 +29,11 @@ extern volatile uint64_t ttick;
  * pass in an allocator it may have used early in boot.
  * We also want the memory map so that we can set up our own allocators
  */
-void 
-mi_begin(struct multiboot_mmap_entry *copied_map, struct mm_page_allocator *primary_allocator) {
+void mi_begin(struct multiboot_mmap_entry *copied_map,
+			  struct mm_page_allocator *primary_allocator)
+{
 	KASSERT(primary_allocator != NULL, ("can't handle null allocator yet\n"));
-	init_malloc(primary_allocator);
+	init_early_malloc(primary_allocator);
 	console_init();
 	printf("Link time = %s\n", version);
 	printf("%p\n", this_thread());

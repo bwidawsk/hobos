@@ -3,7 +3,9 @@
 #include "page.h"
 #include "page_allocator.h"
 
-void init_malloc(struct mm_page_allocator *allocator);
+/* Malloc used before initfuncs. Try to remove this eventually */
+void init_early_malloc(struct mm_page_allocator *allocator);
+
 void *simple_malloc(uint64_t size);
 void simple_free(const void *addr);
 
