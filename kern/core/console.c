@@ -134,7 +134,7 @@ start_interactive_console() {
 			#ifdef USE_LOCAL_ECHO
 			console_putc(c);
 			#endif
-		} while(c != '\r');
+		} while(c != '\r' && c != '\n');
 
 		/* Shortcut empty commands */
 		if (idx == 0)
