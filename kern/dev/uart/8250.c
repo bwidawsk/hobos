@@ -33,7 +33,7 @@ write_divisor(uint32_t divisor, void *ctrl) {
 	write_8250_reg(LCR_REG_8250, orig_lcr, ctrl);
 }
 
-static void 
+static void
 cons_init_8250(struct console_driver *me_cons) {
 	me_cons->pvt = &use_8250_io;
 
@@ -49,7 +49,7 @@ cons_init_8250(struct console_driver *me_cons) {
 	write_divisor(115200, me_cons->pvt);
 }
 
-static void 
+static void
 cons_putc_8250(struct console_driver *me_cons, unsigned char c) {
 	uint8_t thre;
 	#if (CONFIG_CONSOLE_NEEDS_STUPID_LINEFEED == 1)
@@ -71,14 +71,15 @@ cons_putc_8250(struct console_driver *me_cons, unsigned char c) {
 	#endif
 }
 
-static char 
-cons_getc_8250(struct console_driver *me_cons) { 
+static char
+cons_getc_8250(struct console_driver *me_cons) {
 	while(!cons_checkc_8250(me_cons));
+
 	return read_8250_reg(RBR_REG_8250, me_cons->pvt);
 }
 
 static int
-cons_checkc_8250(struct console_driver *me_cons) { 
+cons_checkc_8250(struct console_driver *me_cons) {
 	//uint8_t iir;
 	//iir = read_8250_reg(IIR_REG_8250, me_cons->pvt);
 	//return IIR_RXA(iir);
