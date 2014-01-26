@@ -1,3 +1,4 @@
 include Makefile
-CFLAGS+=-ggdb
+# GDB only macro support
+CFLAGS+=-ggdb3
 LD_SCRIPT=debug.ld
