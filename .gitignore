@@ -22,6 +22,7 @@ bootimage/bochsrc.txt
 bootimage/disk_image
 bootimage/files/*
 bootimage/myfs.img
+kern/cscope.*
 kern/kernel
 kern/include/arch
 kern/core/vers.c
