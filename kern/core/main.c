@@ -21,8 +21,6 @@ extern char version[];
 
 /* FIXME: remove these */
 extern struct pic_dev pic_8259;
-extern void do_ata_md5_test(int);
-extern volatile uint64_t ttick;
 
 /*
  * Machine independent beginning. The machine dependent code can optionally
@@ -51,8 +49,6 @@ void mi_begin(struct multiboot_mmap_entry *copied_map,
 	// TODO abstract sti
 	__asm__ volatile("sti");
 	call_initialization_functions();
-
-	//do_ata_md5_test(0);
 
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
