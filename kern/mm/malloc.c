@@ -30,6 +30,8 @@ INITFUNC_DECLARE(malloc_init, INITFUNC_ALLOCATION_SUBSYSTEM) {
 void *
 simple_malloc(uint64_t size) {
 	KASSERT(malloc_inited != 0, ("Malloc not inited"));
+	KASSERT(size <= PAGE_SIZE, "Simple malloc only supports %d bytes. %d was requested\n",
+								PAGE_SIZE, size);
 	pfn_t temp;
 	temp = page_allocator->get_page(page_allocator);
 	return paddr_to_vaddr((void *)PAGE_TO_VAL(temp));
