@@ -45,4 +45,9 @@ int pad_block(struct md5_context *ctx);
 void md5_hash_block(struct md5_context *ctx);
 
 void display_md5hash(struct md5_context *ctx);
+
+typedef struct md5sum { uint8_t x[16]; } md5sum;
+typedef char md5_block_t[MD5_BLOCK_SIZE];
+md5sum md5_hash_data(void *data, uint64_t length);
+
 #endif

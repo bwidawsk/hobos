@@ -57,7 +57,7 @@ init_md5_ctx(struct md5_context *ctx, uint8_t *data, uint64_t size) {
 	ctx->padded_size = size + bytes_to_write + 8;
 }
 
-static uint32_t 
+static uint32_t
 leftrotate(uint32_t x, uint32_t y) {
 	return (x << y) | (x >> (32UL - y));
 }
@@ -115,6 +115,7 @@ md5_hash_block(struct md5_context *ctx) {
 	ctx->h2 = ctx->h2 + c;
 	ctx->h3 = ctx->h3 + d;
 	ctx->hashed_bytes += MD5_BLOCK_SIZE;
+	ctx->curptr += MD5_BLOCK_SIZE;
 }
 
 void

@@ -6,7 +6,6 @@
 /* This should be dynamic... */
 typedef char ata_block_t[512];
 #define MD5_BLOCKS_PER_ATA_SECTOR (512 / MD5_BLOCK_SIZE)
-typedef char md5_block_t[MD5_BLOCK_SIZE];
 md5_block_t temp_blks[MD5_BLOCKS_PER_ATA_SECTOR * 256];
 
 /**
@@ -74,17 +73,7 @@ do_ata_md5_test(int argc, char *argv[]) {
 		KWARN(1, ("Pad required, not expected, bailing\n"));
 		return NULL;
 	}
-#if 0
-	/* Do the last block and pad */
-	blkdev->read_block(blkdev, i, temp_blks, 1);
 
-	ctx.curptr = &temp_blks[0];
-	md5_hash_block(&ctx);
-	if (ret) {
-		ctx.curptr += MD5_BLOCK_SIZE;
-		md5_hash_block(&ctx);
-}
-#endif
 	printf("\n");
 	display_md5hash(&ctx);
 	printf("\n");
