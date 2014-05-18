@@ -7,13 +7,11 @@ export CC
 export LD
 export MAKEDEPEND
 
-MEMORY_ALLOCATOR=DS_ALLOCATOR
-
 # I'd like to have no builtins so that GCC isn't required, but can't avoid for now
 #CFLAGS+=-fno-builtin
 CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall
 CFLAGS+=-Wno-unused-function
-DEFINES=-DKERNEL -DAMD64 -D$(MEMORY_ALLOCATOR)
+DEFINES=-DKERNEL
 DEFINES+=$(shell cat build_options)
 CFLAGS+=$(DEFINES)
 LD_SCRIPT=linker_script.ld -S
