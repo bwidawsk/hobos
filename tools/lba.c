@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 		printf("%d\n", sec);
 	else {
 		int chs1 = head;
-		int chs2 = sec & 0x3f | ((cyl >> 2) & 0xc0);
+		int chs2 = (sec & 0x3f) | ((cyl >> 2) & 0xc0);
 		int chs3 = cyl & 0xFF;
 		printf("%d %d %d\n", chs1, chs2, chs3);
 	}
