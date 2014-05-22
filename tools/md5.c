@@ -1,6 +1,7 @@
 // Algorithm from http://en.wikipedia.org/wiki/MD5
 
 #include <stdint.h>
+#include <stdio.h>
 #include <md5.h>
 #ifndef KERNEL
 #include <sys/mman.h>

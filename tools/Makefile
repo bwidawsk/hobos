@@ -1,17 +1,21 @@
-ext2_tool: ext2_tool.c
-	$(CC) -D_GNU_SOURCE -I ../kern/fs/ext2/ -o $@ $<
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .c .o .h
+CC=clang
+#CC=gcc
+CFLAGS=-idirafter../common/include
+OBJECTS := $(patsubst %.c,%.o,$(wildcard *.c))
+EXES := $(OBJECTS:%.o=%)
 
+all: md5 ext2_tool $(EXES)
 
-lba: lba.o
+#special stuff goes here
+ext2_tool: CFLAGS += -D_GNU_SOURCE -I../kern/fs/ext2/
 
-pt_walk : pt_walk.o
+md5: CFLAGS += -I ../common/src/
+md5: md5.o
+	$(CC) $(CLAGS) ../common/src/md5_base.o -o $@ $<
 
-md5: md5.c ../common/src/md5_base.c
-	$(CC) -idirafter../common/include -include stdint.h -include stdio.h -o $@ $?
-
+.PHONY: clean
 clean :
-	-rm lba
-	-rm pt_walk
-	-rm ext2_tool
-	-rm md5
-	-rm *.o
+	-rm $(OBJECTS) $(EXES)
