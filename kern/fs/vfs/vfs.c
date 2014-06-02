@@ -44,7 +44,8 @@ vfs_ls(int argc, char *argv[]) {
 	fs->ops->ls(fs, path, NULL);
 	return NULL;
 }
-void
+
+static void
 vfs_help() {
 	printf("ls\n");
 }

@@ -34,22 +34,18 @@
 	__asm__ volatile("ud2");
 #endif
 
-
-
-#define ROUND_UP(x, base) 		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
-#define ROUND_DOWN(x, base) 	(((x) / (base)) * (base)) 
+#define ROUND_UP(x, base)		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
+#define ROUND_DOWN(x, base)		(((x) / (base)) * (base))
 #define IS_POW2(x) (!(x & (x-1)))
 #define _INITSECTION_  __attribute__ ((section ("initonly") ))
 /* CompileTimeLIST
- * I got the idea of the implementation from FreeBSD, but it's a generic OS 
- * trick thing used in Linux as well.
- * The code is mine. I needed a hint with the __start and __stop to find the 
- * start and end points of the section which it seems are automatically made by 
- * the linker??? (this is the part I borrowed from FreeBSD)
- * It works by storing a pointer to a structure in a specially named section, we
- * can then later use the special linker symbols to find the start and end
- * of the section and walk through the list.
- * usage 
+ * I got the idea of the implementation from FreeBSD, but it's a generic OS trick
+ * thing used in Linux as well. The code is mine. I needed a hint with the __start
+ * and __stop to find the start and end points of the section which it seems are
+ * automatically made by the linker??? (this is the part I borrowed from FreeBSD) It
+ * works by storing a pointer to a structure in a specially named section, we can
+ * then later use the special linker symbols to find the start and end of the
+ * section and walk through the list.
  */
 
  /* these macros shouldn't really be publicly used */
