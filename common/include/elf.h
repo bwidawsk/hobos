@@ -9,7 +9,7 @@
 #error "__ELF_WORD_SIZE must be defined as 32 or 64"
 #endif
 
-#define ELF_CLASS   __CONCAT(ELFCLASS,__ELF_WORD_SIZE)
+#define ELF_CLASS   __CAT(ELFCLASS,__ELF_WORD_SIZE)
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define ELF_DATA    ELFDATA2LSB
@@ -19,10 +19,10 @@
 #error "Unknown byte order"
 #endif
 
-#define __elfN(x)   __CONCAT(__CONCAT(__CONCAT(elf,__ELF_WORD_SIZE),_),x)
-#define __ElfN(x)   __CONCAT(__CONCAT(__CONCAT(Elf,__ELF_WORD_SIZE),_),x)
-#define __ELFN(x)   __CONCAT(__CONCAT(__CONCAT(ELF,__ELF_WORD_SIZE),_),x)
-#define __ElfType(x)    typedef __ElfN(x) __CONCAT(Elf_,x)
+#define __elfN(x)   __CAT(__CAT(__CAT(elf,__ELF_WORD_SIZE),_),x)
+#define __ElfN(x)   __CAT(__CAT(__CAT(Elf,__ELF_WORD_SIZE),_),x)
+#define __ELFN(x)   __CAT(__CAT(__CAT(ELF,__ELF_WORD_SIZE),_),x)
+#define __ElfType(x)    typedef __ElfN(x) __CAT(Elf_,x)
 
 /* TODO: END FreeBSD license */
 typedef struct {
