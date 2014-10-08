@@ -8,8 +8,7 @@
 
 #define SECTOR_SIZE 512
 void
-main (int size, unsigned char device, struct partition *partition_entry) 
-	__attribute__((noreturn));
+main(int size, unsigned char device, struct partition *partition_entry) __attribute__((noreturn));
 
 static void load_kernel(const char *kern_name, char *args);
 
@@ -26,9 +25,10 @@ uint8_t bios_device;
 int (*legacy_read_sector)(void *addr, unsigned char count, unsigned int lba[2], unsigned char bios_device);
 
 // we assume 32 bits is enough to represent the return value...
-extern Elf32_Addr elf_load(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
+extern Elf32_Addr
+elf_load(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
 
-/* machine independant read sector is the function that's passed to the 
+/* machine independent read sector is the function that's passed to the
  * FS specific code for it to load files. The idea is the FS specific code
  * need not know much about the load medium. We pass a sector size to the
  * FS code, but that's it
@@ -80,8 +80,8 @@ mi_read_sector(const void *addr, unsigned int count, unsigned int start[2]) {
 }
 
 static void
-build_memory_map() {
-
+build_memory_map()
+{
 	int e820_count = MAX_E820_ENTRIES;
 	int return_flags = 0;
 	struct e820_entry *entry = &e820_map[0];
@@ -101,22 +101,21 @@ build_memory_map() {
 		memcpy(&regs.edx, smap, sizeof(smap));
 		#ifdef E820_DEBUG
 		struct e820_entry *temp = (struct e820_entry *)regs.edi;
-		printf("E820: %x%x %x%x %x\n", temp->addr_high, temp->addr_low, temp->length_high, temp->length_low, temp->type);
+		printf("E820: %x%x %x%x %x\n",
+			   temp->addr_high, temp->addr_low, temp->length_high, temp->length_low, temp->type);
 		#endif
 		regs.edi += sizeof(struct e820_entry);
 	} while(regs.ebx != 0 && !(return_flags & 1) && --e820_count && ++total_e820_count);
 
 	/*
-Example: BOCHS with 32 MB memory
-E820: 0000000000000000 000000000009f000 00000001
-E820: 000000000009f000 0000000000001000 00000002
-E820: 00000000000e8000 0000000000018000 00000002
-E820: 0000000000100000 0000000001ef0000 00000001
-E820: 0000000001ff0000 0000000000010000 00000003
-E820: 00000000fffc0000 0000000000040000 00000002
-
+	 * Example: BOCHS with 32 MB memory
+	 * E820: 0000000000000000 000000000009f000 00000001
+	 * E820: 000000000009f000 0000000000001000 00000002
+	 * E820: 00000000000e8000 0000000000018000 00000002
+	 * E820: 0000000000100000 0000000001ef0000 00000001
+	 * E820: 0000000001ff0000 0000000000010000 00000003
+	 * E820: 00000000fffc0000 0000000000040000 00000002
 	 */
-
 }
 
 static struct e820_entry *
@@ -209,10 +208,8 @@ struct partition partition_table[4];
 #define HOBOLOAD_KERNEL_NAME 3
 #define HOBOLOAD_ARGS 4
 static char *hload_info[HOBOLOAD_ARGS+1];
-void
-main (
-	int size, unsigned char device, struct partition *partition_entry) {
-
+void main(int size, unsigned char device, struct partition *partition_entry)
+{
 	clear_bss();
 	int i;
 

@@ -8,8 +8,10 @@ legacy_int(unsigned char which, struct legacy_regs_32 *regs) {
 		"push	%7;"
 		"call	intX;"
 		"pop	%0;"
-		: "=m" (return_flags), "=a" (regs->eax), "=b" (regs->ebx), "=c" (regs->ecx), "=d" (regs->edx), "=D" (regs->edi), "=S" (regs->esi)
-		: "m" (which), "a" (regs->eax), "b" (regs->ebx), "c" (regs->ecx), "d" (regs->edx), "D" (regs->edi), "S" (regs->esi)
+		: "=m" (return_flags), "=a" (regs->eax), "=b" (regs->ebx), "=c" (regs->ecx), "=d" (regs->edx),
+			"=D" (regs->edi), "=S" (regs->esi)
+		: "m" (which), "a" (regs->eax), "b" (regs->ebx), "c" (regs->ecx), "d" (regs->edx),
+			"D" (regs->edi), "S" (regs->esi)
 	);
 
 	return return_flags;

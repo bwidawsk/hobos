@@ -1,5 +1,5 @@
 .code32
-/* 
+/*
  * intX is a generic function for doing real mode interrupts
  * it doesn't properly return CF, but we don't care about that yet
  * no fs/gs to save room
@@ -42,7 +42,7 @@ legacy_interrupt:
 	and $0xFFFFFFFE, %ebx
 	mov %ebx, %cr0
 	ljmp $0x0,$legacy_interrupt_real
-	
+
 legacy_interrupt_real:
 	xorw %bx, %bx
 	movw %bx, %ds
@@ -60,7 +60,7 @@ tramp_opcode:
 	.byte 0x00
 
 	push %ebx
-		
+
 	movl %cr0, %ebx
 	orw  $0x1, %bx
 	movl %ebx, %cr0

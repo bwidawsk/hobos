@@ -9,7 +9,8 @@
 #include "elf.h"
 
 #define ELF_PRINTF(...) printf(__VA_ARGS__)
-extern Elf64_Addr elf_load64(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
+extern Elf64_Addr
+elf_load64(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
 
 static __ElfN(Ehdr) *
 validate_header(const void *addr) {
@@ -45,7 +46,7 @@ __ElfN(Addr)
 elf_load(const void *addr, unsigned int loaded_len,
 	struct multiboot_elf_section_header_table *ret) {
 	__ElfN(Ehdr) *ehdr = validate_header(addr);
-	
+
 	if (ehdr == 0)
 		return elf_load64(addr, loaded_len, ret);
 
@@ -77,7 +78,7 @@ elf_load(const void *addr, unsigned int loaded_len,
 			memset((void *)phdr[phdr_count].p_paddr + phdr[phdr_count].p_filesz,
 				0,
 				phdr[phdr_count].p_memsz - phdr[phdr_count].p_filesz);
-		} 
+		}
 	}
 
 	ret->num = (multiboot_uint32_t)ehdr->e_shnum;

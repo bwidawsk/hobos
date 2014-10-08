@@ -3,7 +3,6 @@
 #include "small_libc.h"
 #include "multiboot.h"
 
-
 #include "stdint.h"
 #include "cdefs.h"
 #include "elf.h"

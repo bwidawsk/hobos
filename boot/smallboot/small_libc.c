@@ -28,7 +28,7 @@ puts(const char *str) {
 
 void *
 memset(void *s, int c, int n) {
-	while(n--) 
+	while(n--)
 		*(unsigned char *)s++ = (unsigned char)c;
 
 	return s;

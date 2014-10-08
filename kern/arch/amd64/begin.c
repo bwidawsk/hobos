@@ -18,12 +18,12 @@ void amd64_begin(struct multiboot_info *mboot_info, uint32_t magic)  __attribute
 static void new_beginning();
 static uint8_t temp_interrupt_stack[4096] __attribute__((used, section(".recycle")));
 static uint64_t kernel_size;
-static void *stack_va; 
+static void *stack_va;
 // 20 is Random
 #define MAX_BOOT_MMAP_ENTRIES 20
 struct multiboot_mmap_entry copied_map[MAX_BOOT_MMAP_ENTRIES];
 
-struct segment_descriptor mboot_gdt[NUM_SEGMENTS] 
+struct segment_descriptor mboot_gdt[NUM_SEGMENTS]
 	__attribute__((section(".multiboot"))) = {
 		GDT_SEGMENTS
 	};
@@ -41,7 +41,7 @@ cpuid_setup() {
 	#define CPUID_RET_EDX 0
 	cpuid_return_t ret;
 	cpuid(0x80000001, ret);
-	if (ret[CPUID_RET_EDX] & CPUID_EFER_NXE1 || 
+	if (ret[CPUID_RET_EDX] & CPUID_EFER_NXE1 ||
 		ret[CPUID_RET_EDX] & CPUID_EFER_NXE2) {
 		/* TODO:
 		movl $IA32_EFER, %ecx
@@ -101,8 +101,7 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 			best_entry = num_entries;
 			maxlen = map[num_entries].len;
 		}
-		early_printf("%x  %x\n", 
-			map[num_entries].addr, map[num_entries].len);
+		early_printf("%x  %x\n", map[num_entries].addr, map[num_entries].len);
 	} while(num_entries--);
 
 	if (usable_sections >= 3) {
@@ -144,7 +143,7 @@ pde_t *kernel_pd_phys;
 #endif
 
 
-/* TODO: get rid of all the hardcoding 
+/* TODO: get rid of all the hardcoding
 bwidawsk@snipes /home/bwidawsk/workspace/C/hobos_trunk/tools $ ./pt_walk 0xffffffff810043d5
 pml4 = 0x1ff
 dirptr = 0x1fe
@@ -159,7 +158,7 @@ change_pages_and_jump(void (*func)) {
 	pfn_t temp;
 	int pdpte, pde;
 
-	// Allocate our page table pages directly from the page allocator we 
+	// Allocate our page table pages directly from the page allocator we
 	// initialized. We do this because we can't reliably translate a VA from
 	// halloc into the PA we need.
 	temp = primary_allocator->get_page(primary_allocator);
@@ -175,7 +174,7 @@ change_pages_and_jump(void (*func)) {
 	primary_allocator->get_contig_pages(primary_allocator, MAX_KERNSIZE_GB, pd_pages);
 	kernel_pd_phys = (pde_t *)PAGE_TO_VAL(pd_pages[0]);
 
-	// The dmap pages would use a lot of stack if it's a local, so allocate 
+	// The dmap pages would use a lot of stack if it's a local, so allocate
 	// some pages for it, and free it when we finish.
 	pfn_t dmap_temp_pages[2];
 	primary_allocator->get_contig_pages(primary_allocator, 2, dmap_temp_pages);
@@ -226,7 +225,6 @@ change_pages_and_jump(void (*func)) {
 		:
 		: "r" (pml4_phys), "r" (stack_va), "a" (func)
 	);
-
 }
 
 /*
@@ -245,7 +243,7 @@ change_pages_and_jump(void (*func)) {
  * statically allocate a page for the interrupt stack early. Later on we
  * can allocate more pages for it if needed.
  */
-void 
+void
 amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	int i;
 	multiboot_uint32_t count;
@@ -301,6 +299,6 @@ new_beginning() {
 	*(uint64_t *)stack_va = (uint64_t)&first_thread;
 	wrmsr(0xC0000102, (uint64_t)stack_va);
 	swapgs();
-	
+
 	mi_begin(copied_map, primary_allocator);
 }
