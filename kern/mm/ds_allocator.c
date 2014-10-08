@@ -110,7 +110,8 @@ static int
 ds_get_contig_pages(struct mm_page_allocator *pallocator, int count, pfn_t *space) {
 	// TODO: not threadsafe
 	KASSERT((pallocator->used_pages + count ) < pallocator->total_pages,
-			"No more pages");
+			"No more pages. Used = %ld/%ld, Requested = %d",
+			pallocator->used_pages, pallocator->total_pages, count);
 	struct ds_page_allocator *allocator = (struct ds_page_allocator *)pallocator;
 	for(int i = 0; i < count; i++) {
 		space[i] = allocator->page_array[allocator->next_free_pindex + i];
