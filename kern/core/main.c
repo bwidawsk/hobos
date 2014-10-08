@@ -15,7 +15,7 @@ struct mm_page_allocator *primary_allocator;
 
 struct thread first_thread = {
 	.tid = 1,
-	.debug = "poop"
+	.debug = "Kernel Thread"
 };
 extern char version[];
 
@@ -30,12 +30,21 @@ extern struct pic_dev pic_8259;
 void mi_begin(struct multiboot_mmap_entry *copied_map,
 			  struct mm_page_allocator *primary_allocator)
 {
+	static volatile int wait = 0;
+#ifdef HALT_ON_ENTRY
+	wait = 1;
+#endif
+	while (wait);
 	KASSERT(primary_allocator != NULL, ("can't handle null allocator yet\n"));
+
 	init_early_malloc(primary_allocator);
 	console_init();
 	printf("Link time = %s\n", version);
+
+#if 0
 	printf("%p\n", this_thread());
 	printf("%s\n", this_thread()->debug);
+#endif
 
 	// interrupt setup (needed for when we enumerate)
 	// TODO: abstract PIC
