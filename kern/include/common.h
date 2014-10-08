@@ -34,7 +34,7 @@
 	__asm__ volatile("ud2");
 #endif
 
-#define ROUND_UP(x, base)		(((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0)
+#define ROUND_UP(x, base)		((((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0))
 #define ROUND_DOWN(x, base)		(((x) / (base)) * (base))
 #define IS_POW2(x) (!(x & (x-1)))
 #define _INITSECTION_  __attribute__ ((section ("initonly") ))
