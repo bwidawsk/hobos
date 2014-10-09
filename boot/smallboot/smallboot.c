@@ -292,11 +292,6 @@ void main(int size, unsigned char device, struct partition *partition_entry)
 
 	while(1);
 }
-	unsigned int addr_low;
-	unsigned int addr_high;
-	unsigned int length_low;
-	unsigned int length_high;
-	unsigned int type;
 
 static unsigned int
 calc_lower_mem() {
