@@ -365,6 +365,25 @@ create_mulitboot_info_struct(struct multiboot_elf_section_header_table *table) {
 	return multiboot_info;
 }
 
+void *elf_load_helper(const void *addr, unsigned int loaded_len,
+					  struct multiboot_elf_section_header_table *ret)
+{
+extern void *elf_load64(const void *, unsigned int, struct multiboot_elf_section_header_table *);
+extern void *elf_load32(const void *, unsigned int, struct multiboot_elf_section_header_table *);
+
+	const char elf_magic[4] = { 0x7f, 'E', 'L', 'F' };
+	char *e_ident = (char *)addr;
+	ASSERT(strncmp(e_ident, elf_magic, 4) == 0);
+	ASSERT(e_ident[EI_DATA] == ELFDATA2LSB);
+
+	if (e_ident[EI_CLASS] == ELFCLASS64)
+		return elf_load64(addr, loaded_len, ret);
+	else if (e_ident[EI_CLASS] == ELFCLASS32)
+		return elf_load32(addr, loaded_len, ret);
+	else
+		ASSERT(0);
+}
+
 static int
 load_multiboot_kernel(const char *kern_name, char *args) {
 	void *addr = 0;
@@ -398,7 +417,7 @@ load_multiboot_kernel(const char *kern_name, char *args) {
 	nbytes = load_file(kern_name, &addr);
 
 	struct multiboot_elf_section_header_table table;
-	void (*kernel_entry)(void) = (void *)elf_load(addr, nbytes, &table);
+	void (*kernel_entry)(void) = (void *)elf_load_helper(addr, nbytes, &table);
 	if (kernel_entry == 0) {
 		return -1;
 	}

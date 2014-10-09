@@ -4,7 +4,6 @@ SPT?=63
 # heads per cylinder
 HPC?=16
 
-# 
 FS_SIZE?=
 
 bootimg:
@@ -19,3 +18,7 @@ clean :
 	${MAKE} -C mbr clean
 	${MAKE} -C smallboot DEBUG=1 clean
 
+.PHONY: tags
+tags:
+	ctags -R .
+	ctags -aR ../common

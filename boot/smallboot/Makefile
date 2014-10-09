@@ -10,7 +10,8 @@ else
 CFLAGOPTS+=-Os
 endif
 
-OBJECTS = head.o bootstrap.o smallboot.o tramp.o small_libc.o ext2_load.o legacy_int.o elf_load.o elf_load64.o
+OBJECTS = head.o bootstrap.o smallboot.o tramp.o \
+	  small_libc.o ext2_load.o legacy_int.o elf_load32.o elf_load64.o
 
 all : smallboot.img
 
