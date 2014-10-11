@@ -90,6 +90,9 @@
 #ifndef ASM_FILE
 /* This should also be somewhere in common/include */
 extern int printf(const char *fmt, ...);
+extern void bt(void);
+extern void bt_fp(void *fp);
+
 typedef int int8_t __attribute__ ((mode (QI)));
 typedef unsigned int uint8_t __attribute__ ((mode (QI)));
 typedef int int16_t __attribute__ ((mode (HI)));

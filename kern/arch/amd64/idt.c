@@ -4,31 +4,9 @@
 #include "idt_common.h"
 #include "include/asm.h"
 
-
 struct idt_entry idt[MAX_IDT_ENTRIES];
 
 uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
-
-/* TODO generalize and move this function somewhere */
-#include "amd64_defines.h"
-#include <ia_defines.h>
-#include "mm_amd64.h"
-static void print_backtrace(uint64_t rbp)
-{
-	printf("Backtrace: \n");
-	do {
-//		printf("rbp was %p\n", rbp);
-		uint64_t prev_rbp = *((uint64_t *)rbp);
-		uint64_t prev_ip = *((uint64_t *)rbp + 1);
-//		printf("prev rbp was %p\n", prev_rbp);
-		printf("\t%p\n", prev_ip);
-		rbp = prev_rbp;
-		/*  Stop if rbp is not in the kernel
-		 *  TODO< need an upper bound too*/
-		if (rbp <= KVADDR(0,0,0,0))
-			break;
-	} while(1);
-}
 
 /* TODO:
  * idt_handlers.S, I push a 0 error code in certain cases, I need to pop as well
@@ -44,8 +22,8 @@ dflt_c_handler(struct trap_frame64 *tf) {
 	} else if (tf->tf_which == T_UNDEF_FAULT) {
 		start_interactive_console();
 	}
-	printf("\n");
-	print_backtrace(tf->tf_rbp);
+	bt_fp((void *)tf->tf_rbp);
+//	start_interactive_console();
 	while(1);
 }
 
