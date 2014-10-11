@@ -3,48 +3,46 @@
 
 typedef uint32_t cpuid_return_t[4];
 
-static inline void 
+static inline void
 outb(uint8_t byte, uint16_t port) {
 	__asm__ volatile("outb %0, %1" : : "a" (byte), "d" (port));
 }
 
-static inline void 
+static inline void
 outw(uint16_t word, uint16_t port) {
 	__asm__ volatile("outw %0, %1" : : "r" (word), "d" (port));
 }
 
-static inline void 
+static inline void
 outl(uint32_t dword, uint16_t port) {
 	__asm__ volatile("outl %0, %1" : : "r" (dword), "d" (port));
 }
 
-
-static inline unsigned char 
+static inline unsigned char
 inb(uint16_t port) {
 	uint8_t retval;
 	__asm__ volatile ("inb %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
 
-static inline unsigned short 
+static inline unsigned short
 inw(uint16_t port) {
 	uint16_t retval;
 	__asm__ volatile ("inw %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
 
-static inline unsigned int 
+static inline unsigned int
 inl(uint16_t port) {
 	uint32_t retval;
 	__asm__ volatile ("inl %1, %0" : "=a"(retval) : "Nd"(port));
 	return retval;
 }
 
-
 static inline void
 cpuid(uint32_t eax, cpuid_return_t retval) {
 	__asm__ volatile (
-		"cpuid" 
+		"cpuid"
 		: "=a" (retval[0]), "=b" (retval[1]), "=c" (retval[2]), "=d"(retval[3])
 		: "a" (eax)
 		);
@@ -53,17 +51,17 @@ cpuid(uint32_t eax, cpuid_return_t retval) {
 static inline void
 cpuid_cx(uint32_t eax, uint32_t ecx, cpuid_return_t retval) {
 	__asm__ volatile (
-		"cpuid" 
+		"cpuid"
 		: "=a" (retval[0]), "=b" (retval[1]), "=c" (retval[2]), "=d"(retval[3])
 		: "a" (eax), "c" (ecx)
 		);
 }
-static inline void 
+static inline void
 ltr(uint16_t which) {
 	__asm__ volatile("ltr %0" : : "r" (which));
 }
 
-inline void 
+inline void
 write_cr0(uint32_t newcr0) {
 	__asm__ volatile ("movl %0, %%cr0" : : "g" (newcr0));
 }
@@ -75,7 +73,7 @@ inline uint32_t read_cr0() {
 }
 
 #if 0
-static inline void 
+static inline void
 write_cr3(uint32_t newcr3) {
 	__asm__ volatile ("mov %0, %%cr3" : : "r" (newcr3));
 }
