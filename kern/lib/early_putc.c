@@ -12,7 +12,7 @@ __hbuiltin_early_putc(char c) {
 
 void early_putc(char c) __attribute__((weak, alias ("__hbuiltin_early_putc")));
 
-#if (CONFIG_STUBBED_EARLY_PRINTF == 0)
+#if (CONFIG_STUBBED_EARLY_PRINTF != 0)
 int
 early_printf(const char *format, ...) {
 	return 0;
@@ -34,7 +34,7 @@ num_to_hex(unsigned long long num, char ret[16]) {
 }
 #define PRINTF_BUF_MAX 512
 static char test[PRINTF_BUF_MAX];
-int 
+int
 early_printf(const char *format, ...) {
 	char num[16] = {0};
 	char *instr, *tmpstr;
@@ -45,7 +45,7 @@ early_printf(const char *format, ...) {
 	const char *string = format;
 	va_list ap;
 
-	if (format == (const char *)0) 
+	if (format == (const char *)0)
 		return 0;
 
 	if (format[0] == (char)0)
