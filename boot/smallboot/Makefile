@@ -18,7 +18,7 @@ all : smallboot.img
 bootstrap.o : bootstrap.c
 	$(CC) $(CFLAGS) -Os -c $<
 
-%.o : %.c
+%.o : %.c elf_load_common.c
 	$(CC) $(CFLAGS) $(CFLAGOPTS) -c $<
 
 %.o : %.S
