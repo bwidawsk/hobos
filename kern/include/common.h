@@ -6,32 +6,32 @@
 	#define NULL ((void *)0)
 #endif
 
-/* 
+#define panic(format, ...) do { \
+	printf("panic: "); \
+	printf(format, ##__VA_ARGS__); \
+	__asm__ volatile("ud2"); \
+} while (0)
+
+/*
  * The contents should really only contain macros since it will be included
  * by all files.
  */
-
 #ifndef NO_INVARIANTS
 #define KASSERT(x, format, ...) do { \
 		if (!(x)) { \
 			printf("%s: %s\n", __FILE__, #x); \
-			printf((const char *)format, ##__VA_ARGS__); \
-			printf("\n"); \
-			__asm__ volatile("ud2"); \
+			bt(); \
+			panic(format, ##__VA_ARGS__); \
 		} \
-	} while (0);
-#define panic(str) KASSERT(0, (str));
+	} while (0)
 #define KWARN(x, ...) do { \
 		if (!(x)) { \
 			printf("%s: %s\n", __FILE__, #x);  \
 		} \
-	} while (0);
+	} while (0)
 #else
 	#define KASSERT(x, format, ...)
 	#define KWARN(x, ...)
-#define panic(str) \
-	printf("panic: %s\n", str); \
-	__asm__ volatile("ud2");
 #endif
 
 #define ROUND_UP(x, base)		((((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0))
