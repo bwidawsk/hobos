@@ -21,3 +21,6 @@ struct arch_state {
 	/* FPU state */
 	/* AVX state */
 };
+
+struct thread *this_thread(void);
+void *arch_xlate_pa(void *pa);

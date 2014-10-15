@@ -248,6 +248,11 @@ amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	int i;
 	multiboot_uint32_t count;
 	struct multiboot_mmap_entry *map;
+	static volatile int wait = 0;
+#ifdef HALT_ON_ENTRY
+	wait = 1;
+#endif
+	while (wait);
 
 	/* Setup the exception handlers as early as possible to catch errors */
 	setup_exception_handlers();
