@@ -3,24 +3,26 @@
 #define __ELF_WORD_SIZE 64 /* FIXME: need to figure how to abstract */
 #include <elf.h>
 #include <arch/arch.h> // arch_xlate_pa()
+#include <lib.h>
 
-static struct symbol {
-	uint64_t start;
-	uint64_t end;
-	const char * name;
-} *kernel_symbols;
+#include "syms.h"
 
+static struct {
+	struct symbol *symbols;
+	int count;
+} symbol_table;
 
 static void
-get_elf64_symbols_mboot(Elf64_Shdr *sh_table, Elf64_Half shnum, Elf64_Half shstrndx)
+get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half shstrndx)
 {
+	Elf64_Shdr *sh_table;
 	char *strings = NULL;
 	Elf64_Sym *syms = NULL;
 	int elf_sym_count = 0;
 	int function_syms = 0;
 	int i;
 
-	sh_table = arch_xlate_pa(sh_table);
+	sh_table = arch_xlate_pa((void *)(uint64_t)section_headers);
 
 	for (i = 0; i < shnum; i++) {
 		if (i == shstrndx)
@@ -72,23 +74,29 @@ get_elf64_symbols_mboot(Elf64_Shdr *sh_table, Elf64_Half shnum, Elf64_Half shstr
 	if (!strings || !syms)
 		return;
 
-	kernel_symbols = malloc(sizeof(struct symbol) * function_syms);
-	if (!kernel_symbols) {
+	symbol_table.symbols = malloc(sizeof(struct symbol) * function_syms);
+	if (!symbol_table.symbols) {
 		KWARN("Failed to allocate space for symbols\n");
 		free(strings);
 		return;
 	}
 
+	/* Store count for walking the array later */
+	symbol_table.count = function_syms;
+
 	for (i = 0; i < elf_sym_count; i++) {
 		Elf64_Sym *sym = &syms[i];
 		if (sym->st_info != STT_FUNC || !sym->st_size)
 			continue;
-		kernel_symbols[--function_syms].start = sym->st_value;
-		kernel_symbols[function_syms].end = sym->st_value + sym->st_size;
-		kernel_symbols[function_syms].name = &strings[sym->st_name];
+		symbol_table.symbols[--function_syms].start = sym->st_value;
+		symbol_table.symbols[function_syms].end = sym->st_value + sym->st_size;
+		symbol_table.symbols[function_syms].name = &strings[sym->st_name];
 	}
 
-	KWARN(function_syms, "Leftover symbols\n");
+	KWARN(function_syms, "Leftover symbols, space wasted\n");
+	/* Adjust the pointer if there are leftovers */
+	symbol_table.count -= function_syms;
+	symbol_table.symbols = &symbol_table.symbols[function_syms];
 }
 
 void

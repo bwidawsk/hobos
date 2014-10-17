@@ -10,6 +10,8 @@
 #include <device.h>
 #include <fs/vfs.h>
 
+#include "syms.h"
+
 /* This was the allocator used/setup by the arch specific code */
 struct mm_page_allocator *primary_allocator;
 
@@ -21,7 +23,6 @@ extern char version[];
 
 /* FIXME: remove these */
 extern struct pic_dev pic_8259;
-extern void get_elf_symbols_mboot(multiboot_elf_section_header_table_t *mboot_elf);
 
 /*
  * Machine independent beginning. The machine dependent code can optionally
