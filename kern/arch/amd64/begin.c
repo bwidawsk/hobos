@@ -9,6 +9,8 @@
 #include "ia_defines.h"
 #include "idt_common.h"
 #include "multiboot.h"
+#define __ELF_WORD_SIZE 64
+#include "elf.h"
 
 extern void *kernel_load_start;
 extern void *kernel_load_end;
@@ -22,6 +24,7 @@ static void *stack_va;
 // 20 is Random
 #define MAX_BOOT_MMAP_ENTRIES 20
 struct multiboot_mmap_entry copied_map[MAX_BOOT_MMAP_ENTRIES];
+multiboot_elf_section_header_table_t copied_elf_header;
 
 struct segment_descriptor mboot_gdt[NUM_SEGMENTS]
 	__attribute__((section(".multiboot"))) = {
@@ -133,7 +136,6 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 #ifndef GB_PAGES
 pml4e_t *pml4_phys;
 pdpte_t *dmap_pdpt_phys;
-#define DMAP_GBS 512
 pde_t *dmap_pagedir_phys;
 pdpte_t *kernel_pdpt_phys;
 #define MAX_KERNSIZE_GB 1
@@ -160,7 +162,7 @@ change_pages_and_jump(void (*func)) {
 
 	// Allocate our page table pages directly from the page allocator we
 	// initialized. We do this because we can't reliably translate a VA from
-	// halloc into the PA we need.
+	// into the PA we need.
 	temp = primary_allocator->get_page(primary_allocator);
 	pml4_phys = (pml4e_t *)PAGE_TO_VAL(temp);
 	temp = primary_allocator->get_page(primary_allocator);
@@ -211,7 +213,6 @@ change_pages_and_jump(void (*func)) {
 	primary_allocator->free_page(primary_allocator, dmap_temp_pages[0]);
 	primary_allocator->free_page(primary_allocator, dmap_temp_pages[1]);
 
-	//stack_va = halloc(PAGE_SIZE);
 	temp = primary_allocator->get_page(primary_allocator);
 	stack_va = (void *)DMAP_XLATE_PA((void *)PAGE_TO_VAL(temp));
 
@@ -259,11 +260,13 @@ amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	task.ist1 = (uint64_t)temp_interrupt_stack;
 	first_temp_task_load();
 	cpuid_setup();
+
 	struct gdt_descriptor64 gdtdesc = {
 		.base = (uint64_t)&gdt,
 		.limit = sizeof(mboot_gdt) - 1
 	};
 	lgdt(&gdtdesc);
+
 	kernel_size = &kernel_load_end - &kernel_load_start;
 	map	= (struct multiboot_mmap_entry *)(uint64_t)mboot_info->mmap_addr;
 
@@ -274,11 +277,21 @@ amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	}
 	copied_map[i].type = 0xbeef;
 	carve_mboot_memory(map, count);
+
+	if (mboot_info->flags & MULTIBOOT_INFO_ELF_SHDR) {
+		KASSERT(mboot_info->u.elf_sec.size == sizeof(Elf64_Shdr),
+				"Bootloader size, and compile time size of elf do not match\n");
+
+		copied_elf_header = mboot_info->u.elf_sec;
+	}
+
 	change_pages_and_jump(new_beginning);
 	while(1);
 }
 
-extern void mi_begin(struct multiboot_mmap_entry *, struct mm_page_allocator *);
+extern void mi_begin(struct multiboot_mmap_entry *,
+					 multiboot_elf_section_header_table_t *,
+					 struct mm_page_allocator *);
 extern struct thread first_thread;
 
 struct thread *
@@ -305,5 +318,5 @@ new_beginning() {
 	wrmsr(0xC0000102, (uint64_t)stack_va);
 	swapgs();
 
-	mi_begin(copied_map, primary_allocator);
+	mi_begin(copied_map, &copied_elf_header, primary_allocator);
 }

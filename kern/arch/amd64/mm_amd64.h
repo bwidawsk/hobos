@@ -23,16 +23,15 @@ extern void *va_base;
 
 #define KERNEL_PML 511ULL
 #define DMAP_PML 510ULL
+#define DMAP_GBS 512ULL
 #define RECURSIVE_PML 509ULL
 
 #define DMAP_BASE ((-1ULL << VA_RSVD_SHIFT) | (DMAP_PML << PML4_SHIFT))
 #define DMAP_TOP (((-1ULL << VA_RSVD_SHIFT) | ((DMAP_PML + 1ULL) << PML4_SHIFT)) - 1)
 
-#define DMAP_XLATE_PA(pa) \
-	(DMAP_BASE + (uint64_t)pa)
+#define DMAP_XLATE_PA(pa) (DMAP_BASE + ((uint64_t)(pa)))
 
-#define DMAP_XLATE_VA(va) \
-	((uint64_t)va - DMAP_BASE)
+#define DMAP_XLATE_VA(va) (((uint64_t)(va)) - DMAP_BASE)
 
 #define VA_IN_DMAP(va) \
 	((((uint64_t)va) >= DMAP_BASE) && (((uint64_t)va) < DMAP_TOP))

@@ -21,6 +21,7 @@ extern char version[];
 
 /* FIXME: remove these */
 extern struct pic_dev pic_8259;
+extern void get_elf_symbols_mboot(multiboot_elf_section_header_table_t *mboot_elf);
 
 /*
  * Machine independent beginning. The machine dependent code can optionally
@@ -28,14 +29,16 @@ extern struct pic_dev pic_8259;
  * We also want the memory map so that we can set up our own allocators
  */
 void mi_begin(struct multiboot_mmap_entry *copied_map,
+			  multiboot_elf_section_header_table_t *mboot_elf,
 			  struct mm_page_allocator *primary_allocator)
 {
 	KASSERT(primary_allocator != NULL, ("can't handle null allocator yet\n"));
 
 	init_early_malloc(primary_allocator);
 	console_init();
-
 	printf("Link time = %s\n", version);
+
+	get_elf_symbols_mboot(mboot_elf);
 
 #if 0
 	printf("%p\n", this_thread());

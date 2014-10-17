@@ -3,6 +3,7 @@
 
 void *
 arch_xlate_pa(void *pa) {
+	KASSERT(pa < (void *)(DMAP_GBS << 30ULL), "Tried to access above max direct mapped mem %dG\n", DMAP_GBS);
 	return (void *)DMAP_XLATE_PA(pa);
 }
 

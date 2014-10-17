@@ -58,7 +58,7 @@ multiboot_entry:
  */
 //movl    $(stack + STACK_SIZE), %esp
 
-/* Reset EFLAGS. BAW: for some reason OS doesn't trust EFLAGS */
+/* Reset EFLAGS. BW: for some reason OS doesn't trust EFLAGS */
 pushl   $0
 popf
 

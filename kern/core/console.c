@@ -97,7 +97,7 @@ parse_and_send_cmd(char *in_cmd) {
 			last_was_space = 0;
 		}
 	}
-	
+
 	do_shell_cmd(argv_idx, argv);
 }
 
@@ -142,10 +142,10 @@ start_interactive_console() {
 
 		/* remove the \r which was the last character */
 		cmd_len = idx - 1;
-		
+
 		/* make sure we null pad it */
 		in_cmd[cmd_len] = 0;
-		
+
 		/* go work on it */
 		parse_and_send_cmd(in_cmd);
 	}
