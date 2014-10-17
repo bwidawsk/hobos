@@ -23,7 +23,14 @@ void __noarch_bt_fp(void *fp)
 	printf("No backtrace information available\n");
 }
 
+void *__noarch_xlate_pa(void *pa)
+{
+	panic("Architecture must define a %s\n", __FUNCTION__);
+	return NULL;
+}
+
 void arch_pause(void) __attribute__((weak, alias ("__noarch_pause")));
 struct thread *this_thread(void) __attribute__((weak, alias ("__this_thread")));
 void bt(void) __attribute__((weak, alias ("__noarch_bt")));
 void bt_fp(void *fp) __attribute__((weak, alias ("__noarch_bt_fp")));
+void *arch_xlate_pa(void *pa) __attribute__((weak, alias ("__noarch_xlate_pa")));
