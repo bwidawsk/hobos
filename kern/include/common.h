@@ -88,10 +88,10 @@
 #define OFFSET_OF(structure, member) __builtin_offsetof(structure, member)
 
 #ifndef ASM_FILE
+#include "noarch.h"
+
 /* This should also be somewhere in common/include */
 extern int printf(const char *fmt, ...);
-extern void bt(void);
-extern void bt_fp(void *fp);
 
 typedef int int8_t __attribute__ ((mode (QI)));
 typedef unsigned int uint8_t __attribute__ ((mode (QI)));

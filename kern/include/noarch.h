@@ -1,7 +1,9 @@
 #ifndef __NO_ARCH_H__
 #define __NO_ARCH_H__
 
-void arch_pause();
-struct thread *this_thread();
+extern void arch_pause();
+extern struct thread *this_thread();
+extern void bt(void);
+extern void bt_fp(void *fp);
 
 #endif
