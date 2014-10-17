@@ -24,10 +24,6 @@ unsigned char bss_sectors[SECTOR_SIZE * 127];
 uint8_t bios_device;
 int (*legacy_read_sector)(void *addr, unsigned char count, unsigned int lba[2], unsigned char bios_device);
 
-// we assume 32 bits is enough to represent the return value...
-extern Elf32_Addr
-elf_load(const void *addr, unsigned int loaded_len, struct multiboot_elf_section_header_table *ret);
-
 /* machine independent read sector is the function that's passed to the
  * FS specific code for it to load files. The idea is the FS specific code
  * need not know much about the load medium. We pass a sector size to the
@@ -368,20 +364,33 @@ create_mulitboot_info_struct(struct multiboot_elf_section_header_table *table) {
 void *elf_load_helper(const void *addr, unsigned int loaded_len,
 					  struct multiboot_elf_section_header_table *ret)
 {
-extern void *elf_load64(const void *, unsigned int, struct multiboot_elf_section_header_table *);
-extern void *elf_load32(const void *, unsigned int, struct multiboot_elf_section_header_table *);
+extern void *elf_load64(const void *, void *, int, int, struct multiboot_elf_section_header_table *);
+extern void *elf_load32(const void *, void *, int, int, struct multiboot_elf_section_header_table *);
 
 	const char elf_magic[4] = { 0x7f, 'E', 'L', 'F' };
 	char *e_ident = (char *)addr;
+	const void *ehdr = addr;
 	ASSERT(strncmp(e_ident, elf_magic, 4) == 0);
 	ASSERT(e_ident[EI_DATA] == ELFDATA2LSB);
 
-	if (e_ident[EI_CLASS] == ELFCLASS64)
-		return elf_load64(addr, loaded_len, ret);
-	else if (e_ident[EI_CLASS] == ELFCLASS32)
-		return elf_load32(addr, loaded_len, ret);
-	else
+	switch (e_ident[EI_CLASS]) {
+	case ELFCLASS64:
+		return elf_load64(addr,
+						  (void *)addr + ((Elf64_Ehdr *)ehdr)->e_shoff,
+						  ((Elf64_Ehdr *)ehdr)->e_shnum,
+						  ((Elf64_Ehdr *)ehdr)->e_shstrndx,
+						  ret);
+		break;
+	case ELFCLASS32:
+		return elf_load32(addr,
+						  (void *)addr + ((Elf32_Ehdr *)ehdr)->e_shoff,
+						  ((Elf32_Ehdr *)ehdr)->e_shnum,
+						  ((Elf32_Ehdr *)ehdr)->e_shstrndx,
+						  ret);
+		break;
+	default:
 		ASSERT(0);
+	}
 }
 
 static int
@@ -441,6 +450,6 @@ load_kernel(const char *kern_name, char *args) {
 		return;
 	}
 
-	printf("Not a multibootkernel\n");
+	printf("Not a multiboot kernel\n");
 	ASSERT(0);
 }

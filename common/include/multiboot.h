@@ -16,7 +16,10 @@
  *  DEVELOPER OR DISTRIBUTOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  *  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  *  IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ * This file was copied from gnu.org, except where "bw: " comments exist
  */
+
 
 #ifndef MULTIBOOT_HEADER
 #define MULTIBOOT_HEADER 1
@@ -133,10 +136,10 @@ typedef struct multiboot_aout_symbol_table multiboot_aout_symbol_table_t;
 /* The section header table for ELF. */
 struct multiboot_elf_section_header_table
 {
-  multiboot_uint32_t num;
-  multiboot_uint32_t size;
-  multiboot_uint32_t addr;
-  multiboot_uint32_t shndx;
+  multiboot_uint32_t num;   /* bw: Number of sections */
+  multiboot_uint32_t size;  /* bw: Size of each section header*/
+  multiboot_uint32_t addr;  /* bw: Address of the ELF kernel's section header table*/
+  multiboot_uint32_t shndx; /* bw: String table index */
 };
 typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
 
