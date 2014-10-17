@@ -2,8 +2,8 @@
 #define _SYMS_H_
 
 struct symbol {
-	uint64_t start;
-	uint64_t end;
+	void *start;
+	void *end;
 	const char *name;
 };
 

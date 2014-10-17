@@ -88,8 +88,8 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 		Elf64_Sym *sym = &syms[i];
 		if (sym->st_info != STT_FUNC || !sym->st_size)
 			continue;
-		symbol_table.symbols[--function_syms].start = sym->st_value;
-		symbol_table.symbols[function_syms].end = sym->st_value + sym->st_size;
+		symbol_table.symbols[--function_syms].start = (void *)sym->st_value;
+		symbol_table.symbols[function_syms].end = (void *)sym->st_value + sym->st_size;
 		symbol_table.symbols[function_syms].name = &strings[sym->st_name];
 	}
 
