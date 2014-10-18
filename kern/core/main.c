@@ -61,9 +61,5 @@ void mi_begin(struct multiboot_mmap_entry *copied_map,
 
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
-	__asm__ volatile("ud2");
-
-	while(1) {
-		arch_pause();
-	}
+	start_interactive_console();
 }

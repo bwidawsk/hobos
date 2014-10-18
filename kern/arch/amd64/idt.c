@@ -20,7 +20,7 @@ dflt_c_handler(struct trap_frame64 *tf) {
 	if (tf->tf_which == T_PAGE_FAULT) {
 		printf("fault address == 0x%x\n", read_cr2());
 	} else if (tf->tf_which == T_UNDEF_FAULT) {
-		start_interactive_console();
+		start_interactive_console(NULL);
 	}
 //	start_interactive_console();
 	while(1);
