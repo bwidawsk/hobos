@@ -36,6 +36,7 @@ char console_getc();
 void console_puts(char *s);
 
 struct console_info {
+	uint64_t frame_pointer;
 };
 void start_interactive_console(struct console_info *info);
 #endif
