@@ -54,7 +54,7 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 			elf_sym_count = sh_table[i].sh_size / sizeof(Elf64_Sym);
 
 			for (j = 0; j < elf_sym_count; j++) {
-				Elf64_Sym *sym = &syms[i];
+				Elf64_Sym *sym = &syms[j];
 				if (sym->st_info == STT_FUNC && sym->st_size && sym->st_name) {
 					function_syms++;
 				}
