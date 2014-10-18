@@ -12,7 +12,7 @@ void bt_fp(void *fp)
 		fp = (void *)prev_rbp;
 		/*  Stop if rbp is not in the kernel
 		 *  TODO< need an upper bound too*/
-		if (fp <= (void *)KVADDR(KERNEL_PML,0,0,0))
+		if (fp <= (void *)KVADDR(DMAP_PML,0,0,0))
 			break;
 	} while(1);
 }
