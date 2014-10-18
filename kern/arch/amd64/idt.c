@@ -22,7 +22,6 @@ dflt_c_handler(struct trap_frame64 *tf) {
 	} else if (tf->tf_which == T_UNDEF_FAULT) {
 		start_interactive_console();
 	}
-	bt_fp((void *)tf->tf_rbp);
 //	start_interactive_console();
 	while(1);
 }
