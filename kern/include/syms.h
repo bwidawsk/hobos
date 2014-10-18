@@ -7,6 +7,13 @@ struct symbol {
 	const char *name;
 };
 
-void get_elf_symbols_mboot(multiboot_elf_section_header_table_t *mboot_elf);
+struct sym_offset {
+	const char *name;
+	uint64_t offset;
+};
+
+struct multiboot_elf_section_header_table;
+void get_elf_symbols_mboot(struct multiboot_elf_section_header_table *mboot_elf);
+struct sym_offset get_symbol(void *addr);
 
 #endif

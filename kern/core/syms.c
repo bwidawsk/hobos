@@ -86,8 +86,9 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 
 	for (i = 0; i < elf_sym_count; i++) {
 		Elf64_Sym *sym = &syms[i];
-		if (sym->st_info != STT_FUNC || !sym->st_size)
+		if (ELF64_ST_TYPE(sym->st_info) != STT_FUNC || !sym->st_size)
 			continue;
+
 		symbol_table.symbols[--function_syms].start = (void *)sym->st_value;
 		symbol_table.symbols[function_syms].end = (void *)sym->st_value + sym->st_size;
 		symbol_table.symbols[function_syms].name = &strings[sym->st_name];
@@ -97,6 +98,36 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 	/* Adjust the pointer if there are leftovers */
 	symbol_table.count -= function_syms;
 	symbol_table.symbols = &symbol_table.symbols[function_syms];
+}
+
+/* Check if the address exists in the given symbol. Returns the offset from the
+ * beginning if so */
+static inline uint64_t
+__symbol_offset(void *addr, struct symbol *sym)
+{
+	if (addr >= sym->end)
+		return 0;
+
+	if (addr < sym->start)
+		return 0;
+
+	return addr - sym->start;
+}
+
+struct sym_offset
+get_symbol(void *addr)
+{
+	struct symbol *sym;
+	int i;
+
+	for (i = 0; i < symbol_table.count; i++) {
+		sym = &symbol_table.symbols[i];
+		uint64_t offset = __symbol_offset(addr, sym);
+		if (offset)
+			return (struct sym_offset){sym->name, offset};
+	}
+
+	return (struct sym_offset){"????", 0};
 }
 
 void

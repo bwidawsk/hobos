@@ -1,14 +1,15 @@
 #include <amd64_defines.h>
 #include <ia_defines.h>
 #include <mm_amd64.h>
+#include <syms.h>
 
 void bt_fp(void *fp)
 {
-	printf("Backtrace: \n");
 	do {
 		uint64_t prev_rbp = *((uint64_t *)fp);
-		uint64_t prev_ip = *((uint64_t *)(prev_rbp + sizeof(prev_rbp)));
-		printf("\t%p\n", prev_ip);
+		uint64_t prev_ip = *((uint64_t *)(fp + sizeof(prev_rbp)));
+		struct sym_offset sym_offset = get_symbol((void *)prev_ip);
+		printf("\t%s (+0x%x)\n", sym_offset.name, sym_offset.offset);
 		fp = (void *)prev_rbp;
 		/*  Stop if rbp is not in the kernel
 		 *  TODO< need an upper bound too*/
@@ -19,14 +20,17 @@ void bt_fp(void *fp)
 
 void bt()
 {
-	uint64_t *rbp;
+	uint64_t rbp;
+	uint64_t ip;
 
-	__asm__ volatile(
-					 "movq %%rbp, %0"
-					 : "=r" (rbp)
+	__asm__ volatile("call whatevs%=;"
+					 "whatevs%=:pop %1;"
+					 "movq %%rbp, %0;"
+					 : "=r" (rbp), "=r" (ip)
 					 :
 					 :
 					);
-
-	bt_fp(rbp);
+	struct sym_offset sym_offset = get_symbol((void *)ip);
+	printf("\t%s (+0x%x)\n", sym_offset.name, sym_offset.offset);
+	bt_fp((void *)rbp);
 }
