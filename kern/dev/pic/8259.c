@@ -196,7 +196,7 @@ struct pic_dev pic_8259 = {
 
 #include <bs_commands.h>
 static void *
-pic8259_dump(int argc, char *argv[]) {
+pic8259_dump(struct console_info *info, int argc, char *argv[]) {
 	pic8259_print_irrs();
 	pic8259_print_isrs();
 	return NULL;

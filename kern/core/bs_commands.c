@@ -3,7 +3,7 @@
 BS_COMANDS_CREATE_LIST;
 
 static void *
-help_cmd_execute(int argc, char *argv[]) {
+help_cmd_execute(struct console_info *info, int argc, char *argv[]) {
 	int throwaway = 0;
 	struct bs_cmd *cmd;
 	console_puts("Displaying commands: \n");
@@ -22,7 +22,7 @@ help_cmd_help() {
 
 BS_COMMAND_DECLARE(help_cmd, help_cmd_execute, help_cmd_help);
 void
-do_shell_cmd(int argc, char *argv[]) {
+do_shell_cmd(struct console_info *info, int argc, char *argv[]) {
 	int throwaway = 0;
 	struct bs_cmd *cmd = &help_cmd;
 	struct bs_cmd *best = &help_cmd;
@@ -56,5 +56,5 @@ do_shell_cmd(int argc, char *argv[]) {
 		}
 	}
 
-	best->execute(argc, argv);
+	best->execute(info, argc, argv);
 }

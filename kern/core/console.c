@@ -76,7 +76,7 @@ console_puts(char *s) {
 
 /* TODO: replace this with libc like stuff */
 static void
-parse_and_send_cmd(char *in_cmd) {
+parse_and_send_cmd(char *in_cmd, struct console_info *info) {
 	#define MAX_ARGS 4
 	int idx;
 	int argv_idx = 0;
@@ -98,11 +98,11 @@ parse_and_send_cmd(char *in_cmd) {
 		}
 	}
 
-	do_shell_cmd(argv_idx, argv);
+	do_shell_cmd(info, argv_idx, argv);
 }
 
 void
-start_interactive_console() {
+start_interactive_console(struct console_info *info) {
 	#define MAX_CMD 256
 	while(1) {
 		int cmd_len = 0;
@@ -147,6 +147,6 @@ start_interactive_console() {
 		in_cmd[cmd_len] = 0;
 
 		/* go work on it */
-		parse_and_send_cmd(in_cmd);
+		parse_and_send_cmd(in_cmd, info);
 	}
 }

@@ -61,5 +61,5 @@ void mi_begin(struct multiboot_mmap_entry *copied_map,
 
 	printf("waiting 5 seconds\n");
 	timed_delay(5000000);
-	start_interactive_console();
+	start_interactive_console(NULL);
 }

@@ -37,7 +37,7 @@ INITFUNC_DECLARE(vfs_bootstrap, INITFUNC_DEVICE_VFS) {
 
 #include <bs_commands.h>
 static void *
-vfs_ls(int argc, char *argv[]) {
+vfs_ls(struct console_info *info, int argc, char *argv[]) {
 	char *path = argv[1];
 	struct vfs *fs = vfs_get(path);
 	/* TODO can't be NULL */

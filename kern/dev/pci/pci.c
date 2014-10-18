@@ -86,7 +86,7 @@ pci_get_devs(pci_class_t class, bdfo_t *ret, int *count) {
 
 #include <bs_commands.h>
 static void *
-generic_lspci(int argc, char *argv[]) {
+generic_lspci(struct console_info *info, int argc, char *argv[]) {
 
 	uint16_t bus = 0, dev = 0, func = 0, temp = 0;
 	FOREACH_PCI_DEV(bus, dev, func, temp) {

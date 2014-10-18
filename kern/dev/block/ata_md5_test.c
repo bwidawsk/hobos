@@ -8,13 +8,14 @@ typedef char ata_block_t[512];
 #define MD5_BLOCKS_PER_ATA_SECTOR (512 / MD5_BLOCK_SIZE)
 md5_block_t temp_blks[MD5_BLOCKS_PER_ATA_SECTOR * 256];
 
+#include <bs_commands.h>
 /**
  * do_ata_md5_test - Reads all blocks on a gven device, and calculate the md5.
  *
  * @whichdev: The device (from 0-x) to operate on
  */
 static void *
-do_ata_md5_test(int argc, char *argv[]) {
+do_ata_md5_test(struct console_info *info, int argc, char *argv[]) {
 	struct device *dev;
 	struct block_device *blkdev;
 	struct ata_channel *ata;
@@ -86,5 +87,4 @@ md5_dev_help() {
 	printf("Does an md5 the first block device\n");
 }
 
-#include <bs_commands.h>
 BS_COMMAND_DECLARE(md5_dev, do_ata_md5_test, md5_dev_help);

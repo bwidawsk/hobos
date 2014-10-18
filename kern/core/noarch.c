@@ -1,3 +1,5 @@
+#include <console.h>
+
 void arch_pause(void) __attribute__((weak, alias ("__noarch_pause")));
 static void __noarch_pause(void) { }
 

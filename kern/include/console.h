@@ -35,5 +35,7 @@ void console_putc(char c);
 char console_getc();
 void console_puts(char *s);
 
-void start_interactive_console();
+struct console_info {
+};
+void start_interactive_console(struct console_info *info);
 #endif

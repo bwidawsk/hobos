@@ -4,7 +4,7 @@
 /* BuiltinShell Commands */
 
 #define BS_COMMAND_KEY sect_cmds
-#define BS_COMANDS_CREATE_LIST CTLIST_CREATE(BS_COMMAND_KEY, struct bs_cmd *); 
+#define BS_COMANDS_CREATE_LIST CTLIST_CREATE(BS_COMMAND_KEY, struct bs_cmd *);
 
 #define BS_COMMAND_DECLARE(cmd_name, cmd_exec, cmd_help) \
 	static struct bs_cmd cmd_name = { \
@@ -16,12 +16,13 @@
 
 #define COMMAND_FOREACH(elem, garbage) \
 	CTLIST_FOREACH(elem, BS_COMMAND_KEY, garbage)
-	
+
+struct console_info;
 struct bs_cmd {
 	char *name;
-	void *(*execute)(int argc, char *argv[]);
+	void *(*execute)(struct console_info *info, int argc, char *argv[]);
 	void (*help)();
 };
-void do_shell_cmd(int argc, char *argv[]);
+void do_shell_cmd(struct console_info *info, int argc, char *argv[]);
 
 #endif
