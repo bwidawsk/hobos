@@ -54,7 +54,7 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 
 			for (j = 0; j < elf_sym_count; j++) {
 				Elf64_Sym *sym = &syms[j];
-				if (sym->st_info == STT_FUNC && sym->st_size && sym->st_name) {
+				if (ELF64_ST_TYPE(sym->st_info) == STT_FUNC && sym->st_size && sym->st_name) {
 					function_syms++;
 				}
 			}
@@ -89,7 +89,7 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 		symbol_table.symbols[function_syms].name = &strings[sym->st_name];
 	}
 
-	KWARN(function_syms, "Leftover symbols, space wasted\n");
+	KWARN(function_syms, "Leftover %d symbols, space wasted\n", function_syms);
 	/* Adjust the pointer if there are leftovers */
 	symbol_table.count -= function_syms;
 	symbol_table.symbols = &symbol_table.symbols[function_syms];
