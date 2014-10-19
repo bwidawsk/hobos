@@ -24,7 +24,8 @@ generic_c_handler(uint64_t vector) {
 int
 register_irq(int vector, int (*handler)(void *), void *data) {
 	KASSERT(vector < 16, ("Can only handle 16 vectors for now\n"));
-	KWARN(handlers[vector] != 0, ("Shared interrupts aren't support, overwriting vector %d\n", vector));
+	KWARN(handlers[vector] != 0,
+		  "Shared interrupts aren't support, overwriting vector %d\n", vector);
 
 	handlers[vector] = handler;
 	handler_data[vector] = data;

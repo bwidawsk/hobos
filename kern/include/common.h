@@ -24,11 +24,17 @@
 			panic(format, ##__VA_ARGS__); \
 		} \
 	} while (0)
-#define KWARN(x, ...) do { \
-		if (x) { \
-			printf("Kernel Warning. %s:%d %s\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
-		} \
-	} while (0)
+
+#define KWARN(x, format, ...) ({ \
+	int __warned = !!(x); \
+	if (__warned) { \
+		printf("Kernel Warning. %s:%d ",__FILE__, __LINE__); \
+		printf(format, ##__VA_ARGS__); \
+	} \
+	__warned; \
+})
+
+#define KWARN_NOW(x) KWARN(x, "")
 #else
 	#define KASSERT(x, format, ...)
 	#define KWARN(x, ...)

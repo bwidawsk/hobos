@@ -35,10 +35,9 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 				continue;
 
 			strings = malloc(sh_table[i].sh_size);
-			if (!strings) {
-				KWARN(1, "Failed to allocate memory for strings\n");
+			if (KWARN(!strings, "Failed to allocate memory for strings\n"))
 				return;
-			}
+
 			memcpy(strings, arch_xlate_pa((void *)sh_table[i].sh_addr), sh_table[i].sh_size);
 		}
 
@@ -62,14 +61,10 @@ get_elf64_symbols_mboot(uint32_t section_headers, Elf64_Half shnum, Elf64_Half s
 		}
 	}
 
-	if (!strings) {
-		KWARN(1, "No string section found in ELF\n");
-	}
+	KWARN(!strings, "No string section found in ELF\n");
 
-	if (!syms) {
-		KWARN(1, "No symbol section found in ELF\n");
+	if (KWARN(!syms, "No symbol section found in ELF\n"))
 		free(strings);
-	}
 
 	if (!strings || !syms)
 		return;
