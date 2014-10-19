@@ -10,7 +10,7 @@ EXES := $(OBJECTS:%.o=%)
 all: md5 ext2_tool $(EXES)
 
 #special stuff goes here
-ext2_tool: CFLAGS += -D_GNU_SOURCE -I../kern/fs/ext2/
+ext2_tool: CFLAGS += -D_GNU_SOURCE -I../kern/fs/ext2/ -lm
 
 md5: CFLAGS += -I ../common/src/
 md5: md5.o

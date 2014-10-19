@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
 
 #include "ext2.h"
 
@@ -29,11 +30,10 @@
 #define INODE_IN_TABLE(table_addr, x) \
 	((volatile struct ext2_inode *)((table_addr + (superblock->s_inode_size) * x)))
 
-
 int
 main(int argc, char *argv[]) {
 	int i,j;
-	int fd = open("../bochs/myfs.img", 0);
+	int fd = open(argv[1], 0);
 	if (fd == -1) {
 		perror("open");
 		exit(0);
@@ -53,6 +53,9 @@ main(int argc, char *argv[]) {
 	}
 	int nblocks = superblock->s_blocks_count;
 	int block_size = 1024 * (1 << superblock->s_log_block_size);
+	printf("Number of blocks = %d\n", nblocks);
+	printf("Number of blocks per group = %d\n", superblock->s_blocks_per_group);
+	printf("Number of block groups %d-%f\n", superblock->s_inodes_count / superblock->s_inodes_per_group, ceil((float)nblocks / (float)superblock->s_blocks_per_group));
 	printf("total size is = %d (bs=%d)\n", nblocks * block_size, block_size);
 	printf("first useful block #%d\n", superblock->s_first_data_block);
 	uint32_t first = superblock->s_first_data_block;

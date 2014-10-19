@@ -42,6 +42,7 @@
 
 #define ROUND_UP(x, base)		((((x) / (base)) * (base)) + (((x) % (base)) ? (base) : 0))
 #define ROUND_DOWN(x, base)		(((x) / (base)) * (base))
+#define CEIL(x, y)				(x) % (y) ? (x) / (y) + 1 : (x) / (y)
 #define IS_POW2(x) (!(x & (x-1)))
 #define _INITSECTION_  __attribute__ ((section ("initonly") ))
 /* CompileTimeLIST
