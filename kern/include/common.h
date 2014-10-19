@@ -25,8 +25,8 @@
 		} \
 	} while (0)
 #define KWARN(x, ...) do { \
-		if (!(x)) { \
-			printf("%s: %s\n", __FILE__, #x);  \
+		if (x) { \
+			printf("Kernel Warning. %s:%d %s\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
 		} \
 	} while (0)
 #else

@@ -150,9 +150,9 @@ pic8259_init(int which) {
 
 uint8_t
 pic8259_get_ir(enum which_8259 which, uint8_t which_ir) {
-	KWARN(IS_POW2(which), ("BUG: pic8259_get_irr called for multiple pics\n"));
-	uint8_t which_data_port;	
-	uint8_t which_cmd_port;	
+	KWARN(!IS_POW2(which), ("BUG: pic8259_get_irr called for multiple pics\n"));
+	uint8_t which_data_port;
+	uint8_t which_cmd_port;
 	uint8_t ret;
 
 	if (which & PIC8259_SLAVE) {
