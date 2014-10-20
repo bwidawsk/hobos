@@ -4,23 +4,74 @@
 
 //#define USE_LOCAL_ECHO
 
-extern int early_printf(const char *format, ...);
-
 CONSOLE_CREATE_LIST;
 
 MUTEX_DECLARE(console_puts_lock);
 
-struct console_driver *best_cons;
+static struct console_driver *best_cons;
+static int use_allcons = 0;
+static int inited = 0;
+static unsigned int ptr = 0;
 
-int use_allcons = 0;
-int inited = 0;
-
-#define init_console(cons) if (cons->init) { cons->init(cons); }
-#define putc_console(cons, c) if (cons->putc) { cons->putc(cons, c); }
-#define get_console(cons) cons->getc ? cons->getc(cons) : 0
+/* Simple ring buffer for holding char data */
+#define EARLY_PRINT_BUFFER_SIZE 2048
+char early_print_buffer[EARLY_PRINT_BUFFER_SIZE+1] _INITSECTION_;
+int wrapped = 0;
 
 void
-console_init() {
+__hbuiltin_early_putc(char c)
+{
+	early_print_buffer[ptr++] = c;
+	if (ptr & (EARLY_PRINT_BUFFER_SIZE-1)) {
+		wrapped++;
+		ptr &= (EARLY_PRINT_BUFFER_SIZE-1);
+	}
+}
+void early_putc(char c) __attribute__((weak, alias ("__hbuiltin_early_putc")));
+
+#define init_console(cons) do { \
+	if (cons->init) \
+		cons->init(cons); \
+} while (0)
+
+#define putc_console(cons, c) do { \
+	if (cons->putc) \
+		cons->putc(cons, c); \
+} while (0)
+
+static inline char
+getc_console(struct console_driver *cons)
+{
+	if (cons->getc)
+		return cons->getc(cons);
+
+	return 0;
+}
+
+static void
+print_ringbuffer(struct console_driver *cons)
+{
+	char *begin, *end = &early_print_buffer[ptr];
+	if (wrapped) {
+		begin = &early_print_buffer[ptr+1];
+	} else {
+		begin = early_print_buffer;
+	}
+
+	if (end == early_print_buffer && !wrapped) /* No prints */
+		return;
+
+	while (begin != end) {
+		putc_console(cons, *begin);
+		begin++;
+		if (begin == &early_print_buffer[EARLY_PRINT_BUFFER_SIZE])
+			begin = &early_print_buffer[0];
+	}
+}
+
+void
+console_init()
+{
 	int throwaway = 0;
 	int best_awe = 0;
 	struct console_driver *cons;
@@ -30,17 +81,33 @@ console_init() {
 
 		if(cons->awesomeness > best_awe)
 			best_cons = cons;
+
+		if (early_putc == __hbuiltin_early_putc && use_allcons) {
+			print_ringbuffer(cons);
+		}
 	}
+
+	if (early_putc == __hbuiltin_early_putc && !use_allcons) {
+		print_ringbuffer(best_cons);
+	}
+
 	inited = 1;
 }
 
 void
-console_putc(char c) {
+console_putc(char c)
+{
 	int throwaway = 0;
 	struct console_driver *cons;
+
+	if (!inited) {
+		early_putc(c);
+		return;
+	}
+
 	if (use_allcons) {
 		CONSOLE_FOREACH(cons, throwaway) {
-			putc_console(cons, c)
+			putc_console(cons, c);
 		}
 	} else {
 		putc_console(best_cons, c);
@@ -48,24 +115,26 @@ console_putc(char c) {
 }
 
 char
-console_getc() {
+console_getc()
+{
 	int throwaway = 0;
 	struct console_driver *cons;
 	/* FIXME: this won't work, must getc from only 1 console at a time */
 	if (use_allcons) {
 		CONSOLE_FOREACH(cons, throwaway) {
-			return get_console(cons);
+			return getc_console(cons);
 		}
 	} else {
-		return get_console(best_cons);
+		return getc_console(best_cons);
 	}
 	return -1;
 }
 
-void 
-console_puts(char *s) {
+void
+console_puts(char *s)
+{
 	if(!inited) {
-		early_printf(s);
+		printf(s);
 		return;
 	}
 
@@ -76,7 +145,6 @@ console_puts(char *s) {
 		s++;
 	}
 	mutex_release(&console_puts_lock);
-
 }
 
 /* TODO: replace this with libc like stuff */
@@ -107,7 +175,11 @@ parse_and_send_cmd(char *in_cmd, struct console_info *info) {
 }
 
 void
-start_interactive_console(struct console_info *info) {
+start_interactive_console(struct console_info *info)
+{
+	if (!inited)
+		while(1);
+
 	#define MAX_CMD 256
 	while(1) {
 		int cmd_len = 0;

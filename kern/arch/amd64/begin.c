@@ -14,7 +14,6 @@
 
 extern void *kernel_load_start;
 extern void *kernel_load_end;
-extern int early_printf(const char *format, ...);
 
 void amd64_begin(struct multiboot_info *mboot_info, uint32_t magic)  __attribute__((noreturn));
 static void new_beginning();
@@ -91,7 +90,7 @@ struct mm_page_allocator *primary_allocator;
 
 void
 carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
-	early_printf("Printing memory map passed by bootloader\n");
+	printf("Printing memory map passed by bootloader\n");
 	int best_entry = 0;
 	int usable_sections = 0;
 	multiboot_uint64_t maxlen = 0;
@@ -104,16 +103,16 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 			best_entry = num_entries;
 			maxlen = map[num_entries].len;
 		}
-		early_printf("%x  %x\n", map[num_entries].addr, map[num_entries].len);
+		printf("0x%08x  0x%08x\n", map[num_entries].addr, map[num_entries].len);
 	} while(num_entries--);
 
 	if (usable_sections >= 3) {
-		early_printf("this looks like sparse memory, results may vary\n");
+		printf("this looks like sparse memory, results may vary\n");
 	}
 
 	// 16 MB is an arbitrary size which we consider "good"
 	if (map[best_entry].len <= (1 << 24)) {
-		early_printf("free memory seems small %x\n", map[best_entry].len);
+		printf("free memory seems small %x\n", map[best_entry].len);
 	}
 
 	// start a list of things we need memory for
@@ -127,7 +126,7 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 	#else
 	#error no supported allocator selected
 	#endif
-	early_printf("%s initialized\n", primary_allocator->name);
+	printf("%s initialized\n", primary_allocator->name);
 	// in theory we could grab a handle to another allocator here and give
 	// it a different or sub region of memory.
 }
@@ -260,6 +259,8 @@ amd64_begin(struct multiboot_info *mboot_info, uint32_t magic) {
 	task.ist1 = (uint64_t)temp_interrupt_stack;
 	first_temp_task_load();
 	cpuid_setup();
+
+	/* It is unsafe to print anything until here */
 
 	struct gdt_descriptor64 gdtdesc = {
 		.base = (uint64_t)&gdt,

@@ -50,7 +50,8 @@ cons_init_8250(struct console_driver *me_cons) {
 }
 
 static void
-cons_putc_8250(struct console_driver *me_cons, unsigned char c) {
+cons_putc_8250(struct console_driver *me_cons, unsigned char c)
+{
 	uint8_t thre;
 	#if (CONFIG_CONSOLE_NEEDS_STUPID_LINEFEED == 1)
 	if (c == '\n')
@@ -72,14 +73,16 @@ cons_putc_8250(struct console_driver *me_cons, unsigned char c) {
 }
 
 static char
-cons_getc_8250(struct console_driver *me_cons) {
+cons_getc_8250(struct console_driver *me_cons)
+{
 	while(!cons_checkc_8250(me_cons));
 
 	return read_8250_reg(RBR_REG_8250, me_cons->pvt);
 }
 
 static int
-cons_checkc_8250(struct console_driver *me_cons) {
+cons_checkc_8250(struct console_driver *me_cons)
+{
 	//uint8_t iir;
 	//iir = read_8250_reg(IIR_REG_8250, me_cons->pvt);
 	//return IIR_RXA(iir);

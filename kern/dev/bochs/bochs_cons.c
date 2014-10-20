@@ -12,7 +12,9 @@ static void bochs_cons_putc(struct console_driver *me_cons, unsigned char c) {
 	outb(c, BOCHS_DEBUG_PORT);
 }
 
+#if CONFIG_PORT_E9_PUTCHAR == 1
 void
 early_putc(char c) {
 	outb(c, BOCHS_DEBUG_PORT);
 }
+#endif
