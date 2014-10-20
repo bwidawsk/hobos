@@ -19,9 +19,9 @@
 #ifndef NO_INVARIANTS
 #define KASSERT(x, format, ...) do { \
 		if (!(x)) { \
-			printf("Assertion failed. %s:%d %s\n", __FILE__, __LINE__, #x); \
-			panic(format, ##__VA_ARGS__); \
+			printf("%s: %s\n", __FILE__, #x); \
 			bt(); \
+			panic(format, ##__VA_ARGS__); \
 		} \
 	} while (0)
 
