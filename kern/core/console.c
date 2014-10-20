@@ -15,6 +15,10 @@ struct console_driver *best_cons;
 int use_allcons = 0;
 int inited = 0;
 
+#define init_console(cons) if (cons->init) { cons->init(cons); }
+#define putc_console(cons, c) if (cons->putc) { cons->putc(cons, c); }
+#define get_console(cons) cons->getc ? cons->getc(cons) : 0
+
 void
 console_init() {
 	int throwaway = 0;
@@ -22,7 +26,8 @@ console_init() {
 	struct console_driver *cons;
 
 	CONSOLE_FOREACH(cons, throwaway) {
-		cons->init(cons);
+		init_console(cons);
+
 		if(cons->awesomeness > best_awe)
 			best_cons = cons;
 	}
@@ -35,10 +40,10 @@ console_putc(char c) {
 	struct console_driver *cons;
 	if (use_allcons) {
 		CONSOLE_FOREACH(cons, throwaway) {
-			cons->putc(cons, c);
+			putc_console(cons, c)
 		}
 	} else {
-		best_cons->putc(best_cons, c);
+		putc_console(best_cons, c);
 	}
 }
 
@@ -49,10 +54,10 @@ console_getc() {
 	/* FIXME: this won't work, must getc from only 1 console at a time */
 	if (use_allcons) {
 		CONSOLE_FOREACH(cons, throwaway) {
-			return cons->getc(cons);
+			return get_console(cons);
 		}
 	} else {
-		return best_cons->getc(best_cons);
+		return get_console(best_cons);
 	}
 	return -1;
 }
