@@ -44,7 +44,8 @@
 #define ROUND_DOWN(x, base)		(((x) / (base)) * (base))
 #define CEIL(x, y)				(x) % (y) ? (x) / (y) + 1 : (x) / (y)
 #define IS_POW2(x) (!(x & (x-1)))
-#define _INITSECTION_  __attribute__ ((section ("initonly") ))
+#define _INITSECTION_ __attribute__((used, section(".recycle")))
+
 /* CompileTimeLIST
  * I got the idea of the implementation from FreeBSD, but it's a generic OS trick
  * thing used in Linux as well. The code is mine. I needed a hint with the __start

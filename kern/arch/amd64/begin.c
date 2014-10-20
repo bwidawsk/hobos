@@ -18,7 +18,7 @@ extern int early_printf(const char *format, ...);
 
 void amd64_begin(struct multiboot_info *mboot_info, uint32_t magic)  __attribute__((noreturn));
 static void new_beginning();
-static uint8_t temp_interrupt_stack[4096] __attribute__((used, section(".recycle")));
+static uint8_t temp_interrupt_stack[4096] _INITSECTION_;
 static uint64_t kernel_size;
 static void *stack_va;
 // 20 is Random
