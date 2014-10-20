@@ -1,13 +1,14 @@
 #include <stdarg.h> // This is defined in common/include
 
 /* Simple ring buffer for holding char data */
-char buf[64];
-unsigned char ptr=0;
+#define EARLY_PRINT_BUFFER_SIZE 2048
+char buf[EARLY_PRINT_BUFFER_SIZE];
+unsigned int ptr=0;
 
 void
 __hbuiltin_early_putc(char c) {
 	buf[ptr++] = c;
-	ptr &= 64;
+	ptr &= (EARLY_PRINT_BUFFER_SIZE-1);
 }
 
 void early_putc(char c) __attribute__((weak, alias ("__hbuiltin_early_putc")));
@@ -25,6 +26,7 @@ void early_puts(char *string) {
 		string++;
 	}
 }
+
 static inline void
 num_to_hex(unsigned long long num, char ret[16]) {
 	char hex_chars[] = "0123456789abcdef";
