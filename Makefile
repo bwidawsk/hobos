@@ -2,7 +2,6 @@ BIOS=/usr/share/qemu/bios.bin
 TERM=urxvt
 FS_DEPS=$(wildcard bootimage/files/*)
 
-.PHONY: all debug build_bootimage
 # This represents the ideal setup with a tiled window manager
 all: boot/bootimage
 	-rm mon ser
@@ -24,3 +23,5 @@ boot/bootimage: kern/kernel $(FS_DEPS)
 	echo $?
 	$(MAKE) -C bootimage/
 
+
+.PHONY: all debug boot/bootimage
