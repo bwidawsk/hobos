@@ -31,7 +31,6 @@ OUTPUT = kernel
 
 all : $(OUTPUT)
 
-.PHONY : $(OUTPUT) 
 $(OUTPUT) : include_clean
 	./vers.sh
 	-rm include/arch
@@ -45,26 +44,25 @@ include_clean : include/common.h build_options
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 	touch $@
 
-.PHONY : tags
 tags :
 	ctags -R .
 	ctags -Ra ../common
 
-.PHONY : cscope
 cscope :
 	cscope -q -b -R
 
-.PHONY : picocom
 picocom :
 	sudo picocom -b 115200 -i -r /dev/ttyp9 -c
 
 help :
 	@echo "Available targets: "
-	@echo " all (default)"
+	@echo " all (default), alias: kernel"
 	@echo " tags"
 	@echo " cscope"
 	@echo " picocom"
+	@echo " help"
 	@echo " clean"
+	@echo " distclean"
 	@echo "Variables which you may want to change: "
 	@echo " CC default: $(CC)"
 	@echo " LD default: $(LD)"
@@ -72,18 +70,14 @@ help :
 	@echo " LDFLAGS default: $(LDFLAGS)"
 
 
-.PHONY : clean
 clean :
 	-rm core/vers.c
 	-rm include/arch
 	-rm $(OUTPUT)
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 
-.PHONY : depclean
-depclean: clean
-	$(shell find . -mindepth 2 -name 'Makefile.bak' -exec rm -f {} \;)
-
-.PHONY : distclean
-distclean : clean depclean
+distclean : clean
 	-rm cscope*
 	-rm tags
+
+.PHONY: $(OUTPUT) tags cscope picocom clean distclean
