@@ -1,6 +1,7 @@
 BIOS=/usr/share/qemu/bios.bin
 TERM=urxvt
 FS_DEPS=$(wildcard bootimage/files/*)
+SUBDIRS:=$(patsubst %/Makefile,%,$(wildcard */Makefile))
 
 # This represents the ideal setup with a tiled window manager
 all: boot/bootimage
@@ -23,5 +24,9 @@ boot/bootimage: kern/kernel $(FS_DEPS)
 	echo $?
 	$(MAKE) -C bootimage/
 
+$(patsubst %, clean-%, $(SUBDIRS)):
+	-$(MAKE) -C $(patsubst clean-%, %, $@) clean
 
-.PHONY: all debug boot/bootimage
+clean: $(patsubst %, clean-%, $(SUBDIRS))
+
+.PHONY: all debug boot/bootimage clean
