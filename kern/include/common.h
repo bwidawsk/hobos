@@ -93,8 +93,6 @@
 	printf("\n"); \
 	}
 
-#define OFFSET_OF(structure, member) __builtin_offsetof(structure, member)
-
 #ifndef ASM_FILE
 #include "noarch.h"
 

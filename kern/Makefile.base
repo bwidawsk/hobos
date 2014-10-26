@@ -16,7 +16,7 @@ DEFINES+=$(shell cat build_options)
 CFLAGS+=$(DEFINES)
 LD_SCRIPT=linker_script.ld -S
 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h -imacros ../common/include/cdefs.h
 CFLAGS+=$(INCLUDES)
 
 LDFLAGS?=
