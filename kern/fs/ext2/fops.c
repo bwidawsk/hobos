@@ -366,7 +366,7 @@ ext2_probe(struct vfs *fs)
 		return -1;
 	}
 
-	ext2->groups = CEIL(super_block->s_blocks_count, super_block->s_blocks_per_group);
+	ext2->groups = DIV_ROUND_UP(super_block->s_blocks_count, super_block->s_blocks_per_group);
 	KWARN(ext2->groups != super_block->s_inodes_count / super_block->s_inodes_per_group,
 		  "Filesystem group counts don't match (%d != %d)\n",
 		  ext2->groups, super_block->s_inodes_count / super_block->s_inodes_per_group);
