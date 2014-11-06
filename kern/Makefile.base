@@ -16,8 +16,9 @@ DEFINES+=$(shell cat build_options)
 CFLAGS+=$(DEFINES)
 LD_SCRIPT=linker_script.ld -S
 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h -imacros ../common/include/cdefs.h
-CFLAGS+=$(INCLUDES)
+INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
+ESOTERIC_INCLUDES=-imacros ../common/include/cdefs.h
+CFLAGS+=$(INCLUDES) $(ESOTERIC_INCLUDES)
 
 LDFLAGS?=
 export CFLAGS
@@ -32,24 +33,24 @@ OUTPUT = kernel
 all : $(OUTPUT)
 
 $(OUTPUT) : include_clean
-	./vers.sh
-	-rm include/arch
+	$(shell $(CURDIR)/vers.sh)
+	-@rm -f $(CURDIR)/include/arch
 	ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
 	for dir in $(DIRS); do (${MAKE} -C $$dir $1 || exit 1) || exit 1; done
 	$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/$(LD_SCRIPT) $(OBJS) -o kernel
 
 # autocleans if critical files change
 include_clean : include/common.h build_options
-	-rm $(OUTPUT)
+	-@rm -f $(OUTPUT)
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 	touch $@
 
 tags :
 	ctags -R .
-	ctags -Ra ../common
+	ctags -Ra $(CURDIR)/../common
 
 cscope :
-	cscope -q -b -R
+	cscope -q -k -b -u -R
 
 picocom :
 	sudo picocom -b 115200 -i -r /dev/ttyp9 -c
@@ -71,13 +72,10 @@ help :
 
 
 clean :
-	-rm core/vers.c
-	-rm include/arch
-	-rm $(OUTPUT)
+	-@rm -f core/vers.c include/arch $(OUTPUT)
 	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
 
 distclean : clean
-	-rm cscope*
-	-rm tags
+	-@rm -f cscope* tags
 
 .PHONY: $(OUTPUT) tags cscope picocom clean distclean

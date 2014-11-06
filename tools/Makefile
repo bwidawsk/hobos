@@ -18,4 +18,4 @@ md5: md5.o ../common/src/md5_base.o
 
 .PHONY: clean
 clean :
-	-rm $(OBJECTS) $(EXES)
+	-@rm -f $(OBJECTS) $(EXES)

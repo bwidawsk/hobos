@@ -14,7 +14,7 @@ bootimg:
 
 .PHONY : clean
 clean :
-	rm bootimage
+	-@rm -f bootimage
 	${MAKE} -C mbr clean
 	${MAKE} -C smallboot DEBUG=1 clean
 

@@ -35,6 +35,4 @@ smallboot.lst32 : smallboot.img
 	objdump --disassemble -mi386 $<.elf
 
 clean:
-	rm -f $(OBJECTS)
-	rm -f smallboot.img
-	rm -f smallboot.img.elf
+	-@rm -f $(OBJECTS) smallboot.img smallboot.img.elf

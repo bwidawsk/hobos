@@ -4,4 +4,4 @@ done : $(INPUT)
 	$(CC) $<
 
 clean :
-	-rm *.h.gch
+	-@rm -f *.h.gch

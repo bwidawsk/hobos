@@ -16,6 +16,4 @@ mbr.lst :
 
 
 clean:
-	rm -f mbr.o
-	rm -f mbr.img
-	rm -f mbr.elf
+	-@rm -f mbr.o mbr.img mbr.elf
