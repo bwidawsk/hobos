@@ -3,7 +3,7 @@
 #include <mm_amd64.h>
 #include <syms.h>
 
-void bt_fp(void *fp)
+void backtrace(void *fp)
 {
 	do {
 		uint64_t prev_rbp = *((uint64_t *)fp);
@@ -18,7 +18,7 @@ void bt_fp(void *fp)
 	} while(1);
 }
 
-void bt()
+void backtrace_now(void)
 {
 	uint64_t rbp;
 	uint64_t ip;
@@ -32,5 +32,5 @@ void bt()
 					);
 	struct sym_offset sym_offset = get_symbol((void *)ip);
 	printf("\t%s (+0x%x)\n", sym_offset.name, sym_offset.offset);
-	bt_fp((void *)rbp);
+	backtrace((void *)rbp);
 }

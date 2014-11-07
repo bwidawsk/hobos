@@ -20,7 +20,7 @@
 #define KASSERT(x, format, ...) do { \
 		if (!(x)) { \
 			printf("%s: %s\n", __FILE__, #x); \
-			bt(); \
+			backtrace_now(); \
 			panic(format, ##__VA_ARGS__); \
 		} \
 	} while (0)
