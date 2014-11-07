@@ -11,13 +11,6 @@ int registered_fs_cnt = 0;
  * commandline option, or just always force it to be 0. For simplicity do the
  * latter. */
 #define ROOTFS_PARTITION 0
-static struct vfs *rootfs;
-
-struct vfs *
-vfs_get(const char *path) {
-	/* TODO rootfs is assumed */
-	return rootfs;
-}
 
 INITFUNC_DECLARE(vfs_bootstrap, INITFUNC_DEVICE_VFS) {
 	/* FIXME: It is assumed that the first block device is the device

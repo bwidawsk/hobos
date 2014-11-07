@@ -30,4 +30,11 @@ vfs_register_fs(struct vfs *vfs, const struct vfs_ops *ops)
 	vfs->ops = ops;
 }
 
+static inline struct vfs *
+vfs_get(const char *path)
+{
+	/* TODO: Need to deal with multiple FS */
+	return registered_fs[0];
+}
+
 #endif
