@@ -22,7 +22,9 @@ dflt_c_handler(struct trap_frame64 *tf) {
 	} else if (tf->tf_which == T_UNDEF_FAULT) {
 		start_interactive_console(NULL);
 	}
-//	start_interactive_console();
+	struct console_info ci;
+	ci.frame_pointer = tf->tf_rbp;
+	start_interactive_console(&ci);
 	while(1);
 }
 
