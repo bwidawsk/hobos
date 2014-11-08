@@ -27,6 +27,9 @@ boot/bootimage: kern/kernel $(FS_DEPS)
 $(patsubst %, clean-%, $(SUBDIRS)):
 	-$(MAKE) -C $(patsubst clean-%, %, $@) clean
 
+todolist:
+	-@fgrep --exclude=.git --exclude=tags --exclude=cscope* -H -e TODO -e FIXME -r $(CURDIR)
+
 clean: $(patsubst %, clean-%, $(SUBDIRS))
 
 .PHONY: all debug boot/bootimage clean
