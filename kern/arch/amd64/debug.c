@@ -9,7 +9,8 @@ void backtrace(void *fp)
 		uint64_t prev_rbp = *((uint64_t *)fp);
 		uint64_t prev_ip = *((uint64_t *)(fp + sizeof(prev_rbp)));
 		struct sym_offset sym_offset = get_symbol((void *)prev_ip);
-		printf("\t%s (+0x%x)\n", sym_offset.name, sym_offset.offset);
+		printf("\t%s (+0x%x) [0x%llx]\n",
+			   sym_offset.name, sym_offset.offset, prev_ip);
 		fp = (void *)prev_rbp;
 		/*  Stop if rbp is not in the kernel
 		 *  TODO< need an upper bound too*/
