@@ -1,4 +1,5 @@
 #include <console.h>
+#include <include/arch.h>
 #include <lib.h>
 #include "builtins.h" // generic_popcount()
 
@@ -25,7 +26,7 @@ do_bt_command(struct console_info *info, int argc, char *argv[])
 	if (!info)
 		backtrace_now();
 	else
-		backtrace((void *)info->frame_pointer);
+		backtrace((void *)info->arch_state.rbp);
 	return NULL;
 }
 

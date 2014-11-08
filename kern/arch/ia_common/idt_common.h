@@ -6,15 +6,8 @@
 
 #define MAX_IDT_ENTRIES 256
 
-#ifdef ASM_FILE
-#define IDTVEC(name)    .align 64; .globl X ## name ; \
-            .type X ## name ,@function; X ## name :
-#else
-#define IDTVEC(name)   X ## name
-#endif
-
-#define	T_DIVIDE_FAULT 	0
-#define	T_DEBUG 		1
+#define	T_DIVIDE_FAULT	0
+#define	T_DEBUG			1
 #define	T_NMI_INT		2
 #define	T_BKPT_TRAP		3
 #define	T_OVRFLW_TRAP	4
@@ -36,29 +29,37 @@
 
 #define IRQ_EXTERNAL 32
 #define IRQ_MAX (MAX_IDT_ENTRIES - 1)
-#ifndef ASM_FILE
+
+#ifdef ASM_FILE
+ #define IDTVEC(name) \
+	.align 64; \
+	.globl X ## name; \
+	.type X ## name ,@function; \
+	X ## name:
+#else
+ #define IDTVEC(name)   X ## name
 
 /* default handlers for all traps, aborts, and faults */
-void IDTVEC(T_DIVIDE_FAULT)(void);
-void IDTVEC(T_DEBUG)(void);
-void IDTVEC(T_NMI_INT)(void);
-void IDTVEC(T_BKPT_TRAP)(void);
-void IDTVEC(T_OVRFLW_TRAP)(void);
-void IDTVEC(T_BOUND_FAULT)(void);
-void IDTVEC(T_UNDEF_FAULT)(void);
-void IDTVEC(T_NOMATH_FAULT)(void);
-void IDTVEC(T_DOUBLE_FAULT)(void);
-void IDTVEC(T_COPROC_FAULT)(void);
-void IDTVEC(T_TSS_FAULT)(void);
-void IDTVEC(T_SEG_FAULT)(void);
-void IDTVEC(T_STACK_FAULT)(void);
-void IDTVEC(T_GP_FAULT)(void);
-void IDTVEC(T_PAGE_FAULT)(void);
-void IDTVEC(T_RSVD)(void);
-void IDTVEC(T_MATH_FAULT)(void);
-void IDTVEC(T_ALIGN_FAULT)(void);
-void IDTVEC(T_MACH_ABORT)(void);
-void IDTVEC(T_SIMD_FAULT)(void);
+extern void IDTVEC(T_DIVIDE_FAULT)(void);
+extern void IDTVEC(T_DEBUG)(void);
+extern void IDTVEC(T_NMI_INT)(void);
+extern void IDTVEC(T_BKPT_TRAP)(void);
+extern void IDTVEC(T_OVRFLW_TRAP)(void);
+extern void IDTVEC(T_BOUND_FAULT)(void);
+extern void IDTVEC(T_UNDEF_FAULT)(void);
+extern void IDTVEC(T_NOMATH_FAULT)(void);
+extern void IDTVEC(T_DOUBLE_FAULT)(void);
+extern void IDTVEC(T_COPROC_FAULT)(void);
+extern void IDTVEC(T_TSS_FAULT)(void);
+extern void IDTVEC(T_SEG_FAULT)(void);
+extern void IDTVEC(T_STACK_FAULT)(void);
+extern void IDTVEC(T_GP_FAULT)(void);
+extern void IDTVEC(T_PAGE_FAULT)(void);
+extern void IDTVEC(T_RSVD)(void);
+extern void IDTVEC(T_MATH_FAULT)(void);
+extern void IDTVEC(T_ALIGN_FAULT)(void);
+extern void IDTVEC(T_MACH_ABORT)(void);
+extern void IDTVEC(T_SIMD_FAULT)(void);
 
 #define SET_DEFAULT_VECTORS \
 	SET_IDT_INTR(T_DIVIDE_FAULT, &IDTVEC(T_DIVIDE_FAULT)); \
@@ -80,9 +81,37 @@ void IDTVEC(T_SIMD_FAULT)(void);
 	SET_IDT_INTR(T_MATH_FAULT, &IDTVEC(T_MATH_FAULT)); \
 	SET_IDT_INTR(T_ALIGN_FAULT, &IDTVEC(T_ALIGN_FAULT)); \
 	SET_IDT_INTR(T_MACH_ABORT, &IDTVEC(T_MACH_ABORT)); \
-	SET_IDT_INTR(T_SIMD_FAULT, &IDTVEC(T_SIMD_FAULT));
+	SET_IDT_INTR(T_SIMD_FAULT, &IDTVEC(T_SIMD_FAULT))
 
-void setup_exception_handlers();
+static inline const char *
+get_fault_type(int f)
+{
+	static const char *fault[] = {
+		"DIVIDE_FAULT",
+		"DEBUG",
+		"NMI_INT",
+		"BKPT_TRAP",
+		"OVRFLW_TRAP",
+		"BOUND_FAULT",
+		"UNDEF_FAULT",
+		"NOMATH_FAULT",
+		"DOUBLE_FAULT",
+		"COPROC_FAULT",
+		"TSS_FAULT",
+		"SEG_FAULT",
+		"STACK_FAULT",
+		"GP_FAULT",
+		"PAGE_FAULT",
+		"RSVD",
+		"MATH_FAULT",
+		"ALIGN_FAULT",
+		"MACH_ABORT",
+		"SIMD_FAULT"
+	};
+
+	return fault[f];
+}
+extern void setup_exception_handlers();
 
 static inline void
 lidt(void *idtr) {

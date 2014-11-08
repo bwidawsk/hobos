@@ -36,13 +36,13 @@
 	xchg %r13, TF_R13_OFF(%rsp) ;\
 	xchg %r14, TF_R14_OFF(%rsp) ;\
 	xchg %r15, TF_R15_OFF(%rsp) ;\
-	
+
 #define TRAP_DEF(x)    \
 	STORE_ALL_REGS \
 	movq $(x), TF_WHICH(%rsp) ;\
 	addq $TF_WHICH, %rsp /* remember TF_WHICH is negative */;\
     jmp default_handler
-	
+
 #define TRAP_DEF_NO_ERR_PUSH(x)    \
 	pushq $0 ; \
 	STORE_ALL_REGS \
@@ -104,7 +104,7 @@ IDTVEC(T_MACH_ABORT)
 	TRAP_DEF_NO_ERR_PUSH(T_MACH_ABORT)
 IDTVEC(T_SIMD_FAULT)
 	TRAP_DEF(T_SIMD_FAULT)
-	
+
 // Create an IRQ handler for all possible external
 // interrupts, even though we won't use all
 #define IRQ_HANDLER(index, vec_name) \

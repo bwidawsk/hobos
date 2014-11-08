@@ -3,27 +3,26 @@
 #include "include/irq.h" //AKA <arch/irq.h>
 #include "idt_common.h"
 #include "include/asm.h"
+#include "include/arch.h"
 
-struct idt_entry idt[MAX_IDT_ENTRIES];
-
-uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
+static struct idt_entry idt[MAX_IDT_ENTRIES];
+static uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
 /* TODO:
  * idt_handlers.S, I push a 0 error code in certain cases, I need to pop as well
  */
 void
 dflt_c_handler(struct trap_frame64 *tf) {
-	printf("got exception #%d\n", tf->tf_which);
+	printf("got exception %s (#%d)\n", get_fault_type(tf->tf_which),
+		   tf->tf_which);
 	printf("tf_rip = %p\n", tf->tf_rip);
 	printf("tf_cs = %p\n", tf->tf_cs);
 
-	if (tf->tf_which == T_PAGE_FAULT) {
+	if (tf->tf_which == T_PAGE_FAULT)
 		printf("fault address == 0x%x\n", read_cr2());
-	} else if (tf->tf_which == T_UNDEF_FAULT) {
-		start_interactive_console(NULL);
-	}
+
 	struct console_info ci;
-	ci.frame_pointer = tf->tf_rbp;
+	ci.arch_state.rbp = tf->tf_rbp;
 	start_interactive_console(&ci);
 	while(1);
 }
@@ -42,7 +41,7 @@ setup_exception_handlers() {
 	}
 
 	// Set the default vectors which we actually care about
-	SET_DEFAULT_VECTORS
+	SET_DEFAULT_VECTORS;
 
 	struct idt_descriptor idtr = {
 		.limit = (sizeof(struct idt_entry) * MAX_IDT_ENTRIES) - 1,

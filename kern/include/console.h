@@ -3,7 +3,7 @@
 
 #define CONSOLE_KEY sect_cons
 
-#define CONSOLE_CREATE_LIST CTLIST_CREATE(CONSOLE_KEY, struct console_driver *); 
+#define CONSOLE_CREATE_LIST CTLIST_CREATE(CONSOLE_KEY, struct console_driver *);
 
 #define CONSOLE_DECLARE(cons_name, cinit, cputc, cgetc, ccheckc, val) \
 	static struct console_driver cons_name = { \
@@ -36,7 +36,11 @@ char console_getc();
 void console_puts(char *s);
 
 struct console_info {
-	uint64_t frame_pointer;
+	union {
+		struct arch_state *tmp;
+		uint64_t rbp;
+	} arch_state;
 };
+
 void start_interactive_console(struct console_info *info);
 #endif
