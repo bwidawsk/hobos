@@ -26,7 +26,7 @@ do_bt_command(struct console_info *info, int argc, char *argv[])
 	if (!info)
 		backtrace_now();
 	else
-		backtrace((void *)info->arch_state.rbp);
+		backtrace((void *)info->arch_state->rbp);
 	return NULL;
 }
 

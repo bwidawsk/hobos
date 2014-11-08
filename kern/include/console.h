@@ -36,10 +36,7 @@ char console_getc();
 void console_puts(char *s);
 
 struct console_info {
-	union {
-		struct arch_state *tmp;
-		uint64_t rbp;
-	} arch_state;
+	struct arch_state *arch_state;
 };
 
 void start_interactive_console(struct console_info *info);

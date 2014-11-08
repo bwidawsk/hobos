@@ -13,6 +13,8 @@ static uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
  */
 void
 dflt_c_handler(struct trap_frame64 *tf) {
+	static struct arch_state fault_state;
+
 	printf("got exception %s (#%d)\n", get_fault_type(tf->tf_which),
 		   tf->tf_which);
 	printf("tf_rip = %p\n", tf->tf_rip);
@@ -22,7 +24,8 @@ dflt_c_handler(struct trap_frame64 *tf) {
 		printf("fault address == 0x%x\n", read_cr2());
 
 	struct console_info ci;
-	ci.arch_state.rbp = tf->tf_rbp;
+	arch_from_trapframe(&fault_state, tf);
+	ci.arch_state = &fault_state;
 	start_interactive_console(&ci);
 	while(1);
 }

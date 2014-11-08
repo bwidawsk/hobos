@@ -1,6 +1,7 @@
 #include <mutex.h>
 #include <console.h>
 #include <bs_commands.h>
+#include <arch/arch.h> // capture_register_state
 
 //#define USE_LOCAL_ECHO
 
@@ -179,6 +180,9 @@ start_interactive_console(struct console_info *info)
 {
 	if (!inited)
 		while(1);
+
+	/* Snapshot first before destroying registers */
+	capture_arch_state();
 
 	#define MAX_CMD 256
 	while(1) {
