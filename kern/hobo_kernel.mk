@@ -14,6 +14,6 @@ clean:
 depend: $(SOURCES)
 	-@rm -f depend
 	@touch depend # Is this even necessary?
-	-@$(MAKEDEPEND) -fdepend -Y $(INCLUDES) -- $(ESOTERIC_INCLUDES) -- $^
+	-@$(MAKEDEPEND) -DKERNEL -fdepend -Y $(INCLUDES) -- $(ESOTERIC_INCLUDES) -- $^
 
 -include depend
