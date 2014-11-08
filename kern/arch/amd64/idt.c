@@ -6,7 +6,6 @@
 #include "include/arch.h"
 
 static struct idt_entry idt[MAX_IDT_ENTRIES];
-static uint8_t temp_exception_stack[4096] __attribute__ ((aligned (4096)));
 
 /* TODO:
  * idt_handlers.S, I push a 0 error code in certain cases, I need to pop as well
