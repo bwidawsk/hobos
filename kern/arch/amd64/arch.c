@@ -17,3 +17,15 @@ void arch_from_trapframe(struct arch_state *arch, struct trap_frame64 *tf)
 	TF_A(rdi); TF_A(rsi); TF_A(rbp); TF_A(rsp);
 	#undef TF_A
 }
+
+int popcount(uint64_t operand)
+{
+	int bits;
+
+	__asm__ ("popcnt %1, %0"
+			 : "=r" (bits)
+			 : "g" (operand)
+			 :);
+
+	return bits;
+}

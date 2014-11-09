@@ -90,7 +90,6 @@
 	}
 
 #ifndef ASM_FILE
-#include "noarch.h"
 
 /* This should also be somewhere in common/include */
 extern int printf(const char *fmt, ...);
@@ -103,6 +102,9 @@ typedef int int32_t __attribute__ ((mode (SI)));
 typedef unsigned int uint32_t __attribute__ ((mode (SI)));
 typedef int int64_t __attribute__ ((mode (DI)));
 typedef unsigned int uint64_t __attribute__ ((mode (DI)));
+
+#include "noarch.h"
+
 #endif
 
 #endif
