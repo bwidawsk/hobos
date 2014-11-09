@@ -19,11 +19,11 @@ _LD=$(v_LD_$(V))
 %.o: %.c
 	$(_CC) $(CFLAGS) -c -o $@ $<
 
-$(OUTPUT): subdirs $(OBJS) depend
-	$(_LD) $(LDFLAGS) -r $(OBJS) -o $@
+$(OUTPUT): subdirs $(EARLY_OBJS) $(OBJS) depend
+	$(_LD) $(LDFLAGS) -r $(EARLY_OBJS) $(OBJS) -o $@
 
 clean:
-	-@rm -f $(OUTPUT) $(OBJS) depend depend.bak
+	-@rm -f $(OUTPUT) $(EARLY_OBJS) $(OBJS) depend depend.bak
 
 .PHONY: subdirs
 subdirs:

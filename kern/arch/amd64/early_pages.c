@@ -1,14 +1,14 @@
 #include "amd64_defines.h"
 #include "../ia_common/ia_defines.h"
-/* 
+/*
  * Every address is mapped to the first GB of physical memory. This is done
  * by filling up the PML4 entries to point to 1 PDPT. Each PDPT entry points
  * to 1 PD. The PD is filled with 2MB pages (so 1 GB in 64 bit
  */
- 
+
 #define PDE_EARLY_2MB_FLAGS (PDE_P | PDE_A | PDE_PS | PDE_G)
 #define MEG2(x) (x * 2UL * 1024UL * 1024UL)
-#define PDE_2M(x) PDE_EARLY_2MB_FLAGS | MEG2(x)
+#define PDE_2M(x) (PDE_EARLY_2MB_FLAGS | MEG2(x))
 #define PDE_2M_HELP(x, y) PDE_2M(x + y)
 #define PDE_8M(x) PDE_2M(x), PDE_2M(x) + (2<<20), PDE_2M(x) + (4<<20), PDE_2M(x) + (6<<20)
 pde_t early_pagedirs[512] __attribute__ ((aligned (4096), section (".multiboot"))) = {
