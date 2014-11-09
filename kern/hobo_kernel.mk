@@ -2,7 +2,7 @@
 # source tree. It will generate dependencies using makedepend. This is
 # accomplished by having the Makefile in the directory define special variables
 # (see below for the special variables since comments always get stale).
-OBJS=$(subst .c,.o,$(abspath $(SOURCES)))
+OBJS?=$(subst .c,.o,$(abspath $(SOURCES)))
 # This is based on what Automake does for verbosity.
 #V=0
 v_CC_0=@echo "  CC     $(subst $(ROOTDIR)/, , $<)"; $(CC)
@@ -19,12 +19,15 @@ _LD=$(v_LD_$(V))
 %.o: %.c
 	$(_CC) $(CFLAGS) -c -o $@ $<
 
-$(OUTPUT): $(OBJS) depend
+$(OUTPUT): subdirs $(OBJS) depend
 	$(_LD) $(LDFLAGS) -r $(OBJS) -o $@
 
-.PHONY: clean
 clean:
 	-@rm -f $(OUTPUT) $(OBJS) depend depend.bak
+
+.PHONY: subdirs
+subdirs:
+	-@for dir in $(DIRS); do (cd $$dir; ${MAKE} $1 || exit 1) || exit 1; done
 
 depend: $(SOURCES)
 	-@rm -f depend
@@ -32,3 +35,5 @@ depend: $(SOURCES)
 	-@$(MAKEDEPEND) -DKERNEL -fdepend -Y $(INCLUDES) -- $(ESOTERIC_INCLUDES) -- $^
 
 -include depend
+
+.PHONY: clean subdirs
