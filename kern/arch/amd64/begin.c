@@ -123,8 +123,6 @@ carve_mboot_memory(struct multiboot_mmap_entry *map, int num_entries) {
 	#ifdef DS_ALLOCATOR
 	primary_allocator = (struct mm_page_allocator *)
 		ds_init((memory_region_t *)&map[best_entry], 1);
-	#else
-	#error no supported allocator selected
 	#endif
 	printf("%s initialized\n", primary_allocator->name);
 	// in theory we could grab a handle to another allocator here and give

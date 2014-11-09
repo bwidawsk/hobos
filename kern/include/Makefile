@@ -1,7 +1,7 @@
 INPUT=common.h
 
 done : $(INPUT)
-	$(CC) $<
+	@$(CC) $<
 
 clean :
 	-@rm -f *.h.gch

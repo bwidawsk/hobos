@@ -38,7 +38,7 @@ all : $(OUTPUT)
 $(OUTPUT) : include_clean
 	$(shell $(CURDIR)/vers.sh)
 	-@rm -f $(CURDIR)/include/arch
-	ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
+	@ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
 	@for dir in $(DIRS); do (${MAKE} -C $$dir $1 || exit 1) || exit 1; done
 	@echo "Linking ${TARGET} kernel..."
 	@$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/$(LD_SCRIPT) $(OBJS) -o kernel
