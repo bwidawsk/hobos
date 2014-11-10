@@ -37,14 +37,14 @@ FS_SECTORS_MINUS_SMALLBOOT=$(shell echo $$[$(FS_SECTORS)-$(SECTORS_PER_TRACK)])
 FS_SECTORS_MINUS_ONE=$(shell echo $$[$(FS_SECTORS)-1])
 USED_CYLINDERS=$(shell echo $$[$(FS_SECTORS)/$(SECTORS_PER_CYLINDER)])
 PART_TABLE_STRING=$(shell echo "partition_table 0x80 \
-	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(PART_START)) 0x83 \
-	$(shell ../tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(FS_SECTORS_MINUS_ONE)) \
+	$(shell ../userspace/tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(PART_START)) 0x83 \
+	$(shell ../userspace/tools/lba -h $(HEADS_PER_CYLINDER) -s $(SECTORS_PER_TRACK) -l $(FS_SECTORS_MINUS_ONE)) \
 	$(PART_START) $(FS_SECTORS_MINUS_SMALLBOOT)")
 
 #This is NOT multiprocess safe, but good enough...
 LOOP_DEV=$(shell sudo losetup -f)
 
-all : disk_image updatebochsrs ../tools/lba
+all : disk_image updatebochsrs ../userspace/tools/lba
 	@echo Created image with 
 	@echo "    Block Size $(BLOCK_SIZE)"
 	@echo "    Sectors per track $(SECTORS_PER_TRACK)"

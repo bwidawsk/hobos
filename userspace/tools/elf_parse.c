@@ -12,8 +12,8 @@
 void *addr;
 
 #define __ELF_WORD_SIZE 64
-#include "../common/include/cdefs.h"
-#include "../common/include/elf.h"
+#include <include/cdefs.h>
+#include <include/elf.h>
 
 static bool debug = true;
 #define DEBUG_PRINT(...) do { \

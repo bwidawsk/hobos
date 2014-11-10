@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <math.h>
 
-#include "ext2.h"
+#include <ext2.h>
 
 #define GROUP_BLOCK(addr) \
 	((volatile struct ext2_group_desc*) (addr))
