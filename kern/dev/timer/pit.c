@@ -70,7 +70,7 @@ void PIT_SETUP_PERIODIC(uint16_t divisor) {
 
 static inline
 uint16_t PIT_READ_CURRENT() {
-	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH); 
+	PIT_CMD_WRITE(PIT_CHAN0 | PIT_ACC_LATCH);
 	return ((uint16_t)PIT_DATA_READ | (PIT_DATA_READ << 8));
 }
 
@@ -82,12 +82,7 @@ pit_init(struct timer *me) {
 	me->set_periodic = set_periodic;
 }
 
-static int 
-set_oneshot(struct timer *me, uint64_t timeout_usecs) {
-	return 0;
-}
-
-static 
+static
 int set_periodic(struct timer *me, uint64_t timeout_usecs) {
 	if (timeout_usecs > PIT_MAX_USECS)
 		return 1;
