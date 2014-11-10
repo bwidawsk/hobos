@@ -5,6 +5,8 @@
 #include <device.h>
 #include "ata.h"
 
+#pragma GCC diagnostic ignored "-Wunused-function"
+
 static void ata_dump_identity(struct ata_channel *ata);
 static void ata_write_dev(struct ata_channel *ata, uint8_t devdata, const int skip_check);
 static void ata_write_cmd(struct ata_channel *ata, ata_cmd_t cmd, const int skip_check);
