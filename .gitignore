@@ -24,5 +24,6 @@ bootimage/files/*
 bootimage/myfs.img
 kern/cscope.*
 kern/kernel
+kern/include_clean
 kern/include/arch
 kern/core/vers.c
