@@ -24,6 +24,7 @@ $(OUTPUT): subdirs $(EARLY_OBJS) $(OBJS) depend
 
 clean:
 	-@rm -f $(OUTPUT) $(EARLY_OBJS) $(OBJS) depend depend.bak
+	-@rm -f $(EXTRA_FILES)
 
 .PHONY: subdirs
 subdirs:

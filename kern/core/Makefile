@@ -2,6 +2,6 @@ SOURCES=main.c noarch.c console.c mutex.c bs_commands.c interrupt.c timer.c init
 SOURCES+=vers.c
 OUTPUT=core.a
 INCLUDES+=-I$(ROOTDIR)/../common/include
+EXTRA_FILES=vers.c
 
 include $(ROOTDIR)/hobo_kernel.mk
-

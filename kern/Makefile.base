@@ -5,66 +5,75 @@ MAKEDEPEND = makedepend
 ifneq ($(V), 0)
 MAKEFLAGS=--no-print-directory
 endif
-export ROOTDIR=$(PWD)
-export CC
-export LD
-export MAKEDEPEND
+ROOTDIR=$(PWD)
 
-# I'd like to have no builtins so that GCC isn't required, but can't avoid for now
-#CFLAGS+=-fno-builtin
-CFLAGS+=-mcmodel=kernel -ansi -std=c99 -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib -Wall
-CFLAGS+=-Wno-unused-function
-DEFINES=-DKERNEL
-DEFINES+=$(shell cat build_options)
-CFLAGS+=$(DEFINES)
-LD_SCRIPT=linker_script.ld -S
+INCLUDES = -I$(PWD) \
+	   -I$(PWD)/include \
+	   -I$(PWD)/arch/$(TARGET) \
+	   -I$(ROOTDIR)/../common/include \
+	   -include $(PWD)/include/common.h
 
-INCLUDES=-I$(PWD)/include -I$(PWD)/arch/$(TARGET) -I$(PWD) -I$(ROOTDIR)/../common/include -include $(PWD)/include/common.h
-ESOTERIC_INCLUDES=-imacros ../common/include/cdefs.h
-CFLAGS+=$(INCLUDES) $(ESOTERIC_INCLUDES)
+# These are includes which don't go with makedepend. Eventually we can turn
+# this into esoteric cflags if needed.
+ESOTERIC_INCLUDES = -imacros ../common/include/cdefs.h
+
+# Basic CFLAGS for a standalone binary
+CFLAGS += -mcmodel=kernel -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib
+# Setup compile specs
+CFLAGS += -ansi -std=c99
+# Defines and such
+CFLAGS += -Wall -DKERNEL $(shell cat build_options)
+#CFLAGS+=-fno-builtin #can't avoid for now
 
 LDFLAGS?=
-export CFLAGS
-export LDFLAGS
-export DEFINES
-export INCLUDES
 
-DIRS = include arch/$(TARGET) core dev lib mm fs
-OBJS = arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a fs/fs.a
-OUTPUT = kernel
+CFLAGS+=$(INCLUDES) $(ESOTERIC_INCLUDES)
+export ROOTDIR CFLAGS LDFLAGS DEFINES INCLUDES CC LD MAKEDEPEND
 
-all : $(OUTPUT)
+# Any variables defined below are local
+SUBDIRS := include arch/$(TARGET) core dev lib mm fs
+OBJS := arch/$(TARGET)/arch.a core/core.a dev/devices.a lib/lib.a mm/mm.a fs/fs.a
+OUTPUT := kernel
+LD_SCRIPT := linker_script.ld -S
 
-$(OUTPUT) : include_clean
-	$(shell $(CURDIR)/vers.sh)
-	-@rm -f $(CURDIR)/include/arch
-	@ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
-	@for dir in $(DIRS); do (${MAKE} -C $$dir $1 || exit 1) || exit 1; done
+all: include_clean version $(SUBDIRS)
 	@echo "Linking ${TARGET} kernel..."
 	@$(LD) $(LDFLAGS) -N -e start -T arch/${TARGET}/$(LD_SCRIPT) $(OBJS) -o kernel
 
-# autocleans if critical files change
-include_clean : include/common.h build_options
-	-@rm -f $(OUTPUT)
-	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
-	touch $@
+version:
+	$(shell $(CURDIR)/vers.sh)
 
-tags :
+# autocleans if critical files change
+include_clean: include/common.h build_options
+	@$(MAKE) clean
+	@$(MAKE) version
+	@touch $@
+	-@rm -f $(CURDIR)/include/arch
+	@ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
+
+$(SUBDIRS):
+	@$(MAKE) $(MAKEFLAGS) -C $@ $(MAKE_TARGET)
+
+tags:
 	ctags -R .
 	ctags -Ra $(CURDIR)/../common
 
-cscope :
+cscope:
 	cscope -q -k -b -u -R
 
-picocom :
-	sudo picocom -b 115200 -i -r /dev/ttyp9 -c
+clean: $(SUBDIRS)
+clean: MAKE_TARGET=clean
+
+distclean: clean
+	-@rm -f cscope* tags
+
+.PHONY: version arch_symlink $(SUBDIRS) $(OUTPUT) tags cscope clean distclean help
 
 help :
 	@echo "Available targets: "
-	@echo " all (default), alias: kernel"
+	@echo " all (default)"
 	@echo " tags"
 	@echo " cscope"
-	@echo " picocom"
 	@echo " help"
 	@echo " clean"
 	@echo " distclean"
@@ -73,13 +82,3 @@ help :
 	@echo " LD default: $(LD)"
 	@echo " CFLAGS default: $(CFLAGS)"
 	@echo " LDFLAGS default: $(LDFLAGS)"
-
-
-clean :
-	-@rm -f core/vers.c include/arch $(OUTPUT)
-	for dir in $(DIRS); do (${MAKE} -C $$dir clean $1 || exit 1) || exit 1; done
-
-distclean : clean
-	-@rm -f cscope* tags
-
-.PHONY: $(OUTPUT) tags cscope picocom clean distclean
