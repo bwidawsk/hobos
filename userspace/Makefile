@@ -1,4 +1,4 @@
-SUBDIRS=tools
+SUBDIRS=tools tests
 CC=clang
 # Common defines some header files with system names. So we must search after those.
 COMMON=$(realpath ../common)
