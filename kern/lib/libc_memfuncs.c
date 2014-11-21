@@ -1,11 +1,11 @@
 
 void *__hbuiltin_memcpy(void *dest, const void *src, uint64_t n);
-void *__hbuiltin_memset(void *s, int c, uint64_t n);
+void __hbuiltin_memset(void *s, char c, uint64_t n);
 void __hbuiltin_bzero(void *s, uint64_t n);
 void __hbuiltin_bcopy(const void *src, void *dest, uint64_t n);
 
 void memcpy(void *dest, const void *src, uint64_t n) __attribute__((weak, alias ("__hbuiltin_memcpy")));
-void memset(void *s, int c, uint64_t n) __attribute__((weak, alias ("__hbuiltin_memset")));
+void arch_memset(void *s, char c, uint64_t n) __attribute__((weak, alias ("__hbuiltin_memset")));
 void bzero(void *s, uint64_t n) __attribute__((weak, alias ("__hbuiltin_bzero")));
 void bcopy(const void *src, void *dest, uint64_t n) __attribute__((weak, alias ("__hbuiltin_bcopy")));
 
@@ -53,12 +53,18 @@ __hbuiltin_memcpy(void *dest, const void *src, uint64_t n) {
 	return ret;
 }
 
-/* This is very non-optimal */
-void *
-__hbuiltin_memset(void *s, int c, uint64_t n) {
+void
+__hbuiltin_memset(void *s, char c, uint64_t n) {
 	while(n--) {
 		*(uint8_t *)s = (uint8_t)c;
 	}
+}
+
+void *
+memset(void *s, int c, uint64_t n)
+{
+	arch_memset(s, c, n);
+
 	return s;
 }
 

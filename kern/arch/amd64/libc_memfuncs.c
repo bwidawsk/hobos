@@ -1,4 +1,4 @@
-void memset(void *s, int c, uint64_t n)
+void arch_memset(void *s, int c, uint64_t n)
 {
 	KWARN_NOW(c & ~0xff);
 	c &= 0xff;
