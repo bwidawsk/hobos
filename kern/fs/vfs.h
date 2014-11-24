@@ -8,7 +8,7 @@ struct vfs_inode {
 struct vfs;
 struct vfs_ops {
 	int (*probe)(struct vfs *fs);
-	int (*load_file)(struct vfs *fs, const char *file);
+	int (*load_file)(struct vfs *fs, const char *file, void *dest);
 	int (*ls)(struct vfs *fs, const char *dir, struct vfs_inode **);
 };
 

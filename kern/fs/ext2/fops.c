@@ -347,6 +347,22 @@ ext2_ls(struct vfs *fs,  const char *path, struct vfs_inode **inodes)
 }
 
 static int
+ext2_load_file(struct vfs *fs, const char *file, void *dest)
+{
+	struct ext2_driver *ext2 = (struct ext2_driver *)fs;
+	struct ext2_inode inode;
+	int ret;
+
+	ret = get_inode_for_path(ext2, file, &inode);
+	if (ret)
+		return ret;
+
+	load_blocks(ext2, &inode, dest);
+
+	return 0;
+}
+
+static int
 ext2_probe(struct vfs *fs)
 {
 	struct ext2_super_block *super_block;
@@ -371,7 +387,9 @@ ext2_probe(struct vfs *fs)
 		  "Filesystem group counts don't match (%d != %d)\n",
 		  ext2->groups, super_block->s_inodes_count / super_block->s_inodes_per_group);
 
-	ext2->blocks_for_gdesc_table = ROUND_UP((sizeof(struct ext2_group_desc) * ext2->groups), ext2->block_size) / ext2->block_size;
+	ext2->blocks_for_gdesc_table =
+		ROUND_UP((sizeof(struct ext2_group_desc) * ext2->groups), ext2->block_size) / ext2->block_size;
+
 	/*
 	 * The first block after the super block has the group descriptor table
 	 * TODO: similar to superblock, we can find backups
