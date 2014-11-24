@@ -30,6 +30,7 @@
 	if (__warned) { \
 		printf("Kernel Warning. %s:%d ",__FILE__, __LINE__); \
 		printf(format, ##__VA_ARGS__); \
+		backtrace_now(); \
 	} \
 	__warned; \
 })
