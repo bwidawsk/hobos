@@ -11,7 +11,8 @@ INCLUDES = -I$(PWD) \
 	   -I$(PWD)/include \
 	   -I$(PWD)/arch/$(TARGET) \
 	   -I$(ROOTDIR)/../common/include \
-	   -include $(PWD)/include/common.h
+	   -include $(PWD)/include/common.h \
+	   -include $(PWD)/include/lib.h
 
 # These are includes which don't go with makedepend. Eventually we can turn
 # this into esoteric cflags if needed.
