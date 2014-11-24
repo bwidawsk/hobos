@@ -1,5 +1,5 @@
 extern void memcpy(void *dest, const void *src, uint64_t n);
-extern void memset(void *s, int c, uint64_t n);
+extern void *memset(void *s, int c, uint64_t n);
 extern void bzero(void *s, uint64_t n);
 extern void bcopy(const void *src, void *dest, uint64_t n);
 extern char *strcpy(char *dest, const char *src);
