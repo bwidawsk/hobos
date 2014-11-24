@@ -22,11 +22,7 @@ zalloc(uint64_t size)
 	if (!ret)
 		return ret;
 
-	//bzero(ret, size);
-	do {
-		--size;
-		((unsigned char *)ret)[size] = 0;
-	} while (size);
+	bzero(ret, size);
 
 	return ret;
 }
