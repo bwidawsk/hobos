@@ -3,7 +3,7 @@ CC=gcc
 LD=ld
 MAKEDEPEND = makedepend
 ifneq ($(V), 0)
-MAKEFLAGS=--no-print-directory
+QUIETFLAGS=--no-print-directory
 endif
 ROOTDIR=$(CURDIR)
 
@@ -50,7 +50,7 @@ include_clean: include/common.h build_options
 
 $(SUBDIRS):
 	@ln -sf $(ROOTDIR)/arch/${TARGET}/include/ $(ROOTDIR)/include/arch
-	@$(MAKE) $(MAKEFLAGS) -C $@ $(MAKE_TARGET)
+	@$(MAKE) $(QUIETFLAGS) -C $@ $(MAKE_TARGET)
 
 tags:
 	ctags -R .
