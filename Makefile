@@ -20,8 +20,10 @@ debug: boot/bootimage
 	$(TERM) -e qemu-system-x86_64 bootimage/disk_image -s -serial unix:ser -monitor unix:mon -debugcon stdio -bios $(BIOS)
 	#$(TERM) -e qemu-system-x86_64 bootimage/disk_image -S -s -serial unix:ser -monitor unix:mon -debugcon stdio -bios $(BIOS)
 
+kern/kernel:
+	$(MAKE) -C kern/ all
+
 boot/bootimage: kern/kernel $(FS_DEPS)
-	echo $?
 	$(MAKE) -C bootimage/
 
 $(patsubst %, clean-%, $(SUBDIRS)):
