@@ -59,21 +59,21 @@ force : all myfs.img
 
 .PHONY : updatembr
 updatembr :
-	$(SED) 's/^partition_table1/$(PART_TABLE_STRING)/' ../boot/mbr/mbr_template.txt > ../boot/mbr/mbr.S
+	@$(SED) 's/^partition_table1/$(PART_TABLE_STRING)/' ../boot/mbr/mbr_template.txt > ../boot/mbr/mbr.S
 
 .PHONY : updatebochsrs
 updatebochsrs :
-	-rm -f bochsrc.txt
-	touch bochsrc.txt
-	$(SED) -i.orig 's/^ata0-master.*/ata0-master: type=disk, mode=flat, path="disk_image", cylinders=$(USED_CYLINDERS), heads=$(HEADS_PER_CYLINDER), spt=$(SECTORS_PER_TRACK)/' bochsrc.txt
+	@rm -f bochsrc.txt
+	@touch bochsrc.txt
+	@$(SED) -i.orig 's/^ata0-master.*/ata0-master: type=disk, mode=flat, path="disk_image", cylinders=$(USED_CYLINDERS), heads=$(HEADS_PER_CYLINDER), spt=$(SECTORS_PER_TRACK)/' bochsrc.txt
 
 ../boot/bootimage: updatembr
 	${MAKE} -C ../boot DEBUG=1
 
 disk_image: myfs.img ../boot/bootimage
-	cp ../boot/bootimage ./disk_image
-	dd if=../boot/bootimage of=disk_image ibs=$(SMALLBOOT_SIZE) conv=sync count=1  > /dev/null 2>&1
-	cat myfs.img >> disk_image
+	@cp ../boot/bootimage ./disk_image
+	@dd if=../boot/bootimage of=disk_image ibs=$(SMALLBOOT_SIZE) conv=sync count=1  > /dev/null 2>&1
+	@cat myfs.img >> disk_image
 
 # put something like below in sudoers file to not need a password
 #%wheel  ALL=(ALL)       NOPASSWD: /sbin/losetup, \
@@ -83,17 +83,17 @@ disk_image: myfs.img ../boot/bootimage
 #		/bin/chmod -R 777 hobosmnt/
 
 myfs.img : ../kern/kernel
-	-cp ../kern/kernel files/
-	-dd if=/dev/zero of=$(TEMP_IMG) bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
-	-sudo losetup $(LOOP_DEV) $(TEMP_IMG)
-	-sudo $(MKFS) $(MKFS_FLAGS) $(LOOP_DEV)  > /dev/null 2>&1
-	-sudo mkdir -p hobosmnt/
-	-sudo mount -o loop $(LOOP_DEV)  hobosmnt/
-	-sudo chmod -R 777 hobosmnt/
-	-cp -r files/* hobosmnt/
-	-sudo umount hobosmnt/
-	-sudo losetup -d $(LOOP_DEV)
-	-mv $(TEMP_IMG) myfs.img
+	@cp ../kern/kernel files/
+	@dd if=/dev/zero of=$(TEMP_IMG) bs=$(BLOCK_SIZE) count=$(FS_SECTORS_MINUS_SMALLBOOT) > /dev/null 2>&1
+	@sudo losetup $(LOOP_DEV) $(TEMP_IMG)
+	@sudo $(MKFS) $(MKFS_FLAGS) $(LOOP_DEV)  > /dev/null 2>&1
+	@sudo mkdir -p hobosmnt/
+	@sudo mount -o loop $(LOOP_DEV)  hobosmnt/
+	@sudo chmod -R 777 hobosmnt/
+	@cp -r files/* hobosmnt/
+	@sudo umount hobosmnt/
+	@sudo losetup -d $(LOOP_DEV)
+	@mv $(TEMP_IMG) myfs.img
 
 check:
 	../tools/ext2_tool
