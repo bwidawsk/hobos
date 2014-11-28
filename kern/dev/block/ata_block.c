@@ -1,9 +1,10 @@
-#include <dev/pci/pci_access.h>
 #include <mm/malloc.h>
 #include <mutex.h>
 #include <init_funcs.h>
 #include <device.h>
 #include "ata.h"
+
+#include "../dev/pci/pci_access.h" /* FIXME: abstract include */
 
 #pragma GCC diagnostic ignored "-Wunused-function"
 

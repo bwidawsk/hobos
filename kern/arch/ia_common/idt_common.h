@@ -1,9 +1,6 @@
 #ifndef _IDT_COMMON_H_
 #define _IDT_COMMON_H_
 
-/* This gdt.h should exist in one of the arch directories */
-#include "gdt.h"
-
 #define MAX_IDT_ENTRIES 256
 
 #define	T_DIVIDE_FAULT	0

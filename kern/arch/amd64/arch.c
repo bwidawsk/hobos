@@ -1,5 +1,5 @@
 #include "include/irq.h"
-#include "arch/arch.h"
+#include "include/arch.h"
 
 /* TODO: Change this to max cpus */
 struct arch_state archbuf[TEMP_MAX_CPU];

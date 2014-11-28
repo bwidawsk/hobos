@@ -1,9 +1,10 @@
 #include <device.h>
-#include <dev/block/block.h>
-#include <fs/vfs.h>
 #include <mm/malloc.h>
 #include <lib.h>
 #include "ext2.h"
+
+#include "../dev/block/block.h" /* FIXME: abstract include */
+#include "../fs/vfs.h" /* FIXME: abstract include */
 
 struct ext2_driver {
 	struct vfs base;

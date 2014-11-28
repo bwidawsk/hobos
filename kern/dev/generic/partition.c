@@ -1,8 +1,9 @@
 #include <master_boot_record.h>
 #include <device.h>
-#include <dev/block/block.h>
 #include <init_funcs.h>
 #include <mm/malloc.h>
+
+#include "../dev/block/block.h" /* FIXME: abstract include */
 
 void load_mbr(struct block_device *block_dev)
 {

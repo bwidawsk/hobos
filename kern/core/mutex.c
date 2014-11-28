@@ -1,3 +1,4 @@
+#include <arch/arch.h>
 #include <thread.h> // this_thread
 #include <noarch.h> // this_thread
 #include <arch/atomic.h>

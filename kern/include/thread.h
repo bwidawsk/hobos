@@ -1,5 +1,3 @@
-#include <arch/arch.h>
-
 struct thread {
 	uint64_t tid;
 	// arch context

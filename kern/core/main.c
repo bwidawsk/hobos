@@ -1,14 +1,16 @@
 #include <mm/malloc.h>
+#include <arch/arch.h>
+#include <thread.h> /* Needs arch.h */
 #include <console.h>
 #include <mutex.h>
 #include <multiboot.h>
 #include <noarch.h>
-#include <thread.h>
 #include <timer.h>
 #include <init_funcs.h>
-#include <dev/pic/pic.h>
 #include <device.h>
-#include <fs/vfs.h>
+
+#include "../dev/pic/pic.h" /* FIXME: interface for interrupt controller */
+#include "../fs/vfs.h" /* FIXME: interface for vfs */
 
 #include "syms.h"
 

@@ -1,8 +1,8 @@
-#include <amd64_defines.h>
 #include <ia_defines.h>
-#include <mm_amd64.h>
-#include <include/arch.h>
 #include <syms.h>
+#include "amd64_defines.h"
+#include "mm_amd64.h"
+#include "arch.h"
 
 void backtrace(void *fp)
 {

@@ -1,7 +1,8 @@
 #include <init_funcs.h>
 #include <device.h>
-#include <dev/block/block.h>
 #include "../vfs.h"
+
+#include "../dev/block/block.h" /* FIXME: abstract include */
 
 /* TODO: linked list when available */
 struct vfs *registered_fs[2];

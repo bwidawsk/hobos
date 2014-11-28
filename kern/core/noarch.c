@@ -1,5 +1,5 @@
 #include <console.h>
-#include <include/arch.h>
+#include <arch/arch.h>
 #include <lib.h>
 #include "builtins.h" // generic_popcount()
 

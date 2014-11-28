@@ -5,18 +5,16 @@ MAKEDEPEND = makedepend
 ifneq ($(V), 0)
 MAKEFLAGS=--no-print-directory
 endif
-ROOTDIR=$(PWD)
+ROOTDIR=$(CURDIR)
 
-INCLUDES = -I$(PWD) \
-	   -I$(PWD)/include \
-	   -I$(PWD)/arch/$(TARGET) \
+INCLUDES = -I$(ROOTDIR)/include \
 	   -I$(ROOTDIR)/../common/include \
-	   -include $(PWD)/include/common.h \
-	   -include $(PWD)/include/lib.h
+	   -include $(ROOTDIR)/include/common.h \
+	   -include $(ROOTDIR)/include/lib.h
 
 # These are includes which don't go with makedepend. Eventually we can turn
 # this into esoteric cflags if needed.
-ESOTERIC_INCLUDES = -imacros ../common/include/cdefs.h
+ESOTERIC_INCLUDES = -imacros $(ROOTDIR)/../common/include/cdefs.h
 
 # Basic CFLAGS for a standalone binary
 CFLAGS += -mcmodel=kernel -ffreestanding -nostdinc -nostartfiles -nodefaultlibs -nostdlib
@@ -47,12 +45,11 @@ version:
 # autocleans if critical files change
 include_clean: include/common.h build_options
 	@$(MAKE) clean
-	@$(MAKE) version
+	@rm -f $(CURDIR)/include/arch
 	@touch $@
-	-@rm -f $(CURDIR)/include/arch
-	@ln -sf $(PWD)/arch/${TARGET}/include/ $(PWD)/include/arch
 
 $(SUBDIRS):
+	@ln -sf $(ROOTDIR)/arch/${TARGET}/include/ $(ROOTDIR)/include/arch
 	@$(MAKE) $(MAKEFLAGS) -C $@ $(MAKE_TARGET)
 
 tags:

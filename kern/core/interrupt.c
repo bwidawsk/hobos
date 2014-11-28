@@ -1,5 +1,6 @@
 #include <arch/irq.h>
-#include <dev/pic/pic.h>
+
+#include "../dev/pic/pic.h" /* FIXME: provide a real interface */
 
 /* Currently hardcoded to use 8259 */
 extern struct pic_dev pic_8259;

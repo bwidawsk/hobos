@@ -1,7 +1,7 @@
 OUTPUT=arch.a
 SOURCES=arch.c atomic_amd64.c begin.c debug.c idt.c libc_memfuncs.c mm_amd64.c reset.c
 EARLY_OBJS=idt_handlers.o header.o early_pages.o
-INCLUDES+=-I../ia_common
+INCLUDES+=-I../ia_common -Iinclude
 CFLAGS+=$(INCLUDES)
 
 include $(ROOTDIR)/hobo_kernel.mk
